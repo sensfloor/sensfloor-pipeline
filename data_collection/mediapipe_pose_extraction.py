@@ -1,5 +1,6 @@
 import argparse
 import csv
+import os
 import time
 from pathlib import Path
 
@@ -68,6 +69,9 @@ def read_video(p: Path, options: PoseLandmarkerOptions, draw_image: bool, genera
     generate_new_header: use the first frame to generate a csv header, if set to False, uses HEADER constant instead
     """
     csv_path = f"{p.parent / p.stem}_poses.csv"
+    if os.path.exists(csv_path):
+        print(f"File {csv_path} already exists, skipping")
+        return
     write_csv_header(csv_path, HEADER)
 
     with (PoseLandmarker.create_from_options(options) as landmarker, \
@@ -125,7 +129,7 @@ def read_video(p: Path, options: PoseLandmarkerOptions, draw_image: bool, genera
         cv2.destroyAllWindows()
 
 
-def main(date: Path):
+def main(date: str):
     model_path = './data_collection/pose_landmarker_full.task'
 
     BaseOptions = mp.tasks.BaseOptions
@@ -138,8 +142,14 @@ def main(date: Path):
         base_options=BaseOptions(model_asset_path=model_path),
         running_mode=VisionRunningMode.VIDEO)
 
-    DATA_ROOT_DIR = Path()
-    read_video(Path(DATA_ROOT_DIR / "data" / date / "video.mp4"), options, draw_image=False, generate_new_header=False)
+    DATA_PATH = Path("data")
+    if date is not None:
+        read_video(DATA_PATH / date / "video.mp4", options, draw_image=False, generate_new_header=False)
+    else:
+        print("No video specified. Extracting all videos")
+        for date in DATA_PATH.iterdir():
+            print(f"Extracting {date}")
+            read_video(DATA_PATH / date.name / "video.mp4", options, draw_image=False, generate_new_header=False)
 
 if __name__ == '__main__':
     # 1. Create the parser
@@ -149,7 +159,7 @@ if __name__ == '__main__':
 
     # 2. Add the video path argument
     parser.add_argument(
-        'date',
+        '--date',
         type=str,
         help="The date of the video to be extracted. Extracting all from data otherwise (e.g., 2025-12-01_12-44-43)"
     )
@@ -159,4 +169,4 @@ if __name__ == '__main__':
 
     # 4. Call the main function with the path from the arguments
     # We wrap the argument in Path() to ensure it's a pathlib.Path object
-    main(Path(args.date))
+    main(args.date)
