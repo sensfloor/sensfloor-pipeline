@@ -2,7 +2,7 @@ from abc import ABCMeta
 
 import torch
 
-from sensfloor.model.utils import SIGNAL_Z
+from utils import SIGNAL_Z
 
 joint_count = 21
 roi_x_length = 12

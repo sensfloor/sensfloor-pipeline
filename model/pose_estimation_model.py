@@ -3,7 +3,7 @@ from typing import Tuple
 import torch
 import torch.nn as nn
 
-from sensfloor.model.utils import SIGNAL_Z
+from utils import SIGNAL_Z
 
 
 class RegressionModel(nn.Module):

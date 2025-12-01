@@ -2,10 +2,10 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader
 
-from sensfloor.model.SensfloorTrainer import SensfloorTrainer
-from sensfloor.model.model import RegressionModel
-from sensfloor.model.pose_dataset import PoseDataset
-from sensfloor.model.utils import set_seed
+from SensfloorTrainer import SensfloorTrainer
+from pose_estimation_model import RegressionModel
+from pose_dataset import PoseDataset
+from utils import set_seed
 
 set_seed(seed=42)
 

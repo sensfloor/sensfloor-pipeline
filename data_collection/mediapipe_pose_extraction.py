@@ -1,3 +1,4 @@
+import argparse
 import csv
 import time
 from pathlib import Path
@@ -9,9 +10,10 @@ from mediapipe import solutions
 from mediapipe.framework.formats import landmark_pb2
 from mediapipe.tasks import python
 from mediapipe.tasks.python.vision import PoseLandmarkerOptions
+from mediapipe.tasks.python.vision.pose_landmarker import PoseLandmarker
 from tqdm import tqdm
 
-from utils import get_landmarks_header
+from mediapipe_utils import get_landmarks_header
 
 # use "generate_new_header" flag and copy printout
 HEADER = ['frame', 'x0', 'y0', 'z0', 'x1', 'y1', 'z1', 'x2', 'y2', 'z2', 'x3', 'y3', 'z3', 'x4', 'y4', 'z4', 'x5', 'y5', 'z5', 'x6', 'y6', 'z6', 'x7', 'y7', 'z7', 'x8', 'y8', 'z8', 'x9', 'y9', 'z9', 'x10', 'y10', 'z10', 'x11', 'y11', 'z11', 'x12', 'y12', 'z12', 'x13', 'y13', 'z13', 'x14', 'y14', 'z14', 'x15', 'y15', 'z15', 'x16', 'y16', 'z16', 'x17', 'y17', 'z17', 'x18', 'y18', 'z18', 'x19', 'y19', 'z19', 'x20', 'y20', 'z20', 'x21', 'y21', 'z21', 'x22', 'y22', 'z22', 'x23', 'y23', 'z23', 'x24', 'y24', 'z24', 'x25', 'y25', 'z25', 'x26', 'y26', 'z26', 'x27', 'y27', 'z27', 'x28', 'y28', 'z28', 'x29', 'y29', 'z29', 'x30', 'y30', 'z30', 'x31', 'y31', 'z31', 'x32', 'y32', 'z32']
@@ -123,9 +125,8 @@ def read_video(p: Path, options: PoseLandmarkerOptions, draw_image: bool, genera
         cv2.destroyAllWindows()
 
 
-if __name__ == '__main__':
-    # --- MediaPipe Task Setup ---
-    model_path = 'pose_landmarker_full.task'
+def main(date: Path):
+    model_path = './data_collection/pose_landmarker_full.task'
 
     BaseOptions = mp.tasks.BaseOptions
     PoseLandmarker = mp.tasks.vision.PoseLandmarker
@@ -138,4 +139,24 @@ if __name__ == '__main__':
         running_mode=VisionRunningMode.VIDEO)
 
     DATA_ROOT_DIR = Path()
-    read_video(Path(DATA_ROOT_DIR / "data" / "2025-12-01_12-44-43" / "video.mp4"), options, draw_image=False, generate_new_header=False)
+    read_video(Path(DATA_ROOT_DIR / "data" / date / "video.mp4"), options, draw_image=False, generate_new_header=False)
+
+if __name__ == '__main__':
+    # 1. Create the parser
+    parser = argparse.ArgumentParser(
+        description="Run MediaPipe Pose Landmarker on a specified video file."
+    )
+
+    # 2. Add the video path argument
+    parser.add_argument(
+        'date',
+        type=str,
+        help="The date of the video to be extracted. Extracting all from data otherwise (e.g., 2025-12-01_12-44-43)"
+    )
+
+    # 3. Parse the arguments
+    args = parser.parse_args()
+
+    # 4. Call the main function with the path from the arguments
+    # We wrap the argument in Path() to ensure it's a pathlib.Path object
+    main(Path(args.date))
