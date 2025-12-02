@@ -3,7 +3,7 @@
 /sensfloor/**/*.mp4
 /sensfloor/docs
 
-data
+/data
 
 # IDE
 .vscode
