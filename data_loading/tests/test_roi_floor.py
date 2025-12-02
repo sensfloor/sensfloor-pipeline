@@ -121,7 +121,7 @@ def test_adjust_roi_to_fit_y_0():
     np.testing.assert_array_equal(roi.history, expected_roi_history)
 
 
-def test_adjust_roi_to_fit_x_maxlen():
+def test_adjust_roi_to_fit_x_max():
     # Arrange floor
     x_size = 5
     y_size = 6
@@ -144,7 +144,7 @@ def test_adjust_roi_to_fit_x_maxlen():
     np.testing.assert_array_equal(roi.history, expected_roi_history)
 
 
-def test_adjust_roi_to_fit_y_maxlen():
+def test_adjust_roi_to_fit_y_max():
     # Arrange floor
     x_size = 5
     y_size = 6
@@ -188,6 +188,7 @@ def test_roi_size_5():
     floor.update(positions, signals)
     roi = floor.get_roi()
 
+    assert roi is not None and roi.x == 0
     assert roi is not None and roi.y == 5
     np.testing.assert_array_equal(roi.history, expected_roi_history)
 

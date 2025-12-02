@@ -25,7 +25,7 @@ class RoIFloor(Floor):
 
     def update(self, positions: list[tuple[int, int]], signals: np.ndarray) -> None:
         self.last_updated_positions = positions
-        return super().update(positions, signals)
+        super().update(positions, signals)
 
     def get_roi(self) -> None | RoI:
         # Return no region of interest if no updates exist
