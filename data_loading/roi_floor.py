@@ -16,6 +16,9 @@ class RoIFloor(Floor):
     def __init__(
         self, x_size: int, y_size: int, history_maxlen: int, roi_size: int
     ) -> None:
+        if x_size < roi_size or y_size < roi_size:
+            raise ValueError("RoI too large for floor size")
+
         super().__init__(x_size, y_size, history_maxlen)
         self.roi_size = roi_size
         self.last_updated_positions: list[tuple[int, int]] | None = None

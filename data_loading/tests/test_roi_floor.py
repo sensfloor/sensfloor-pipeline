@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from data_loading.roi_floor import RoIFloor
 
@@ -189,3 +190,13 @@ def test_roi_size_5():
 
     assert roi is not None and roi.y == 5
     np.testing.assert_array_equal(roi.history, expected_roi_history)
+
+
+def test_roi_too_large_for_floor():
+    x_size = 2
+    y_size = 2
+    history_maxlen = 1
+    roi_size = 3
+
+    with pytest.raises(ValueError):
+        RoIFloor(x_size, y_size, history_maxlen, roi_size)
