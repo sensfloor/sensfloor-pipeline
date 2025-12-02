@@ -14,7 +14,9 @@ SERIAL_PORT = "/dev/tty.usbserial-A571V1ZF"
 READOUT_DIR = "data"
 FPS = 15
 
-recording_datetime = datetime.now(ZoneInfo("Europe/Berlin")).strftime("%Y-%m-%d_%H-%M-%S")
+recording_datetime = datetime.now(ZoneInfo("Europe/Berlin")).strftime(
+    "%Y-%m-%d_%H-%M-%S"
+)
 base_path = Path(READOUT_DIR) / recording_datetime
 recording_csv_path = base_path / "sensfloor_readout.csv"
 recording_video_path = base_path / "video.mp4"
@@ -54,7 +56,9 @@ def read_messages() -> None:
                 message_queue.put(message)
 
 
-def write_message_in_file(message: bytearray, frame_number: int, writer: DictWriter) -> None:
+def write_message_in_file(
+    message: bytearray, frame_number: int, writer: DictWriter
+) -> None:
     hex_arr = list(message)
 
     # Check for invalid message?
@@ -68,7 +72,10 @@ def write_message_in_file(message: bytearray, frame_number: int, writer: DictWri
         "magic_number": 23,
         "x": int.from_bytes([hex_arr[3]]),
         "y": int.from_bytes([hex_arr[4]]),
-        **{str(field_id): sensor_value for field_id, sensor_value in enumerate(hex_arr[9:])},
+        **{
+            str(field_id): sensor_value
+            for field_id, sensor_value in enumerate(hex_arr[9:])
+        },
     }
 
     writer.writerow(row)
@@ -82,12 +89,29 @@ cap = cv2.VideoCapture(0)
 frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 fourcc = cv2.VideoWriter_fourcc(*"avc1")
-out = cv2.VideoWriter(str(recording_video_path), fourcc, FPS, (frame_width, frame_height))
+out = cv2.VideoWriter(
+    str(recording_video_path), fourcc, FPS, (frame_width, frame_height)
+)
 frame_interval_length = 1.0 / FPS
 
 # Initialize file readout
 readout_file = recording_csv_path.open("w", newline="", encoding="utf-8")
-fieldnames = ["timestamp", "frame_number", "group_id", "magic_number", "x", "y", "0", "1", "2", "3", "4", "5", "6", "7"]
+fieldnames = [
+    "timestamp",
+    "frame_number",
+    "group_id",
+    "magic_number",
+    "x",
+    "y",
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+]
 writer = csv.DictWriter(readout_file, fieldnames=fieldnames)
 writer.writeheader()
 
@@ -95,6 +119,7 @@ writer.writeheader()
 messages_thread = threading.Thread(target=read_messages)
 messages_thread.start()
 
+recording_start_time = time.perf_counter()
 try:
     frame_number = 0
 
@@ -129,6 +154,8 @@ try:
             )
 
 finally:
+    recording_time = time.perf_counter() - recording_start_time
+    print(f"Recorded for {recording_time}s")
     stop_event.set()
     messages_thread.join()
 
