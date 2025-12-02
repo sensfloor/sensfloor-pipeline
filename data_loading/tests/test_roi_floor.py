@@ -4,7 +4,7 @@ from data_loading.roi_floor import RoIFloor
 
 
 def test_returns_no_roi_when_no_update():
-    floor = RoIFloor(x=5, y=5, history_maxlen=1, roi_size=3)
+    floor = RoIFloor(x_size=5, y_size=5, history_maxlen=1, roi_size=3)
     roi = floor.get_roi()
     assert roi is None
 

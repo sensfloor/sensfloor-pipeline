@@ -16,21 +16,21 @@ def interpolate_signal(signal: np.ndarray) -> np.ndarray:
 
 
 class Floor:
-    def __init__(self, x: int, y: int, history_maxlen: int) -> None:
-        self._x = x
-        self._y = y
+    def __init__(self, x_size: int, y_size: int, history_maxlen: int) -> None:
+        self._x_size = x_size
+        self._y_size = y_size
         self._history_maxlen = history_maxlen
         self._history_queue = deque(maxlen=history_maxlen)
-        self.patches = np.zeros((x * 4, y * 4))
+        self.patches = np.zeros((x_size * 4, y_size * 4))
 
     @property
     def shape(self) -> tuple[int, int]:
-        return self._x, self._y
+        return self._x_size, self._y_size
 
     @property
     def history(self) -> np.ndarray:
         empty_history = self._history_maxlen - len(self._history_queue)
-        zero_fill = np.zeros((empty_history, self._x * 4, self._y * 4))
+        zero_fill = np.zeros((empty_history, self._x_size * 4, self._y_size * 4))
         return np.stack([*zero_fill, *list(self._history_queue)])
 
     def update(self, positions: list[tuple[int, int]], signals: np.ndarray) -> None:

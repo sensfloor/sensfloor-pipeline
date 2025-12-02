@@ -13,10 +13,12 @@ class RoI:
 
 
 class RoIFloor(Floor):
-    def __init__(self, x: int, y: int, history_maxlen: int, roi_size: int) -> None:
-        super().__init__(x, y, history_maxlen)
+    def __init__(
+        self, x_size: int, y_size: int, history_maxlen: int, roi_size: int
+    ) -> None:
+        super().__init__(x_size, y_size, history_maxlen)
         self.roi_size = roi_size
-        self.last_updated_positions: np.ndarray | None = None
+        self.last_updated_positions: list[tuple[int, int]] | None = None
 
     def update(self, positions: list[tuple[int, int]], signals: np.ndarray) -> None:
         self.last_updated_positions = positions
