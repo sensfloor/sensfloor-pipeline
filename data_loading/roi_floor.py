@@ -27,15 +27,43 @@ class RoIFloor(Floor):
         if self.last_updated_positions is None:
             return None
 
-        last_updated_position = self.last_updated_positions[0]
-        x = last_updated_position[0]
-        y = last_updated_position[1]
+        max_signal_sum = 0
+        roi = None
+        for x, y in self.last_updated_positions:
+            x_roi_top_left = self._get_roi_x_top_left(x)
+            y_roi_top_left = self._get_roi_y_top_left(y)
+            roi_range = self.roi_size * 4
+            roi_history = self.history[
+                :,
+                x_roi_top_left : x_roi_top_left + roi_range,
+                y_roi_top_left : y_roi_top_left + roi_range,
+            ]
 
-        x_kernel = (x - 1) * 4
-        y_kernel = (y - 1) * 4
-        kernel_range = self.roi_size * 4
-        roi_history = self.history[
-            :, x_kernel : x_kernel + kernel_range, y_kernel : y_kernel + kernel_range
-        ]
+            signal_sum = roi_history[-1].sum()
+            if signal_sum > max_signal_sum:
+                max_signal_sum = signal_sum
+                roi = RoI(x_roi_top_left // 4, y_roi_top_left // 4, roi_history)
 
-        return RoI(x_kernel / 4, y_kernel / 4, roi_history)
+        return roi
+
+    def _get_roi_x_top_left(self, x: int) -> int:
+        x_top_left = x - (self.roi_size // 2)
+
+        if x_top_left <= 0:
+            return 0
+
+        if (x_top_left + self.roi_size) * 4 > self.patches.shape[0]:
+            return self.patches.shape[0] - self.roi_size * 4
+
+        return x_top_left * 4
+
+    def _get_roi_y_top_left(self, y: int) -> int:
+        y_top_left = y - (self.roi_size // 2)
+
+        if y_top_left <= 0:
+            return 0
+
+        if (y_top_left + self.roi_size) * 4 > self.patches.shape[1]:
+            return self.patches.shape[1] - self.roi_size * 4
+
+        return y_top_left * 4

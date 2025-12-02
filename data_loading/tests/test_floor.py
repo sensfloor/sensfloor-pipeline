@@ -95,7 +95,7 @@ def test_floor_history():
     np.testing.assert_array_equal(history, expected_history)
 
 
-def test_floor_history_rotates():
+def test_floor_history_rotates_when_history_is_full():
     x_size = 5
     y_size = 5
     floor = Floor(x_size, y_size, history_maxlen=1)
