@@ -113,6 +113,9 @@ try:
         out.write(frame)
         cv2.imshow("Recording...", frame)
 
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
+
         frame_duration = time.perf_counter() - frame_start_time
         sleep_time = frame_interval_length - frame_duration
 
@@ -125,10 +128,7 @@ try:
                 f"Processing took longer than {frame_interval_length:.4f}s (took {frame_duration:.4f}s). Video is not {FPS} FPS!",
             )
 
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
 finally:
-    # Stop thread
     stop_event.set()
     messages_thread.join()
 
