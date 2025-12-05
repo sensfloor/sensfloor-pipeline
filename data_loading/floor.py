@@ -33,12 +33,10 @@ class Floor:
         zero_fill = np.zeros((empty_history, self._x_size * 4, self._y_size * 4))
         return np.stack([*zero_fill, *list(self._history_queue)])
 
-    def update(self, positions: list[tuple[int, int]], signals: np.ndarray) -> None:
-        for (x, y), signal in zip(positions, signals):
+    def update(self, positions: np.ndarray, signals: np.ndarray) -> None:
+        for (x, y), signal in zip(positions, signals, strict=True):
             interpolated_signal = interpolate_signal(signal)
             x_patches = x * 4
             y_patches = y * 4
-            self.patches[x_patches : x_patches + 4, y_patches : y_patches + 4] = (
-                interpolated_signal
-            )
+            self.patches[x_patches : x_patches + 4, y_patches : y_patches + 4] = interpolated_signal
         self._history_queue.append(self.patches.copy())
