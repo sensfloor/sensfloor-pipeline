@@ -7,17 +7,114 @@ from torch.nn.modules.loss import _Loss
 from torch.optim.lr_scheduler import LRScheduler
 
 from model.base_trainer import BaseTrainer
+import numpy as np
+import pandas as pd
+
+# All Links between joints for link loss calculation
+LINKS = [
+    (1, 2),  # left_shoulder - right shoulder
+    (1, 3),  # left_shoulder - left_elbow
+    (2, 4),  # right shoulder- right elbow
+    (2, 8),
+    (3, 5),
+    (4, 6),
+    (7, 8),
+    (7, 9),
+    (8, 10),
+    (9, 11),
+    (10, 12),
+    (11, 13),
+    (11, 15),
+    (12, 14),
+    (12, 16),
+    (13, 15),
+    (14, 16)
+    # ...
+]
+
+data_path = './data/sensfloor_dataset.csv'
+
+
+def compute_kmin_kmax(csv_path: str,
+                      links: list[tuple[int, int]],
+                      lower_percentile: float = 3.0,
+                      upper_percentile: float = 97.0):
+    df = pd.read_csv(csv_path)
+
+    num_links = len(links)
+    all_link_lengths = []
+
+    for (a, b) in links:
+        xa = df[f"x{a}"].to_numpy()
+        ya = df[f"y{a}"].to_numpy()
+        za = df[f"z{a}"].to_numpy()
+
+        xb = df[f"x{b}"].to_numpy()
+        yb = df[f"y{b}"].to_numpy()
+        zb = df[f"z{b}"].to_numpy()
+
+        # calculate all pair of distances between joint a and joint b for all frames
+        dx = xa - xb
+        dy = ya - yb
+        dz = za - zb
+        d = np.sqrt(dx * dx + dy * dy + dz * dz)
+
+        all_link_lengths.append(d)
+
+    # calculate k_min and k_max for each joint links
+    k_min_list = []
+    k_max_list = []
+
+    for d in all_link_lengths:
+        k_min_list.append(np.percentile(d, lower_percentile))
+        k_max_list.append(np.percentile(d, upper_percentile))
+
+    k_min = np.array(k_min_list)
+    k_max = np.array(k_max_list)
+
+    return k_min, k_max
+
+
+k_min, k_max = compute_kmin_kmax(data_path, LINKS)
 
 
 def loss(logits: torch.Tensor, labels: torch.Tensor):
     """
     logits: [B, 63]
-    labels: [B, 21, 3]
+    labels: [B, 63]
     """
 
-    loss = nn.MSELoss(reduction='sum')(logits, labels)
+    loss = nn.MSELoss(reduction='mean')(logits, labels)
+    link_loss =  calculate_linkloss(reshaped, k_min, k_max)/len(LINKS)
+    loss = mse_loss + link_loss
     # TODO: Add loss for too large joints / regularization -> So the model doesnt go local minimum setting all points 0
     return loss
+
+def calculate_linkloss(pred_keypoints: torch.Tensor, k_min, k_max):
+
+    B = pred_keypoints.size(0)
+    device = pred_keypoints.device
+    dtype = pred_keypoints.dtype
+
+    num_links = len(LINKS)
+    link_lengths = []
+
+    for (a, b) in LINKS:  # a, b are indices of the connected keypoints
+        diff = pred_keypoints[:, a] - pred_keypoints[:, b]
+        d = torch.linalg.vector_norm(diff, dim=1)
+        link_lengths.append(d)
+
+    link_lengths = torch.stack(link_lengths, dim=1)
+
+    k_min = torch.as_tensor(k_min, device=device, dtype=dtype) #convert to tensor
+    k_max = torch.as_tensor(k_max, device=device, dtype=dtype)
+
+    short_linkloss = torch.clamp(k_min - link_lengths, min=0.0) # if the link length is less than k_min then return k_min - link_lengths, otherwise 0
+    long_linkloss  = torch.clamp(link_lengths - k_max, min=0.0) # if the link length is bigger than k_max then return link_lengths - k_max, otherwise 0
+    link_loss = short_linkloss + long_linkloss
+
+    return link_loss.sum()
+
 
 
 class SensfloorTrainer(BaseTrainer):
@@ -44,3 +141,4 @@ class SensfloorTrainer(BaseTrainer):
         correct = (dist < threshold)
         accuracy = correct.float().mean()  # average over all B × 17
         return accuracy * 100
+
