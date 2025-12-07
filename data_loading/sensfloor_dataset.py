@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+import numpy as np
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
@@ -16,6 +17,7 @@ class DatasetConfig:
     floor_size_y: int
     roi_size: int
     drop_landmarks: list[PoseLandmark] | None = None
+    signal_threshold: int = 140
 
 class SensfloorPosesDataset(Dataset):
     def __init__(
@@ -39,10 +41,12 @@ class SensfloorPosesDataset(Dataset):
 
             self.poses_df = self.poses_df.drop(columns=columns_to_drop)
 
-        # Remove all messages that are below a signal value of 140 
-        relevant_rows = self.sensfloor_readout_df[["0", "1", "2", "3", "4", "5", "6", "7"]].gt(140).any(axis=1)
+        # Remove all messages that are below a signal value of 140 (no activity, just noise)
+        relevant_rows = self.sensfloor_readout_df[["0", "1", "2", "3", "4", "5", "6", "7"]].gt(config.signal_threshold).any(axis=1)
         filtered_readout = self.sensfloor_readout_df[relevant_rows]
-        self.frames_containing_messages = filtered_readout.unique()
+        frames_containing_messages = filtered_readout["frame_number"].unique()
+        frames_containing_messages_mask = np.isin(frames_containing_messages, self.poses_df["frame"].unique())
+        self.frames_containing_messages = frames_containing_messages[frames_containing_messages_mask]
 
     def __len__(self) -> int:
         return len(self.frames_containing_messages)
