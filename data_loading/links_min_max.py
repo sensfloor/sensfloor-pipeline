@@ -1,43 +1,66 @@
+from pathlib import Path
+
 import numpy as np
+import pandas as pd
+from numpy import ndarray
 
 from data_loading.pose_landmark import LINKS
-import pandas as pd
 
-def compute_kmin_kmax(csv_path: str,
-                      links=None,
-                      lower_percentile: float = 3.0,
-                      upper_percentile: float = 97.0):
+
+def get_link_min_max(do_compute_link_lengths: bool, traing_folders: Path = Path("./data")):
+    link_path = Path("./outputs/link_lengths")
+    link_min_path = link_path / "link_min.npy"
+    link_max_path = link_path / "link_max.npy"
+
+    if do_compute_link_lengths:
+        link_min, link_max = compute_kmin_kmax(traing_folders, lower_percentile=3.0, upper_percentile=97.0)
+        np.save(link_min_path, link_min)
+        np.save(link_max_path, link_max)
+    else:
+        link_min = np.load(link_min_path)
+        link_max = np.load(link_max_path)
+
+    return link_min, link_max
+
+
+def compute_kmin_kmax(train_folder_path: Path, links=None, lower_percentile: float = 3.0,
+                      upper_percentile: float = 97.0) -> tuple[ndarray, ndarray]:
     if links is None:
         links = LINKS
 
-    df = pd.read_csv(csv_path)
+    collected_link_data = [[] for _ in links]
 
-    all_link_lengths = []
+    folders = [folder for folder in train_folder_path.iterdir() if folder.is_dir()]
 
-    for (a, b) in links:
-        xa = df[f"x{a}"].to_numpy()
-        ya = df[f"y{a}"].to_numpy()
-        za = df[f"z{a}"].to_numpy()
+    for folder in folders:
+        csv_path = folder / "video_poses.csv"
+        df = pd.read_csv(csv_path)
+        for i, (a, b) in enumerate(links):
+            xa = df[f"x{a}"].to_numpy()
+            ya = df[f"y{a}"].to_numpy()
+            za = df[f"z{a}"].to_numpy()
 
-        xb = df[f"x{b}"].to_numpy()
-        yb = df[f"y{b}"].to_numpy()
-        zb = df[f"z{b}"].to_numpy()
+            xb = df[f"x{b}"].to_numpy()
+            yb = df[f"y{b}"].to_numpy()
+            zb = df[f"z{b}"].to_numpy()
 
-        # calculate all pair of distances between joint a and joint b for all frames
-        dx = xa - xb
-        dy = ya - yb
-        dz = za - zb
-        d = np.sqrt(dx * dx + dy * dy + dz * dz)
+            # calculate all pair of distances between joint a and joint b for all frames
+            dx = xa - xb
+            dy = ya - yb
+            dz = za - zb
+            d = np.sqrt(dx * dx + dy * dy + dz * dz)
 
-        all_link_lengths.append(d)
+            collected_link_data[i].append(d)
 
     # calculate k_min and k_max for each joint links
     k_min_list = []
     k_max_list = []
 
-    for d in all_link_lengths:
-        k_min_list.append(np.percentile(d, lower_percentile))
-        k_max_list.append(np.percentile(d, upper_percentile))
+    for link_arrays in collected_link_data:
+        combined_d = np.concatenate(link_arrays)
+
+        k_min_list.append(np.percentile(combined_d, lower_percentile))
+        k_max_list.append(np.percentile(combined_d, upper_percentile))
 
     k_min = np.array(k_min_list)
     k_max = np.array(k_max_list)

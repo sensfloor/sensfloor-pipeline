@@ -6,7 +6,7 @@ from data_loading.pose_landmark import LINKS
 def calculate_linkloss(pred_keypoints: torch.Tensor, k_min, k_max, pose_to_model_dict):
     device = pred_keypoints.device
     dtype = pred_keypoints.dtype
-    coords = pred_keypoints.view(-1, 17, 3)  # [B, 17, 3] #TODO: parametrize landmarks_out
+    coords = pred_keypoints.view(-1, len(pose_to_model_dict), 3)  # [B, 17, 3]
 
     link_lengths = []
 
@@ -16,7 +16,7 @@ def calculate_linkloss(pred_keypoints: torch.Tensor, k_min, k_max, pose_to_model
             continue
         # model outputs might not have all indices based on hyperparameters
         diff = coords[:, pose_to_model_dict[a]] - coords[:, pose_to_model_dict[b]]  # [B, 3]
-        length = torch.linalg.vector_norm(diff, dim=1)
+        length = torch.linalg.vector_norm(diff, dim=1) + 1e-8 # prevent NaN gradients if distance is 0
         link_lengths.append(length)
 
     link_lengths = torch.stack(link_lengths, dim=1)
@@ -28,4 +28,4 @@ def calculate_linkloss(pred_keypoints: torch.Tensor, k_min, k_max, pose_to_model
     long_linkloss = torch.clamp(link_lengths - k_max, min=0.0)
     link_loss = short_linkloss + long_linkloss
 
-    return link_loss.sum() / len(link_lengths)  # mean
+    return link_loss.mean()

@@ -1,10 +1,8 @@
-from pathlib import Path
-
+import numpy as np
 import torch
 from torch import nn, optim
 from torch.optim.lr_scheduler import LRScheduler
 
-from data_loading.links_min_max import compute_kmin_kmax
 from data_loading.pose_landmark import PoseLandmark
 from model.base_trainer import BaseTrainer
 from model.link_loss import calculate_linkloss
@@ -14,7 +12,8 @@ class SensfloorTrainer(BaseTrainer):
     def __init__(self, model: nn.Module,
                  optimizer: optim.Optimizer,
                  device: torch.device,
-                 links_path: Path,
+                 link_min: np.ndarray,
+                 link_max: np.ndarray,
                  pose_to_model_dict: dict[PoseLandmark, int],
                  scheduler: LRScheduler | None = None,
                  use_early_stopping: bool = True,
@@ -27,7 +26,7 @@ class SensfloorTrainer(BaseTrainer):
 
         self.amplify_link_loss = amplify_link_loss
         self.pose_to_model_dict = pose_to_model_dict
-        self.k_min, self.k_max = compute_kmin_kmax(csv_path=links_path)  # TODO: Use Trainloader or Trainset instead
+        self.k_min, self.k_max = link_min, link_max
 
     def forward_pass(self, inputs: torch.Tensor):
         return self.model(inputs)
