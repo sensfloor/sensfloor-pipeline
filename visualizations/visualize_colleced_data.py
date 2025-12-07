@@ -15,14 +15,11 @@ SIGNAL_THRESHOLD = 140
 poses_df = pd.read_csv(POSES_PATH)
 readout_df = pd.read_csv(READOUT_PATH)
 
-
 display_w = 525
 display_h = 805
 
-
 cv2.namedWindow("Floor Heatmap", cv2.WINDOW_NORMAL)
 cv2.namedWindow("Video", cv2.WINDOW_NORMAL)
-
 
 cv2.resizeWindow("Floor Heatmap", display_w, display_h)
 cv2.resizeWindow("Video", 640, 480)

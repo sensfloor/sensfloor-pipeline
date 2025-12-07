@@ -1,8 +1,5 @@
-from typing import Tuple
-
 import torch
-import torch.nn as nn
-
+from torch import nn
 from utils import SIGNAL_Z
 
 
@@ -11,27 +8,48 @@ class RegressionModel(nn.Module):
     idea from Yiyue Luo et. all - Intelligent Carpet: Inferring 3D Human Pose from Tactile Signals
     """
 
-    def __init__(self, input_shape: Tuple[int, int]):
+    def __init__(self, input_shape: tuple[int, int]):
         # TODO: add some kind of max pooling? Didn't because our input is small, but maybe at least padding remove once or sth
         # TODO: adapt kernel size, because we have a smaller input?
         # TODO: consider removing batchnorm, because we want to have value predictions (no sigmoid or classification)
         super().__init__()
 
         # 4x4x64
-        encoder_1 = nn.Sequential(nn.Conv2d(in_channels=64, out_channels=32, kernel_size=3, stride=1, padding=1),
-                                  nn.LeakyReLU(), nn.BatchNorm2d(32))
-        encoder_2 = nn.Sequential(nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1),
-                                  nn.LeakyReLU(), nn.BatchNorm2d(64))
-        encoder_3 = nn.Sequential(nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1),
-                                  nn.LeakyReLU(), nn.BatchNorm2d(128))
-        encoder_4 = nn.Sequential(nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1),
-                                  nn.LeakyReLU(), nn.BatchNorm2d(256))
-        encoder_5 = nn.Sequential(nn.Conv2d(in_channels=256, out_channels=512, kernel_size=3, stride=1, padding=1),
-                                  nn.LeakyReLU(), nn.BatchNorm2d(512))
-        encoder_6 = nn.Sequential(nn.Conv2d(in_channels=512, out_channels=1024, kernel_size=5, stride=1, padding=1),
-                                  nn.LeakyReLU(), nn.BatchNorm2d(1024))
-        encoder_7 = nn.Sequential(nn.Conv2d(in_channels=1024, out_channels=1024, kernel_size=3, stride=1, padding=1),
-                                  nn.LeakyReLU(), nn.BatchNorm2d(1024))
+        encoder_1 = nn.Sequential(
+            nn.Conv2d(in_channels=64, out_channels=32, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(32),
+        )
+        encoder_2 = nn.Sequential(
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(64),
+        )
+        encoder_3 = nn.Sequential(
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(128),
+        )
+        encoder_4 = nn.Sequential(
+            nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(256),
+        )
+        encoder_5 = nn.Sequential(
+            nn.Conv2d(in_channels=256, out_channels=512, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(512),
+        )
+        encoder_6 = nn.Sequential(
+            nn.Conv2d(in_channels=512, out_channels=1024, kernel_size=5, stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(1024),
+        )
+        encoder_7 = nn.Sequential(
+            nn.Conv2d(in_channels=1024, out_channels=1024, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(1024),
+        )
 
         self.encoder = nn.Sequential(encoder_1, encoder_2, encoder_3, encoder_4, encoder_5, encoder_6, encoder_7)
 
@@ -59,38 +77,72 @@ class HeatMapSigmoidModel(nn.Module):
         super().__init__()
 
         # 4x4x64
-        encoder_1 = nn.Sequential(nn.Conv2d(in_channels=64, out_channels=32, kernel_size=3, stride=1, padding=1),
-                                  nn.LeakyReLU(), nn.BatchNorm2d(32))
-        encoder_2 = nn.Sequential(nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1),
-                                  nn.LeakyReLU(), nn.BatchNorm2d(64))
-        encoder_3 = nn.Sequential(nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1),
-                                  nn.LeakyReLU(), nn.BatchNorm2d(128))
-        encoder_4 = nn.Sequential(nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1),
-                                  nn.LeakyReLU(), nn.BatchNorm2d(256))
-        encoder_5 = nn.Sequential(nn.Conv2d(in_channels=256, out_channels=512, kernel_size=3, stride=1, padding=1),
-                                  nn.LeakyReLU(), nn.BatchNorm2d(512))
-        encoder_6 = nn.Sequential(nn.Conv2d(in_channels=512, out_channels=1024, kernel_size=5, stride=1, padding=1),
-                                  nn.LeakyReLU(), nn.BatchNorm2d(1024))
+        encoder_1 = nn.Sequential(
+            nn.Conv2d(in_channels=64, out_channels=32, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(32),
+        )
+        encoder_2 = nn.Sequential(
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(64),
+        )
+        encoder_3 = nn.Sequential(
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(128),
+        )
+        encoder_4 = nn.Sequential(
+            nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(256),
+        )
+        encoder_5 = nn.Sequential(
+            nn.Conv2d(in_channels=256, out_channels=512, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(512),
+        )
+        encoder_6 = nn.Sequential(
+            nn.Conv2d(in_channels=512, out_channels=1024, kernel_size=5, stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(1024),
+        )
         encoder_7 = nn.Sequential(
-            nn.Conv2d(in_channels=1024, out_channels=1024, kernel_size=3, stride=1, padding=1), nn.LeakyReLU(),
-            nn.BatchNorm2d(1024))
+            nn.Conv2d(in_channels=1024, out_channels=1024, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(1024),
+        )
 
         self.encoder = nn.Sequential(encoder_1, encoder_2, encoder_3, encoder_4, encoder_5, encoder_6, encoder_7)
 
         decoder_1 = nn.Sequential(
-            nn.Conv3d(in_channels=1025, out_channels=1025, kernel_size=3, stride=1, padding=1), nn.LeakyReLU(),
-            nn.BatchNorm3d(1025))
-        decoder_2 = nn.Sequential(nn.Conv3d(in_channels=1025, out_channels=512, kernel_size=3, stride=1, padding=1),
-                                  nn.LeakyReLU(), nn.BatchNorm3d(512))
+            nn.Conv3d(in_channels=1025, out_channels=1025, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.BatchNorm3d(1025),
+        )
+        decoder_2 = nn.Sequential(
+            nn.Conv3d(in_channels=1025, out_channels=512, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.BatchNorm3d(512),
+        )
         decoder_3 = nn.Sequential(
             nn.ConvTranspose3d(in_channels=512, out_channels=256, kernel_size=2, stride=2, padding=0),
-            nn.LeakyReLU(), nn.BatchNorm3d(256))
-        decoder_4 = nn.Sequential(nn.Conv3d(in_channels=256, out_channels=128, kernel_size=3, stride=1, padding=1),
-                                  nn.LeakyReLU(), nn.BatchNorm3d(128))
-        decoder_5 = nn.Sequential(nn.Conv3d(in_channels=128, out_channels=64, kernel_size=3, stride=1, padding=1),
-                                  nn.LeakyReLU(), nn.BatchNorm3d(64))
-        decoder_6 = nn.Sequential(nn.Conv3d(in_channels=64, out_channels=21, kernel_size=3, stride=1, padding=1),
-                                  nn.Sigmoid())
+            nn.LeakyReLU(),
+            nn.BatchNorm3d(256),
+        )
+        decoder_4 = nn.Sequential(
+            nn.Conv3d(in_channels=256, out_channels=128, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.BatchNorm3d(128),
+        )
+        decoder_5 = nn.Sequential(
+            nn.Conv3d(in_channels=128, out_channels=64, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.BatchNorm3d(64),
+        )
+        decoder_6 = nn.Sequential(
+            nn.Conv3d(in_channels=64, out_channels=21, kernel_size=3, stride=1, padding=1), nn.Sigmoid()
+        )
 
         self.decoder = nn.Sequential(decoder_1, decoder_2, decoder_3, decoder_4, decoder_5, decoder_6)
 

@@ -6,7 +6,7 @@ from torch import nn, optim, Tensor
 from torch.nn.modules.loss import _Loss
 from torch.optim.lr_scheduler import LRScheduler
 
-from BaseTrainer import BaseTrainer
+from model.base_trainer import BaseTrainer
 
 
 def loss(logits: torch.Tensor, labels: torch.Tensor):
