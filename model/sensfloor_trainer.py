@@ -1,38 +1,35 @@
-from abc import ABC
-from typing import Callable
-
-import torch
-from torch import nn, optim, Tensor
-from torch.nn.modules.loss import _Loss
-from torch.optim.lr_scheduler import LRScheduler
-
-from model.base_trainer import BaseTrainer
 import numpy as np
 import pandas as pd
+import torch
+from torch import nn, optim
+from torch.optim.lr_scheduler import LRScheduler
 
-# All Links between joints for link loss calculation
+from data_loading.pose_landmark import PoseLandmark
+from model.base_trainer import BaseTrainer
+
+# All Links between joints
 LINKS = [
-    (1, 2),  # left_shoulder - right shoulder
-    (1, 3),  # left_shoulder - left_elbow
-    (2, 4),  # right shoulder- right elbow
-    (2, 8),
-    (3, 5),
-    (4, 6),
-    (7, 8),
-    (7, 9),
-    (8, 10),
-    (9, 11),
-    (10, 12),
-    (11, 13),
-    (11, 15),
-    (12, 14),
-    (12, 16),
-    (13, 15),
-    (14, 16)
-    # ...
+    (PoseLandmark.LEFT_SHOULDER, PoseLandmark.RIGHT_SHOULDER),
+    (PoseLandmark.LEFT_SHOULDER, PoseLandmark.LEFT_ELBOW), # put symmetric links next to each other to compare them
+    (PoseLandmark.RIGHT_SHOULDER, PoseLandmark.RIGHT_ELBOW),
+    (PoseLandmark.LEFT_SHOULDER, PoseLandmark.LEFT_HIP),
+    (PoseLandmark.RIGHT_SHOULDER, PoseLandmark.RIGHT_HIP),
+    (PoseLandmark.LEFT_ELBOW, PoseLandmark.LEFT_WRIST),
+    (PoseLandmark.RIGHT_ELBOW, PoseLandmark.RIGHT_WRIST),
+    (PoseLandmark.LEFT_HIP, PoseLandmark.RIGHT_HIP),
+    (PoseLandmark.LEFT_HIP, PoseLandmark.LEFT_KNEE),
+    (PoseLandmark.RIGHT_HIP, PoseLandmark.RIGHT_KNEE),
+    (PoseLandmark.LEFT_KNEE, PoseLandmark.LEFT_ANKLE),
+    (PoseLandmark.RIGHT_KNEE, PoseLandmark.RIGHT_ANKLE),
+    (PoseLandmark.LEFT_ANKLE, PoseLandmark.LEFT_HEEL),
+    (PoseLandmark.LEFT_ANKLE, PoseLandmark.LEFT_FOOT_INDEX),
+    (PoseLandmark.RIGHT_ANKLE, PoseLandmark.RIGHT_HEEL),
+    (PoseLandmark.RIGHT_ANKLE, PoseLandmark.RIGHT_FOOT_INDEX),
+    (PoseLandmark.LEFT_HEEL, PoseLandmark.LEFT_FOOT_INDEX),
+    (PoseLandmark.RIGHT_HEEL, PoseLandmark.RIGHT_FOOT_INDEX)
 ]
 
-data_path = './data/sensfloor_dataset.csv'
+data_path = './data/2025-12-02_12-08-00/video_poses.csv'
 
 
 def compute_kmin_kmax(csv_path: str,
@@ -76,7 +73,7 @@ def compute_kmin_kmax(csv_path: str,
 
 
 k_min, k_max = compute_kmin_kmax(data_path, LINKS)
-
+print(k_min, k_max)
 
 def loss(logits: torch.Tensor, labels: torch.Tensor):
     """
@@ -84,19 +81,17 @@ def loss(logits: torch.Tensor, labels: torch.Tensor):
     labels: [B, 63]
     """
 
-    loss = nn.MSELoss(reduction='mean')(logits, labels)
-    link_loss =  calculate_linkloss(reshaped, k_min, k_max)/len(LINKS)
+    mse_loss = nn.MSELoss(reduction='mean')(logits, labels)
+    link_loss = calculate_linkloss(logits, k_min, k_max) / len(LINKS)
     loss = mse_loss + link_loss
     # TODO: Add loss for too large joints / regularization -> So the model doesnt go local minimum setting all points 0
     return loss
 
-def calculate_linkloss(pred_keypoints: torch.Tensor, k_min, k_max):
 
-    B = pred_keypoints.size(0)
+def calculate_linkloss(pred_keypoints: torch.Tensor, k_min, k_max):
     device = pred_keypoints.device
     dtype = pred_keypoints.dtype
 
-    num_links = len(LINKS)
     link_lengths = []
 
     for (a, b) in LINKS:  # a, b are indices of the connected keypoints
@@ -106,15 +101,16 @@ def calculate_linkloss(pred_keypoints: torch.Tensor, k_min, k_max):
 
     link_lengths = torch.stack(link_lengths, dim=1)
 
-    k_min = torch.as_tensor(k_min, device=device, dtype=dtype) #convert to tensor
+    k_min = torch.as_tensor(k_min, device=device, dtype=dtype)  # convert to tensor
     k_max = torch.as_tensor(k_max, device=device, dtype=dtype)
 
-    short_linkloss = torch.clamp(k_min - link_lengths, min=0.0) # if the link length is less than k_min then return k_min - link_lengths, otherwise 0
-    long_linkloss  = torch.clamp(link_lengths - k_max, min=0.0) # if the link length is bigger than k_max then return link_lengths - k_max, otherwise 0
+    short_linkloss = torch.clamp(k_min - link_lengths,
+                                 min=0.0)  # if the link length is less than k_min then return k_min - link_lengths, otherwise 0
+    long_linkloss = torch.clamp(link_lengths - k_max,
+                                min=0.0)  # if the link length is bigger than k_max then return link_lengths - k_max, otherwise 0
     link_loss = short_linkloss + long_linkloss
 
     return link_loss.sum()
-
 
 
 class SensfloorTrainer(BaseTrainer):
@@ -141,4 +137,3 @@ class SensfloorTrainer(BaseTrainer):
         correct = (dist < threshold)
         accuracy = correct.float().mean()  # average over all B × 17
         return accuracy * 100
-
