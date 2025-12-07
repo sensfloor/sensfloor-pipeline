@@ -38,10 +38,9 @@ class SensfloorTrainer(BaseTrainer):
         return self.loss(outputs, labels)
 
     def calculate_accuracy(self, outputs, labels, threshold=0.1):
-        coords = outputs.view(-1, 17, 3)  # [B, 21, 3] #TODO: parametrize landmarks_out
-        reshaped_labels = labels.view(-1, 17, 3)  # [B, 21, 3] #TODO: parametrize landmarks_out
-        dist = torch.linalg.vector_norm(coords - reshaped_labels, dim=2)  # [B, 21]
+        coords = outputs.view(-1, 17, 3)  # [B, 17, 3] #TODO: parametrize landmarks_out
+        reshaped_labels = labels.view(-1, 17, 3)  # [B, 17, 3] #TODO: parametrize landmarks_out
+        dist = torch.linalg.vector_norm(coords - reshaped_labels, dim=2)  # [B, 17]
         correct = (dist < threshold)
-        accuracy = correct.float().mean()  # average over all B × 21
-
-        return accuracy
+        accuracy = correct.float().mean()  # average over all B × 17
+        return accuracy * 100
