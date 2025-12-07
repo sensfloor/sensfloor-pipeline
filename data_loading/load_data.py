@@ -8,25 +8,27 @@ from data_loading.sensfloor_dataset import SensfloorPosesDataset, DatasetConfig
 DATA_PATH = Path("./data")
 
 
+def load_single_recording(folder: Path, config: DatasetConfig) -> SensfloorPosesDataset:
+    poses_df = pd.read_csv(folder / "video_poses.csv")
+    readout_df = pd.read_csv(folder / "sensfloor_readout.csv")
+    return SensfloorPosesDataset(
+        poses_df=poses_df,
+        sensfloor_readout_df=readout_df,
+        config=config,
+    )
+
+
 def load_data(config: DatasetConfig) -> Dataset:
     folders = [folder for folder in DATA_PATH.iterdir() if folder.is_dir()]
     datasets = []
     for folder in folders:
-        poses_df = pd.read_csv(folder / "video_poses.csv")
-        readout_df = pd.read_csv(folder / "sensfloor_readout.csv")
-        datasets.append(
-            SensfloorPosesDataset(
-                poses_df=poses_df,
-                sensfloor_readout_df=readout_df,
-                config=config,
-            ),
-        )
+        datasets.append(load_single_recording(folder, config))
     return ConcatDataset(datasets)
 
 
 def train_val_test_split(
-    ratios: tuple[float, float, float],
-    config: DatasetConfig,
+        ratios: tuple[float, float, float],
+        config: DatasetConfig,
 ) -> tuple[DataLoader, DataLoader, DataLoader]:
     if sum(ratios) != 1.0:
         message = "Splitting ratios don't add up to 1!"
