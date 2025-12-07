@@ -25,7 +25,6 @@ class BaseTrainer(metaclass=ABCMeta):
         self,
         model: nn.Module,
         optimizer: optim.Optimizer,
-        loss: _Loss | Callable[[Tensor, Tensor], Tensor],
         device: torch.device,
         scheduler: LRScheduler | None = None,
         use_early_stopping: bool = True,
@@ -34,7 +33,6 @@ class BaseTrainer(metaclass=ABCMeta):
     ):
         self.model: nn.Module = model.to(device)
         self.optimizer: optim.Optimizer = optimizer
-        self.loss: _Loss | Callable[[Tensor, Tensor], Tensor] = loss
         self.device: torch.device = device
         self.scheduler: LRScheduler | None = scheduler
         self.use_early_stopping: bool = use_early_stopping
