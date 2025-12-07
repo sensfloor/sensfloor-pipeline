@@ -11,7 +11,7 @@ from mediapipe import solutions
 from mediapipe.framework.formats import landmark_pb2
 from mediapipe.tasks.python.vision import PoseLandmarkerOptions
 from mediapipe.tasks.python.vision.pose_landmarker import PoseLandmarker
-from mediapipe_utils import get_landmarks_header
+from data_collection.mediapipe_utils import get_landmarks_header
 from tqdm import tqdm
 
 # use "generate_new_header" flag and copy printout

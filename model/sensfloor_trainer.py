@@ -4,31 +4,39 @@ import torch
 from torch import nn, optim
 from torch.optim.lr_scheduler import LRScheduler
 
+from data_loading.links_min_max import compute_kmin_kmax
+from data_loading.pose_landmark import PoseLandmark
 from model.base_trainer import BaseTrainer
 from model.link_loss import calculate_linkloss
-from data_loading.links_min_max import compute_kmin_kmax
+
 
 class SensfloorTrainer(BaseTrainer):
     def __init__(self, model: nn.Module,
                  optimizer: optim.Optimizer,
                  device: torch.device,
                  links_path: Path,
+                 pose_to_model_dict: dict[PoseLandmark, int],
                  scheduler: LRScheduler | None = None,
                  use_early_stopping: bool = True,
                  patience: int = 10,
-                 best_model_name: str = "best_model.pth"):
+                 best_model_name: str = "best_model.pth",
+                 amplify_link_loss: float = 10,
+                 ):
         super().__init__(model=model, optimizer=optimizer, device=device, scheduler=scheduler,
                          use_early_stopping=use_early_stopping, patience=patience, best_model_name=best_model_name)
 
-        self.k_min, self.k_max = compute_kmin_kmax(csv_path=links_path)
-
+        self.amplify_link_loss = amplify_link_loss
+        self.pose_to_model_dict = pose_to_model_dict
+        self.k_min, self.k_max = compute_kmin_kmax(csv_path=links_path)  # TODO: Use Trainloader or Trainset instead
 
     def forward_pass(self, inputs: torch.Tensor):
         return self.model(inputs)
 
     def calculate_loss(self, outputs, labels) -> torch.Tensor:
         mse_loss = nn.MSELoss(reduction='mean')(outputs, labels)
-        link_loss = calculate_linkloss(outputs, self.k_min, self.k_max) / len(self.k_min)
+        link_loss = calculate_linkloss(outputs, self.k_min,
+                                       self.k_max,
+                                       self.pose_to_model_dict) * self.amplify_link_loss  # Paper amplifies link loss by 10
         loss = mse_loss + link_loss
         # TODO: Add loss for too large joints / regularization -> So the model doesnt go local minimum setting all points 0
         return loss
