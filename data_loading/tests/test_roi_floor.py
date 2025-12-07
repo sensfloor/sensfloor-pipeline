@@ -19,15 +19,15 @@ def test_returns_roi_in_the_middle_of_floor():
     floor = RoIFloor(x_size, y_size, history_maxlen, roi_size)
 
     # Arrange region of interest
-    positions = [(2, 2)]
-    signals = np.array([[180, 120, 100, 180, 100, 100, 100, 200]])
-    expected_roi_history = np.zeros((history_maxlen, roi_size * 4, roi_size * 4))
+    positions = np.array([[2, 2]])
+    signals = np.array([[180, 220, 200, 180, 200, 200, 200, 210]])
+    expected_roi_history = np.ones((history_maxlen, roi_size * 4, roi_size * 4)) * 127
     expected_roi_history[0, 4:8, 4:8] = np.array(
         [
-            [150, 200, 180, 150],
-            [100, 150, 150, 120],
-            [100, 100, 140, 100],
-            [100, 100, 180, 140],
+            [205, 210, 180, 200],
+            [200, 205, 200, 220],
+            [200, 200, 190, 200],
+            [200, 200, 180, 190],
         ]
     )
 
@@ -49,20 +49,20 @@ def test_returns_roi_with_higher_signal_values():
     floor = RoIFloor(x_size, y_size, history_maxlen, roi_size)
 
     # Arrange region of interest
-    positions = [(1, 1), (3, 3)]
+    positions = np.array([[1, 1], [3, 3]])
     signals = np.array(
         [
-            [180, 120, 100, 180, 100, 100, 100, 200],
-            [180, 120, 100, 180, 100, 100, 200, 200],
+            [180, 220, 200, 180, 200, 200, 200, 210],
+            [180, 220, 200, 180, 200, 200, 220, 210],
         ]
     )
-    expected_roi_history = np.zeros((history_maxlen, roi_size * 4, roi_size * 4))
+    expected_roi_history = np.ones((history_maxlen, roi_size * 4, roi_size * 4)) * 127
     expected_roi_history[0, 4:8, 4:8] = np.array(
         [
-            [200, 200, 180, 150],
-            [200, 200, 150, 120],
-            [100, 100, 140, 100],
-            [100, 100, 180, 140],
+            [215, 210, 180, 200],
+            [220, 215, 200, 220],
+            [200, 200, 190, 200],
+            [200, 200, 180, 190],
         ]
     )
 
@@ -85,9 +85,9 @@ def test_adjust_roi_to_fit_x_0():
 
     # Arrange region of interest
     positions = [(0, 1)]
-    signals = np.array([[100, 100, 100, 100, 100, 100, 100, 100]])
-    expected_roi_history = np.zeros((history_maxlen, roi_size * 4, roi_size * 4))
-    expected_roi_history[0, 0:4, 4:8] = np.ones((1, 4, 4)) * 100
+    signals = np.array([[200, 200, 200, 200, 200, 200, 200, 200]])
+    expected_roi_history = np.ones((history_maxlen, roi_size * 4, roi_size * 4)) * 127
+    expected_roi_history[0, 0:4, 4:8] = np.ones((1, 4, 4)) * 200
 
     # Update floor
     floor.update(positions, signals)
@@ -108,9 +108,9 @@ def test_adjust_roi_to_fit_y_0():
 
     # Arrange region of interest
     positions = [(1, 0)]
-    signals = np.array([[100, 100, 100, 100, 100, 100, 100, 100]])
-    expected_roi_history = np.zeros((history_maxlen, roi_size * 4, roi_size * 4))
-    expected_roi_history[0, 4:8, 0:4] = np.ones((1, 4, 4)) * 100
+    signals = np.array([[200, 200, 200, 200, 200, 200, 200, 200]])
+    expected_roi_history = np.ones((history_maxlen, roi_size * 4, roi_size * 4)) * 127
+    expected_roi_history[0, 4:8, 0:4] = np.ones((1, 4, 4)) * 200
 
     # Update floor
     floor.update(positions, signals)
@@ -131,9 +131,9 @@ def test_adjust_roi_to_fit_x_max():
 
     # Arrange region of interest
     positions = [(4, 1)]
-    signals = np.array([[100, 100, 100, 100, 100, 100, 100, 100]])
-    expected_roi_history = np.zeros((history_maxlen, roi_size * 4, roi_size * 4))
-    expected_roi_history[0, 8:12, 4:8] = np.ones((1, 4, 4)) * 100
+    signals = np.array([[200, 200, 200, 200, 200, 200, 200, 200]])
+    expected_roi_history = np.ones((history_maxlen, roi_size * 4, roi_size * 4)) * 127
+    expected_roi_history[0, 8:12, 4:8] = np.ones((1, 4, 4)) * 200
 
     # Update floor
     floor.update(positions, signals)
@@ -154,9 +154,9 @@ def test_adjust_roi_to_fit_y_max():
 
     # Arrange region of interest
     positions = [(1, 5)]
-    signals = np.array([[100, 100, 100, 100, 100, 100, 100, 100]])
-    expected_roi_history = np.zeros((history_maxlen, roi_size * 4, roi_size * 4))
-    expected_roi_history[0, 4:8, 8:12] = np.ones((1, 4, 4)) * 100
+    signals = np.array([[200, 200, 200, 200, 200, 200, 200, 200]])
+    expected_roi_history = np.ones((history_maxlen, roi_size * 4, roi_size * 4)) * 127
+    expected_roi_history[0, 4:8, 8:12] = np.ones((1, 4, 4)) * 200
 
     floor.update(positions, signals)
     roi = floor.get_roi()
@@ -182,7 +182,7 @@ def test_roi_size_5():
             [200, 200, 200, 200, 200, 200, 200, 200],
         ]
     )
-    expected_roi_history = np.zeros((history_maxlen, roi_size * 4, roi_size * 4))
+    expected_roi_history = np.ones((history_maxlen, roi_size * 4, roi_size * 4)) * 127
     expected_roi_history[-1, 12:16, 16:20] = np.ones((1, 4, 4)) * 200
 
     floor.update(positions, signals)

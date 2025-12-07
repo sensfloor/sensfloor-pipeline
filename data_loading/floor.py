@@ -21,7 +21,7 @@ class Floor:
         self._y_size = y_size
         self._history_maxlen = history_maxlen
         self._history_queue = deque(maxlen=history_maxlen)
-        self.patches = np.zeros((x_size * 4, y_size * 4))
+        self.patches = np.ones((x_size * 4, y_size * 4)) * 127
 
     @property
     def shape(self) -> tuple[int, int]:
@@ -30,11 +30,12 @@ class Floor:
     @property
     def history(self) -> np.ndarray:
         empty_history = self._history_maxlen - len(self._history_queue)
-        zero_fill = np.zeros((empty_history, self._x_size * 4, self._y_size * 4))
+        zero_fill = np.ones((empty_history, self._x_size * 4, self._y_size * 4)) * 127
         return np.stack([*zero_fill, *list(self._history_queue)])
 
     def update(self, positions: np.ndarray, signals: np.ndarray) -> None:
-        for (x, y), signal in zip(positions, signals, strict=True):
+        clipped_signals = signals.clip(min=127)
+        for (x, y), signal in zip(positions, clipped_signals, strict=True):
             interpolated_signal = interpolate_signal(signal)
             x_patches = x * 4
             y_patches = y * 4
