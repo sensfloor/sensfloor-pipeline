@@ -73,7 +73,7 @@ class SensfloorPosesDataset(Dataset):
     def _normalize_roi(self, roi: torch.Tensor) -> torch.Tensor:
         # TODO: Maybe normalize by maximum value of roi to mitigate the effect of different footwear
         normalized_roi = (roi - 127) / 127
-        return (normalized_roi - 0.5) / 0.5
+        return normalized_roi
 
     def _create_roi_floor(self, frame_number: int) -> RoIFloor:
         floor = RoIFloor(
