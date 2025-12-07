@@ -10,20 +10,20 @@ from model.base_trainer import BaseTrainer
 # All Links between joints
 LINKS = [
     (PoseLandmark.LEFT_SHOULDER, PoseLandmark.RIGHT_SHOULDER),
+    (PoseLandmark.LEFT_HIP, PoseLandmark.RIGHT_HIP),
     (PoseLandmark.LEFT_SHOULDER, PoseLandmark.LEFT_ELBOW), # put symmetric links next to each other to compare them
     (PoseLandmark.RIGHT_SHOULDER, PoseLandmark.RIGHT_ELBOW),
     (PoseLandmark.LEFT_SHOULDER, PoseLandmark.LEFT_HIP),
     (PoseLandmark.RIGHT_SHOULDER, PoseLandmark.RIGHT_HIP),
     (PoseLandmark.LEFT_ELBOW, PoseLandmark.LEFT_WRIST),
     (PoseLandmark.RIGHT_ELBOW, PoseLandmark.RIGHT_WRIST),
-    (PoseLandmark.LEFT_HIP, PoseLandmark.RIGHT_HIP),
     (PoseLandmark.LEFT_HIP, PoseLandmark.LEFT_KNEE),
     (PoseLandmark.RIGHT_HIP, PoseLandmark.RIGHT_KNEE),
     (PoseLandmark.LEFT_KNEE, PoseLandmark.LEFT_ANKLE),
     (PoseLandmark.RIGHT_KNEE, PoseLandmark.RIGHT_ANKLE),
     (PoseLandmark.LEFT_ANKLE, PoseLandmark.LEFT_HEEL),
-    (PoseLandmark.LEFT_ANKLE, PoseLandmark.LEFT_FOOT_INDEX),
     (PoseLandmark.RIGHT_ANKLE, PoseLandmark.RIGHT_HEEL),
+    (PoseLandmark.LEFT_ANKLE, PoseLandmark.LEFT_FOOT_INDEX),
     (PoseLandmark.RIGHT_ANKLE, PoseLandmark.RIGHT_FOOT_INDEX),
     (PoseLandmark.LEFT_HEEL, PoseLandmark.LEFT_FOOT_INDEX),
     (PoseLandmark.RIGHT_HEEL, PoseLandmark.RIGHT_FOOT_INDEX)
