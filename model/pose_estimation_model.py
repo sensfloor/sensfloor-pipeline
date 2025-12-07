@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from utils import SIGNAL_Z
+from model.utils import SIGNAL_Z
 
 
 class RegressionModel(nn.Module):
@@ -8,7 +8,7 @@ class RegressionModel(nn.Module):
     idea from Yiyue Luo et. all - Intelligent Carpet: Inferring 3D Human Pose from Tactile Signals
     """
 
-    def __init__(self, input_shape: tuple[int, int]):
+    def __init__(self, roi_shape: tuple[int, int], history_len: int, landmarks_out: int):
         # TODO: add some kind of max pooling? Didn't because our input is small, but maybe at least padding remove once or sth
         # TODO: adapt kernel size, because we have a smaller input?
         # TODO: consider removing batchnorm, because we want to have value predictions (no sigmoid or classification)
@@ -16,7 +16,7 @@ class RegressionModel(nn.Module):
 
         # 4x4x64
         encoder_1 = nn.Sequential(
-            nn.Conv2d(in_channels=64, out_channels=32, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(in_channels=history_len, out_channels=32, kernel_size=3, stride=1, padding=1),
             nn.LeakyReLU(),
             nn.BatchNorm2d(32),
         )
@@ -53,10 +53,9 @@ class RegressionModel(nn.Module):
 
         self.encoder = nn.Sequential(encoder_1, encoder_2, encoder_3, encoder_4, encoder_5, encoder_6, encoder_7)
 
-        dummy_input = torch.zeros((1, 64, input_shape[0], input_shape[1]))
+        dummy_input = torch.zeros((1, history_len, roi_shape[0], roi_shape[1]))
         linear_in_features = self.encoder(dummy_input).numel()
-
-        self.linear = nn.Linear(in_features=linear_in_features, out_features=21 * 3)
+        self.linear = nn.Linear(in_features=linear_in_features, out_features=landmarks_out * 3)  # 3 coordinates
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.encoder(x)

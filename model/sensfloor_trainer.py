@@ -15,13 +15,12 @@ def loss(logits: torch.Tensor, labels: torch.Tensor):
     labels: [B, 21, 3]
     """
 
-    reshaped = logits.view(-1, 21, 3)
-    loss = nn.MSELoss(reduction='sum')(reshaped, labels)
+    loss = nn.MSELoss(reduction='sum')(logits, labels)
     # TODO: Add loss for too large joints / regularization -> So the model doesnt go local minimum setting all points 0
     return loss
 
 
-class SensfloorTrainer(BaseTrainer, ABC):
+class SensfloorTrainer(BaseTrainer):
     def __init__(self, model: nn.Module,
                  optimizer: optim.Optimizer,
                  device: torch.device,
@@ -39,8 +38,9 @@ class SensfloorTrainer(BaseTrainer, ABC):
         return self.loss(outputs, labels)
 
     def calculate_accuracy(self, outputs, labels, threshold=0.1):
-        coords = outputs.view(-1, 21, 3)  # [B, 21, 3]
-        dist = torch.linalg.vector_norm(coords - labels, dim=2)  # [B, 21]
+        coords = outputs.view(-1, 17, 3)  # [B, 21, 3] #TODO: parametrize landmarks_out
+        reshaped_labels = labels.view(-1, 17, 3)  # [B, 21, 3] #TODO: parametrize landmarks_out
+        dist = torch.linalg.vector_norm(coords - reshaped_labels, dim=2)  # [B, 21]
         correct = (dist < threshold)
         accuracy = correct.float().mean()  # average over all B × 21
 

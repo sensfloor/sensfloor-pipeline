@@ -1,29 +1,48 @@
+from dataclasses import dataclass
+
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
 
+from data_loading.pose_landmark import PoseLandmark
 from data_loading.roi_floor import RoIFloor
 
+
+
+@dataclass
+class DatasetConfig:
+    history_maxlen: int
+    floor_size_x: int
+    floor_size_y: int
+    roi_size: int
+    drop_landmarks: list[PoseLandmark] | None = None
 
 class SensfloorPosesDataset(Dataset):
     def __init__(
         self,
         poses_df: pd.DataFrame,
         sensfloor_readout_df: pd.DataFrame,
-        history_maxlen: int,
-        floor_size_x: int,
-        floor_size_y: int,
-        roi_size: int,
+        config: DatasetConfig
     ) -> None:
         super().__init__()
         self.poses_df = poses_df
         self.sensfloor_readout_df = sensfloor_readout_df
-        self.history_maxlen = history_maxlen
-        self.floor_size_x = floor_size_x
-        self.floor_size_y = floor_size_y
-        self.roi_size = roi_size
+        self.history_maxlen = config.history_maxlen
+        self.floor_size_x = config.floor_size_x
+        self.floor_size_y = config.floor_size_y
+        self.roi_size = config.roi_size
 
-        self.frames_containing_messages = self.sensfloor_readout_df["frame_number"].unique()
+        if config.drop_landmarks:
+            columns_to_drop = []
+            for landmark in config.drop_landmarks:
+                columns_to_drop += [f"x{landmark}", f"y{landmark}", f"z{landmark}"]
+
+            self.poses_df = self.poses_df.drop(columns=columns_to_drop)
+
+        # Remove all messages that are below a signal value of 140 
+        relevant_rows = self.sensfloor_readout_df[["0", "1", "2", "3", "4", "5", "6", "7"]].gt(140).any(axis=1)
+        filtered_readout = self.sensfloor_readout_df[relevant_rows]
+        self.frames_containing_messages = filtered_readout.unique()
 
     def __len__(self) -> int:
         return len(self.frames_containing_messages)
