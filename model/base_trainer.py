@@ -8,6 +8,7 @@ from torch import Tensor, nn, optim
 from torch.nn.modules.loss import _Loss
 from torch.optim.lr_scheduler import LRScheduler
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 
 @dataclass
@@ -72,11 +73,18 @@ class BaseTrainer(metaclass=ABCMeta):
 
     def train(self, train_loader: DataLoader, validation_loader: DataLoader, epochs: int) -> None:
         for epoch in range(epochs):
+            num_batches = len(train_loader)
+            progress = tqdm(
+                iterable=enumerate(train_loader),
+                total=num_batches,
+                desc=f"Epoch {epoch + 1}/{epochs}",
+                leave=True,
+            )
             self.model.train()
             total_loss: float = 0.0
             total_accuracy: float = 0.0
 
-            for inputs, labels in train_loader:
+            for _, (inputs, labels) in progress:
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
 
                 # 1. Forward pass
@@ -97,6 +105,8 @@ class BaseTrainer(metaclass=ABCMeta):
                 # Calculate training accuracy
                 total_loss += loss.item()
                 total_accuracy += self.calculate_accuracy(outputs, labels)
+
+                progress.set_postfix({"Loss": f"{loss.item():.4f}"})
 
             avg_loss: float = total_loss / len(train_loader)
             avg_accuracy: float = total_accuracy / len(train_loader)
