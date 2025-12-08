@@ -1,4 +1,5 @@
 from collections import deque
+from dataclasses import dataclass
 
 import numpy as np
 
@@ -15,23 +16,28 @@ def interpolate_signal(signal: np.ndarray) -> np.ndarray:
     )
 
 
+@dataclass
+class FloorConfig:
+    x_size: int
+    y_size: int
+    history_maxlen: int
+
+
 class Floor:
-    def __init__(self, x_size: int, y_size: int, history_maxlen: int) -> None:
-        self._x_size = x_size
-        self._y_size = y_size
-        self._history_maxlen = history_maxlen
-        self._history_queue = deque(maxlen=history_maxlen)
-        self.patches = np.ones((x_size * 4, y_size * 4)) * 127
+    def __init__(self, config: FloorConfig) -> None:
+        self.config = config
+        self.history_queue = deque(maxlen=config.history_maxlen)
+        self.patches = np.ones((config.x_size * 4, config.y_size * 4)) * 127
 
     @property
     def shape(self) -> tuple[int, int]:
-        return self._x_size, self._y_size
+        return self.config.x_size, self.config.y_size
 
     @property
     def history(self) -> np.ndarray:
-        empty_history = self._history_maxlen - len(self._history_queue)
-        zero_fill = np.ones((empty_history, self._x_size * 4, self._y_size * 4)) * 127
-        return np.stack([*zero_fill, *list(self._history_queue)])
+        empty_history = self.config.history_maxlen - len(self.history_queue)
+        zero_fill = np.ones((empty_history, self.config.x_size * 4, self.config.y_size * 4)) * 127
+        return np.stack([*zero_fill, *list(self.history_queue)])
 
     def update(self, positions: np.ndarray, signals: np.ndarray) -> None:
         clipped_signals = signals.clip(min=127)
@@ -40,4 +46,4 @@ class Floor:
             x_patches = x * 4
             y_patches = y * 4
             self.patches[x_patches : x_patches + 4, y_patches : y_patches + 4] = interpolated_signal
-        self._history_queue.append(self.patches.copy())
+        self.history_queue.append(self.patches.copy())

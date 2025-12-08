@@ -1,9 +1,9 @@
 from pathlib import Path
 
 import pandas as pd
-from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split
+from torch.utils.data import ConcatDataset, DataLoader, random_split
 
-from data_loading.sensfloor_dataset import SensfloorPosesDataset, DatasetConfig
+from data_loading.sensfloor_dataset import DatasetConfig, SensfloorPosesDataset
 
 DATA_PATH = Path("./data")
 
@@ -18,17 +18,15 @@ def load_single_recording(folder: Path, config: DatasetConfig) -> SensfloorPoses
     )
 
 
-def load_data(config: DatasetConfig) -> Dataset:
+def load_data(config: DatasetConfig) -> ConcatDataset[SensfloorPosesDataset]:
     folders = [folder for folder in DATA_PATH.iterdir() if folder.is_dir()]
-    datasets = []
-    for folder in folders:
-        datasets.append(load_single_recording(folder, config))
+    datasets = [load_single_recording(folder, config) for folder in folders]
     return ConcatDataset(datasets)
 
 
 def train_val_test_split(
-        ratios: tuple[float, float, float],
-        config: DatasetConfig,
+    ratios: tuple[float, float, float],
+    config: DatasetConfig,
 ) -> tuple[DataLoader, DataLoader, DataLoader]:
     if sum(ratios) != 1.0:
         message = "Splitting ratios don't add up to 1!"
