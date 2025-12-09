@@ -6,7 +6,8 @@
 /data
 
 # IDE
-.vscode
+.vscode/*
+!.vscode/launch.json
 .idea
 
 # Byte-compiled / optimized / DLL files

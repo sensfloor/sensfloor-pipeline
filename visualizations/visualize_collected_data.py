@@ -3,16 +3,14 @@ from pathlib import Path
 import cv2
 import pandas as pd
 
-from data_loading.roi_floor import RoIFloor
+from data_loading.roi_floor import RoIFloor, RoIFloorConfig
 
-DATA_DIR_PATH = Path("data/2025-12-02_12-08-00")
-POSES_PATH = DATA_DIR_PATH / "video_poses.csv"
+DATA_DIR_PATH = Path("data/2025-12-01_12-44-43")
 READOUT_PATH = DATA_DIR_PATH / "sensfloor_readout.csv"
 VIDEO_PATH = DATA_DIR_PATH / "video.mp4"
 
 SIGNAL_THRESHOLD = 140
 
-poses_df = pd.read_csv(POSES_PATH)
 readout_df = pd.read_csv(READOUT_PATH)
 
 display_w = 525
@@ -29,7 +27,8 @@ fps = cap.get(cv2.CAP_PROP_FPS)
 wait_time = int(1000 / fps)
 
 frame_number = 0
-floor = RoIFloor(x_size=6, y_size=4, history_maxlen=10, roi_size=3)
+floor_config = RoIFloorConfig(x_size=6, y_size=4, history_maxlen=10, roi_size=3)
+floor = RoIFloor(floor_config)
 
 while True:
     ret, frame = cap.read()
@@ -40,6 +39,7 @@ while True:
     floor.update(positions=positions, signals=signals)
     current_floor = floor.history[-1].astype("uint8")
     roi = floor.get_roi()
+    current_floor[current_floor < floor_config.active_field_min_value] = 0
 
     display_img = cv2.cvtColor(current_floor, cv2.COLOR_GRAY2BGR)
     if roi is not None:

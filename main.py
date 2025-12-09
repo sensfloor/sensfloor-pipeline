@@ -5,9 +5,9 @@ import torch
 from torch.utils.data import DataLoader
 
 from data_loading.links_min_max import get_link_min_max
-from data_loading.load_data import DatasetConfig, load_single_recording, train_val_test_split
 from data_loading.pose_landmark import PoseLandmark
 from data_loading.roi_floor import RoIFloorConfig
+from data_loading.sensfloor_dataset import DatasetConfig, load_single_dataset, train_val_test_split
 from model.pose_estimation_model import RegressionModel
 from model.sensfloor_trainer import SensfloorTrainer
 from model.utils import set_seed
@@ -59,7 +59,11 @@ def main(do_train: bool, do_test: bool) -> None:
             landmarks_out=landmarks_out,
             history_len=dataset_config.floor_config.history_maxlen,
         )
-        train_loader, val_loader, _ = train_val_test_split(ratios=(0.7, 0.10, 0.20), config=dataset_config)
+        train_loader, val_loader, _ = train_val_test_split(
+            data_root_path=Path("./data"),
+            ratios=(0.7, 0.10, 0.20),
+            config=dataset_config,
+        )
 
         link_min, link_max = get_link_min_max(do_compute_link_lengths=True)
 
@@ -80,7 +84,7 @@ def main(do_train: bool, do_test: bool) -> None:
 
     if do_test:
         data_path = Path("./data/2025-12-02_12-30-55")
-        dataset = load_single_recording(Path(data_path), config=dataset_config)
+        dataset = load_single_dataset(Path(data_path), config=dataset_config)
         dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
 
         model_path = Path("best_model_25.pth")

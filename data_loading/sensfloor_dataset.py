@@ -1,9 +1,10 @@
 from dataclasses import dataclass
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split
 
 from data_loading.pose_landmark import PoseLandmark
 from data_loading.roi_floor import RoIFloorConfig, create_roi_floor
@@ -13,7 +14,6 @@ from data_loading.roi_floor import RoIFloorConfig, create_roi_floor
 class DatasetConfig:
     floor_config: RoIFloorConfig
     drop_landmarks: list[PoseLandmark] | None = None
-    signal_threshold: int = 140
     normalize_signals: bool = False
 
 
@@ -45,20 +45,6 @@ def get_unique_frames_with_poses(sensfloor_readout: pd.DataFrame, poses: pd.Data
     return unique_readout_frames[frames_containing_messages_mask]
 
 
-def clip_field_values(
-    sensfloor_readout: pd.DataFrame,
-    signal_threshold: int,
-    empty_field_signal_value: int,
-) -> pd.DataFrame:
-    signal_columns = ["0", "1", "2", "3", "4", "5", "6", "7"]
-    empty_field_signal_value = 127
-    sensfloor_readout[signal_columns] = sensfloor_readout[signal_columns].mask(
-        sensfloor_readout[signal_columns] < signal_threshold,
-        empty_field_signal_value,
-    )
-    return sensfloor_readout
-
-
 class SensfloorPosesDataset(Dataset):
     def __init__(
         self,
@@ -71,19 +57,13 @@ class SensfloorPosesDataset(Dataset):
         self.sensfloor_readout_df = sensfloor_readout_df
         self.config = config
 
-        self.sensfloor_readout_df = clip_field_values(
-            self.sensfloor_readout_df,
-            signal_threshold=config.signal_threshold,
-            empty_field_signal_value=127,
-        )
-
         if config.drop_landmarks:
             self.poses_df = drop_landmarks(poses=poses_df, drop_landmarks=config.drop_landmarks)
 
-        # Remove all messages that are below a signal value of 140 (no activity, just noise)
+        # Remove all messages that are below a specified signal value (no activity, just noise)
         filtered_readout = remove_noise_messages(
             sensfloor_readout=self.sensfloor_readout_df,
-            noise_threshold=config.signal_threshold,
+            noise_threshold=config.floor_config.active_field_min_value,
         )
 
         self.frames_containing_messages = get_unique_frames_with_poses(
@@ -114,3 +94,40 @@ class SensfloorPosesDataset(Dataset):
         label_tensor = torch.Tensor(label)
 
         return roi_tensor, label_tensor
+
+
+def load_single_dataset(data_path: Path, config: DatasetConfig) -> SensfloorPosesDataset:
+    poses_df = pd.read_csv(data_path / "video_poses.csv")
+    readout_df = pd.read_csv(data_path / "sensfloor_readout.csv")
+    return SensfloorPosesDataset(
+        poses_df=poses_df,
+        sensfloor_readout_df=readout_df,
+        config=config,
+    )
+
+
+def load_all_datasets(data_root_path: Path, config: DatasetConfig) -> ConcatDataset[SensfloorPosesDataset]:
+    folders = [folder for folder in data_root_path.iterdir() if folder.is_dir()]
+    datasets = [load_single_dataset(folder, config) for folder in folders]
+    return ConcatDataset(datasets)
+
+
+def train_val_test_split(
+    data_root_path: Path,
+    ratios: tuple[float, float, float],
+    config: DatasetConfig,
+) -> tuple[DataLoader, DataLoader, DataLoader]:
+    if sum(ratios) != 1.0:
+        message = "Splitting ratios don't add up to 1!"
+        raise RuntimeError(message)
+
+    dataset = load_all_datasets(data_root_path=data_root_path, config=config)
+
+    # TODO: Split dataset for different recording sessions
+    train_subset, val_subset, test_subset = random_split(dataset=dataset, lengths=ratios)
+
+    train_dataloader = DataLoader(train_subset, batch_size=8, shuffle=True)
+    val_dataloader = DataLoader(val_subset, batch_size=8, shuffle=False)
+    test_dataloader = DataLoader(test_subset, batch_size=8, shuffle=False)
+
+    return train_dataloader, val_dataloader, test_dataloader

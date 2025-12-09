@@ -1,17 +1,16 @@
 from pathlib import Path
 
+import cv2
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import patches
 
-from data_loading.load_data import load_data
 from data_loading.roi_floor import RoIFloorConfig, create_roi_floor
-from data_loading.sensfloor_dataset import DatasetConfig
+from data_loading.sensfloor_dataset import DatasetConfig, load_single_dataset
 
-DATA_PATH = Path("./data/2025-12-02_12-30-55")
-SENSFLOOR_READOUT_PATH = DATA_PATH / "sensfloor_readout.csv"
-VIDEO_POSES_PATH = DATA_PATH / "video_poses.csv"
+DATA_PATH = Path("./data/2025-12-01_12-44-43")
+VIDEO_PATH = DATA_PATH / "video.mp4"
 
 
 floor_config = RoIFloorConfig(
@@ -19,6 +18,7 @@ floor_config = RoIFloorConfig(
     y_size=4,
     history_maxlen=10,
     roi_size=3,
+    active_field_min_value=135,
 )
 
 dataset_config = DatasetConfig(
@@ -26,23 +26,31 @@ dataset_config = DatasetConfig(
     normalize_signals=False,
 )
 
-full_dataset = load_data(dataset_config)
+# Define figure parameters
+num_rows = int(np.ceil(floor_config.history_maxlen / 5))
+num_cols = 5
+figsize = (20, 8)
 
-print(f"Cumulative dataset contains {len(full_dataset.datasets)} datasets")
-print(f"Dataset sizes: {full_dataset.cumulative_sizes}")
+# Load dataset
+dataset = load_single_dataset(data_path=DATA_PATH, config=dataset_config)
+frame_number = dataset.frames_containing_messages[0]
 
-# Get first dataset that has at least 100 unique frames containing messages with poses
-min_number_frames_with_poses = 100
-dataset = next(
-    (ds for ds in full_dataset.datasets if len(ds.frames_containing_messages) > min_number_frames_with_poses),
-    None,
-)
+# Get images from video
+cap = cv2.VideoCapture(str(VIDEO_PATH))
+fig, axs = plt.subplots(num_rows, num_cols, figsize=figsize)
+for i, ax in enumerate(axs.flatten()):
+    current_frame_number = (frame_number - floor_config.history_maxlen + 1) + i
+    cap.set(cv2.CAP_PROP_POS_FRAMES, current_frame_number)
+    ret, frame = cap.read()
+    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-if dataset is None:
-    message = "No dataset could be loaded... Do you have a data folder with all the required files?"
-    raise RuntimeError(message)
+    ax.imshow(frame_rgb)
+    ax.axis("off")
 
-frame_number = dataset.frames_containing_messages[200]
+fig.tight_layout()
+
+
+# Get floor signals
 floor = create_roi_floor(config=floor_config, sensfloor_readout=dataset.sensfloor_readout_df, frame_number=frame_number)
 roi = floor.get_roi()
 
@@ -56,8 +64,7 @@ x_size, y_size = floor_history.shape[1], floor_history.shape[2]
 cmap = mcolors.LinearSegmentedColormap.from_list("signal colormap", ["#FFFFFF", "#0033FF", "#FF6A00"])
 
 # Create plots
-rows = int(np.ceil(floor_history.shape[0] / 5))
-fig, axs = plt.subplots(rows, 5, figsize=(20, 8))
+fig, axs = plt.subplots(num_rows, num_cols, figsize=figsize)
 image = None
 for timestamp, ax in enumerate(axs.flatten()):
     image = ax.imshow(
@@ -75,13 +82,16 @@ for timestamp, ax in enumerate(axs.flatten()):
     # Draw region of interest
     roi_row_start, roi_col_start = roi.x * 4, roi.y * 4
 
+    linestyle = "-" if timestamp == (floor_config.history_maxlen - 1) else "--"
+    linewidth = 1.5 if timestamp == (floor_config.history_maxlen - 1) else 1
     roi_rect = patches.Rectangle(
         (roi_col_start, roi_row_start),
         floor_config.roi_size * 4,
         floor_config.roi_size * 4,
-        linewidth=1.5,
+        linewidth=linewidth,
         edgecolor="red",
         facecolor="none",
+        linestyle=linestyle,
     )
     ax.add_patch(roi_rect)
 

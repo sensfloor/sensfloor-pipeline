@@ -28,13 +28,17 @@ def test_returns_roi_in_the_middle_of_floor():
             [200, 200, 180, 190],
         ],
     )
+    expected_roi_x = 1
+    expected_roi_y = 1
 
     # Update floor
     floor.update(positions, signals)
     roi = floor.get_roi()
 
-    assert roi is not None and roi.x == 1
-    assert roi is not None and roi.y == 1
+    assert roi is not None
+    assert roi.x == expected_roi_x
+    assert roi is not None
+    assert roi.y == expected_roi_y
     np.testing.assert_array_equal(roi.history, expected_roi_history)
 
 
@@ -60,13 +64,17 @@ def test_returns_roi_with_higher_signal_values():
             [200, 200, 180, 190],
         ],
     )
+    expected_roi_x = 2
+    expected_roi_y = 2
 
     # Update floor
     floor.update(positions, signals)
     roi = floor.get_roi()
 
-    assert roi is not None and roi.x == 2
-    assert roi is not None and roi.y == 2
+    assert roi is not None
+    assert roi.x == expected_roi_x
+    assert roi is not None
+    assert roi.y == expected_roi_y
     np.testing.assert_array_equal(roi.history, expected_roi_history)
 
 
@@ -85,8 +93,10 @@ def test_adjust_roi_to_fit_x_0():
     floor.update(positions, signals)
     roi = floor.get_roi()
 
-    assert roi is not None and roi.x == 0
-    assert roi is not None and roi.y == 0
+    assert roi is not None
+    assert roi.x == 0
+    assert roi is not None
+    assert roi.y == 0
     np.testing.assert_array_equal(roi.history, expected_roi_history)
 
 
@@ -105,8 +115,10 @@ def test_adjust_roi_to_fit_y_0():
     floor.update(positions, signals)
     roi = floor.get_roi()
 
-    assert roi is not None and roi.x == 0
-    assert roi is not None and roi.y == 0
+    assert roi is not None
+    assert roi.x == 0
+    assert roi is not None
+    assert roi.y == 0
     np.testing.assert_array_equal(roi.history, expected_roi_history)
 
 
@@ -120,13 +132,17 @@ def test_adjust_roi_to_fit_x_max():
     signals = np.array([[200, 200, 200, 200, 200, 200, 200, 200]])
     expected_roi_history = np.ones((config.history_maxlen, config.roi_size * 4, config.roi_size * 4)) * 127
     expected_roi_history[0, 8:12, 4:8] = np.ones((1, 4, 4)) * 200
+    expected_roi_x = 2
+    expected_roi_y = 0
 
     # Update floor
     floor.update(positions, signals)
     roi = floor.get_roi()
 
-    assert roi is not None and roi.x == 2
-    assert roi is not None and roi.y == 0
+    assert roi is not None
+    assert roi.x == expected_roi_x
+    assert roi is not None
+    assert roi.y == expected_roi_y
     np.testing.assert_array_equal(roi.history, expected_roi_history)
 
 
@@ -140,12 +156,16 @@ def test_adjust_roi_to_fit_y_max():
     signals = np.array([[200, 200, 200, 200, 200, 200, 200, 200]])
     expected_roi_history = np.ones((config.history_maxlen, config.roi_size * 4, config.roi_size * 4)) * 127
     expected_roi_history[0, 4:8, 8:12] = np.ones((1, 4, 4)) * 200
+    expected_roi_x = 0
+    expected_roi_y = 3
 
     floor.update(positions, signals)
     roi = floor.get_roi()
 
-    assert roi is not None and roi.x == 0
-    assert roi is not None and roi.y == 3
+    assert roi is not None
+    assert roi.x == expected_roi_x
+    assert roi is not None
+    assert roi.y == expected_roi_y
     np.testing.assert_array_equal(roi.history, expected_roi_history)
 
 
@@ -164,16 +184,21 @@ def test_roi_size_5():
     )
     expected_roi_history = np.ones((config.history_maxlen, config.roi_size * 4, config.roi_size * 4)) * 127
     expected_roi_history[-1, 12:16, 16:20] = np.ones((1, 4, 4)) * 200
-
+    expected_roi_x = 0
+    expected_roi_y = 5
     floor.update(positions, signals)
     roi = floor.get_roi()
 
-    assert roi is not None and roi.x == 0
-    assert roi is not None and roi.y == 5
+    assert roi is not None
+    assert roi.x == expected_roi_x
+
+    assert roi is not None
+    assert roi.y == expected_roi_y
+
     np.testing.assert_array_equal(roi.history, expected_roi_history)
 
 
 def test_roi_too_large_for_floor():
     config = RoIFloorConfig(x_size=2, y_size=2, history_maxlen=1, roi_size=3)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="RoI too large for floor size"):
         RoIFloor(config)

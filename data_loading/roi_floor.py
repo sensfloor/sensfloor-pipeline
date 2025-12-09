@@ -6,16 +6,20 @@ import pandas as pd
 from data_loading.floor import Floor, FloorConfig
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoI:
     x: int
     y: int
     history: np.ndarray
 
 
-@dataclass
+@dataclass(kw_only=True, frozen=True)
 class RoIFloorConfig(FloorConfig):
     roi_size: int
+
+
+def get_relevant_messages_mask(signals: np.ndarray, active_field_min_value: int) -> np.ndarray:
+    return np.where(signals >= active_field_min_value)[0]
 
 
 class RoIFloor(Floor):
@@ -29,7 +33,8 @@ class RoIFloor(Floor):
         self.last_updated_positions: np.ndarray | None = None
 
     def update(self, positions: np.ndarray, signals: np.ndarray) -> None:
-        self.last_updated_positions = positions
+        relevant_messages_mask = get_relevant_messages_mask(signals, self.config.active_field_min_value)
+        self.last_updated_positions = positions[relevant_messages_mask]  # Save only active field positions
         super().update(positions, signals)
 
     def get_roi(self) -> None | RoI:
@@ -81,13 +86,10 @@ class RoIFloor(Floor):
 
 def create_roi_floor(config: RoIFloorConfig, sensfloor_readout: pd.DataFrame, frame_number: int) -> RoIFloor:
     floor = RoIFloor(config)
-
-    earliest_frame_included = frame_number - config.history_maxlen
+    earliest_frame_included = frame_number - config.history_maxlen + 1
     for current_frame_number in range(earliest_frame_included, frame_number + 1):
         messages = sensfloor_readout[sensfloor_readout["frame_number"] == current_frame_number]
-        positions = (
-            messages[["x", "y"]].to_numpy() - 1
-        ).tolist()  # Subtract 1 from positions because they start at 1,1
+        positions = messages[["x", "y"]].to_numpy() - 1  # Subtract 1 from positions because they start at 1,1
         signals = messages[["0", "1", "2", "3", "4", "5", "6", "7"]].to_numpy()
         floor.update(positions, signals)
     return floor
