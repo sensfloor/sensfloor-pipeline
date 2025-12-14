@@ -1,0 +1,35 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Main (Train & Test)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--train",
+                "--test",
+            ]
+        },
+        {
+            "name": "Visualize collected data",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "visualizations.visualize_collected_data",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Visualize RoI floor",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "visualizations.visualize_roi_floor",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+        }
+    ]
+}

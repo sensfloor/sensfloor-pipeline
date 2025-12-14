@@ -15,7 +15,7 @@ READOUT_DIR = "data"
 FPS = 15
 
 recording_datetime = datetime.now(ZoneInfo("Europe/Berlin")).strftime(
-    "%Y-%m-%d_%H-%M-%S"
+    "%Y-%m-%d_%H-%M-%S",
 )
 base_path = Path(READOUT_DIR) / recording_datetime
 recording_csv_path = base_path / "sensfloor_readout.csv"
@@ -57,7 +57,9 @@ def read_messages() -> None:
 
 
 def write_message_in_file(
-    message: bytearray, frame_number: int, writer: DictWriter
+    message: bytearray,
+    frame_number: int,
+    writer: DictWriter,
 ) -> None:
     hex_arr = list(message)
 
@@ -72,10 +74,7 @@ def write_message_in_file(
         "magic_number": 23,
         "x": int.from_bytes([hex_arr[3]]),
         "y": int.from_bytes([hex_arr[4]]),
-        **{
-            str(field_id): sensor_value
-            for field_id, sensor_value in enumerate(hex_arr[9:])
-        },
+        **{str(field_id): sensor_value for field_id, sensor_value in enumerate(hex_arr[9:])},
     }
 
     writer.writerow(row)
@@ -90,7 +89,10 @@ frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 fourcc = cv2.VideoWriter_fourcc(*"avc1")
 out = cv2.VideoWriter(
-    str(recording_video_path), fourcc, FPS, (frame_width, frame_height)
+    str(recording_video_path),
+    fourcc,
+    FPS,
+    (frame_width, frame_height),
 )
 frame_interval_length = 1.0 / FPS
 

@@ -1,34 +1,40 @@
 from dataclasses import dataclass
 
 import numpy as np
+import pandas as pd
 
-from data_loading.floor import Floor
+from data_loading.floor import Floor, FloorConfig
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoI:
     x: int
     y: int
     history: np.ndarray
 
 
-class RoIFloor(Floor):
-    def __init__(
-        self,
-        x_size: int,
-        y_size: int,
-        history_maxlen: int,
-        roi_size: int,
-    ) -> None:
-        if x_size < roi_size or y_size < roi_size:
-            raise ValueError("RoI too large for floor size")
+@dataclass(kw_only=True, frozen=True)
+class RoIFloorConfig(FloorConfig):
+    roi_size: int
 
-        super().__init__(x_size, y_size, history_maxlen)
-        self.roi_size = roi_size
+
+def get_relevant_messages_mask(signals: np.ndarray, active_field_min_value: int) -> np.ndarray:
+    return np.where(signals >= active_field_min_value)[0]
+
+
+class RoIFloor(Floor):
+    def __init__(self, config: RoIFloorConfig) -> None:
+        if config.x_size < config.roi_size or config.y_size < config.roi_size:
+            message = "RoI too large for floor size"
+            raise ValueError(message)
+
+        super().__init__(config)
+        self.roi_size = config.roi_size
         self.last_updated_positions: np.ndarray | None = None
 
     def update(self, positions: np.ndarray, signals: np.ndarray) -> None:
-        self.last_updated_positions = positions
+        relevant_messages_mask = get_relevant_messages_mask(signals, self.config.active_field_min_value)
+        self.last_updated_positions = positions[relevant_messages_mask]  # Save only active field positions
         super().update(positions, signals)
 
     def get_roi(self) -> None | RoI:
@@ -76,3 +82,14 @@ class RoIFloor(Floor):
             return self.patches.shape[1] - self.roi_size * 4
 
         return y_top_left * 4
+
+
+def create_roi_floor(config: RoIFloorConfig, sensfloor_readout: pd.DataFrame, frame_number: int) -> RoIFloor:
+    floor = RoIFloor(config)
+    earliest_frame_included = frame_number - config.history_maxlen + 1
+    for current_frame_number in range(earliest_frame_included, frame_number + 1):
+        messages = sensfloor_readout[sensfloor_readout["frame_number"] == current_frame_number]
+        positions = messages[["x", "y"]].to_numpy() - 1  # Subtract 1 from positions because they start at 1,1
+        signals = messages[["0", "1", "2", "3", "4", "5", "6", "7"]].to_numpy()
+        floor.update(positions, signals)
+    return floor
