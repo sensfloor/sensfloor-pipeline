@@ -243,7 +243,7 @@ def read_video(
         cv2.destroyAllWindows()
 
 
-def main(date: str):
+def main(date: str | None):
     model_path = "./data_collection/pose_landmarker_full.task"
 
     BaseOptions = mp.tasks.BaseOptions

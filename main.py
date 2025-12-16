@@ -12,12 +12,15 @@ from model.pose_estimation_model import RegressionModel
 from model.sensfloor_trainer import SensfloorTrainer
 from model.utils import set_seed
 from visualizations.create_landmark_predictions import create_predictions
+from data_collection.mediapipe_pose_extraction import main as extract_poses
 
 PATCH_WIDTH = 4
 
 
 def main(do_train: bool, do_test: bool) -> None:
     set_seed(seed=42)
+
+    extract_poses(date=None)
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     device = torch.device(device)
@@ -67,7 +70,8 @@ def main(do_train: bool, do_test: bool) -> None:
 
         link_min, link_max = get_link_min_max(do_compute_link_lengths=True)
 
-        optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4)
+        optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5)
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, patience=3)
         trainer = SensfloorTrainer(
             model=model,
             device=device,
@@ -77,21 +81,22 @@ def main(do_train: bool, do_test: bool) -> None:
             link_min=link_min,
             link_max=link_max,
             pose_to_model_dict=pose_to_model_index_dict,
-            amplify_link_loss=0,
+            amplify_link_loss=1,
+            scheduler=scheduler,
         )
 
         trainer.train(train_loader=train_loader, validation_loader=val_loader, epochs=20)
 
     if do_test:
-        data_path = Path("./data/2025-12-02_12-30-55")
+        data_path = Path("./data/2025-12-09_12-57-19-line-felix")
         dataset = load_single_dataset(Path(data_path), config=dataset_config)
         dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
 
-        model_path = Path("best_model_25.pth")
+        model_path = Path("best_model.pth")
         model = RegressionModel(
             roi_shape=roi_shape,
             landmarks_out=landmarks_out,
-            history_len=dataset_config.history_maxlen,
+            history_len=dataset_config.floor_config.history_maxlen,
         )
         checkpoint = torch.load(f=model_path)
         model.load_state_dict(state_dict=checkpoint)

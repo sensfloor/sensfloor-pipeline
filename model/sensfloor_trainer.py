@@ -32,7 +32,7 @@ class SensfloorTrainer(BaseTrainer):
         return self.model(inputs)
 
     def calculate_loss(self, outputs, labels) -> torch.Tensor:
-        mse_loss = nn.MSELoss(reduction='mean')(outputs, labels)
+        mse_loss = nn.MSELoss(reduction='sum')(outputs, labels)
         link_loss = calculate_linkloss(outputs, self.k_min,
                                        self.k_max,
                                        self.pose_to_model_dict) * self.amplify_link_loss  # Paper amplifies link loss by 10
