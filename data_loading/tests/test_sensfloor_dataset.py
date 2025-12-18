@@ -4,7 +4,7 @@ import pandas as pd
 import torch
 
 from data_loading.roi_floor import RoIFloorConfig
-from data_loading.sensfloor_dataset import DatasetConfig, SensfloorPosesDataset
+from data_loading.sensfloor_dataset import DatasetConfig, SensfloorPosesDataset, normalize_roi
 
 current_file_path = Path(__file__).resolve()
 current_dir = current_file_path.parent
@@ -57,3 +57,22 @@ def test_getitem_with_multiple_signals():
 
     # 33 keypoints with x, y and z coordinates
     assert label.shape == torch.Size([33 * 3])
+
+
+def test_normalize_roi_history_1():
+    roi = torch.ones((1, 12, 12)) * 127
+    roi[0, 10, 10] = 200
+    roi = normalize_roi(roi, 127)
+    assert roi[0, 10, 10] == 1
+    assert roi.sum() == 1
+
+
+def test_normalize_roi_history_10():
+    roi = torch.ones((10, 12, 12)) * 127
+    roi[0, :, :] = 177
+    roi[7, 1, 1] = 227
+    roi = normalize_roi(roi, 127)
+
+    assert roi[0, 3, 3] == 0.5  # noqa: PLR2004
+    assert roi[7, 1, 1] == 1
+    assert roi[5, :, :].sum() == 0

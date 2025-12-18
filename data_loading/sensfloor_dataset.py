@@ -17,9 +17,9 @@ class DatasetConfig:
     normalize_signals: bool = False
 
 
-def normalize_roi(roi: torch.Tensor) -> torch.Tensor:
-    # TODO: Maybe normalize by maximum value of roi to mitigate the effect of different footwear
-    return (roi - 127) / 127
+def normalize_roi(roi: torch.Tensor, idle_floor_value: int) -> torch.Tensor:
+    normalizes_roi = roi - idle_floor_value
+    return normalizes_roi / normalizes_roi.max()
 
 
 def drop_landmarks(poses: pd.DataFrame, drop_landmarks: list[PoseLandmark]) -> pd.DataFrame:
@@ -87,7 +87,7 @@ class SensfloorPosesDataset(Dataset):
         roi_tensor = torch.Tensor(roi.history)
 
         if self.config.normalize_signals:
-            roi_tensor = normalize_roi(roi_tensor)
+            roi_tensor = normalize_roi(roi_tensor, self.config.floor_config.idle_field_value)
 
         # Get pose
         label = self.poses_df[self.poses_df["frame"] == frame_number].drop(columns=["frame"]).to_numpy()[0]
