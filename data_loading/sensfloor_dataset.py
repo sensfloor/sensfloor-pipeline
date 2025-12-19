@@ -17,9 +17,9 @@ class DatasetConfig:
     normalize_signals: bool = False
 
 
-def normalize_roi(roi: torch.Tensor, idle_floor_value: int) -> torch.Tensor:
+def normalize_roi(roi: torch.Tensor, idle_floor_value: int, do_normalize: bool) -> torch.Tensor:
     normalizes_roi = roi - idle_floor_value
-    return normalizes_roi / normalizes_roi.max()
+    return normalizes_roi / normalizes_roi.max() if do_normalize else idle_floor_value
 
 
 def drop_landmarks(poses: pd.DataFrame, drop_landmarks: list[PoseLandmark]) -> pd.DataFrame:
@@ -87,7 +87,7 @@ class SensfloorPosesDataset(Dataset):
         roi_tensor = torch.Tensor(roi.history)
 
         if self.config.normalize_signals:
-            roi_tensor = normalize_roi(roi_tensor, self.config.floor_config.idle_field_value)
+            roi_tensor = normalize_roi(roi_tensor, self.config.floor_config.idle_field_value, self.config.floor_config.do_normalize)
 
         # Get pose
         label = self.poses_df[self.poses_df["frame"] == frame_number].drop(columns=["frame"]).to_numpy()[0]
@@ -116,6 +116,7 @@ def train_val_test_split(
     data_root_path: Path,
     ratios: tuple[float, float, float],
     config: DatasetConfig,
+    batch_size: int,
 ) -> tuple[DataLoader, DataLoader, DataLoader]:
     if sum(ratios) != 1.0:
         message = "Splitting ratios don't add up to 1!"
@@ -126,8 +127,10 @@ def train_val_test_split(
     # TODO: Split dataset for different recording sessions
     train_subset, val_subset, test_subset = random_split(dataset=dataset, lengths=ratios)
 
-    train_dataloader = DataLoader(train_subset, batch_size=8, shuffle=True)
-    val_dataloader = DataLoader(val_subset, batch_size=8, shuffle=False)
+    print(f"training dataset length: {len(train_subset)}")
+
+    train_dataloader = DataLoader(train_subset, batch_size=batch_size, shuffle=True)
+    val_dataloader = DataLoader(val_subset, batch_size=batch_size, shuffle=False)
     test_dataloader = DataLoader(test_subset, batch_size=8, shuffle=False)
 
     return train_dataloader, val_dataloader, test_dataloader
