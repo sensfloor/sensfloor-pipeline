@@ -7,7 +7,7 @@ import torch
 from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split
 
 from data_loading.pose_landmark import PoseLandmark
-from data_loading.roi_floor import RoIFloorConfig, create_roi_floor
+from data_loading.roi_floor import RoIFloor, RoIFloorConfig, create_roi_floor
 
 
 @dataclass(frozen=True)
@@ -17,9 +17,9 @@ class DatasetConfig:
     normalize_signals: bool = False
 
 
-def normalize_roi(roi: torch.Tensor, idle_floor_value: int, do_normalize: bool) -> torch.Tensor:
+def normalize_roi(roi: torch.Tensor, idle_floor_value: int) -> torch.Tensor:
     normalizes_roi = roi - idle_floor_value
-    return normalizes_roi / normalizes_roi.max() if do_normalize else idle_floor_value
+    return normalizes_roi / normalizes_roi.max()
 
 
 def drop_landmarks(poses: pd.DataFrame, drop_landmarks: list[PoseLandmark]) -> pd.DataFrame:
@@ -43,6 +43,15 @@ def get_unique_frames_with_poses(sensfloor_readout: pd.DataFrame, poses: pd.Data
     frames_containing_messages_mask = np.isin(unique_readout_frames, poses["frame"].unique())
     # Return all frame unique numbers for which poses exist
     return unique_readout_frames[frames_containing_messages_mask]
+
+
+@dataclass
+class DetailedSensfloorPosesData:
+    frame_number: int
+    floor: RoIFloor
+    untransformed_roi_tensor: torch.Tensor
+    transformed_roi_tensor: torch.Tensor
+    label_tensor: torch.Tensor
 
 
 class SensfloorPosesDataset(Dataset):
@@ -75,6 +84,10 @@ class SensfloorPosesDataset(Dataset):
         return len(self.frames_containing_messages)
 
     def __getitem__(self, index: int) -> tuple[torch.Tensor, torch.Tensor]:
+        data = self.get_detailed_data(index)
+        return data.transformed_roi_tensor, data.label_tensor
+
+    def get_detailed_data(self, index: int) -> DetailedSensfloorPosesData:
         # Get signal history
         frame_number = self.frames_containing_messages[index]
         floor = create_roi_floor(self.config.floor_config, self.sensfloor_readout_df, frame_number)
@@ -84,16 +97,23 @@ class SensfloorPosesDataset(Dataset):
             error_message = "No region of interest found..."
             raise RuntimeError(error_message)
 
-        roi_tensor = torch.Tensor(roi.history)
+        untransformed_roi_tensor = torch.Tensor(roi.history)
 
+        transformed_roi_tensor = untransformed_roi_tensor
         if self.config.normalize_signals:
-            roi_tensor = normalize_roi(roi_tensor, self.config.floor_config.idle_field_value, self.config.floor_config.do_normalize)
+            transformed_roi_tensor = normalize_roi(untransformed_roi_tensor, self.config.floor_config.idle_field_value)
 
         # Get pose
         label = self.poses_df[self.poses_df["frame"] == frame_number].drop(columns=["frame"]).to_numpy()[0]
         label_tensor = torch.Tensor(label)
 
-        return roi_tensor, label_tensor
+        return DetailedSensfloorPosesData(
+            frame_number,
+            floor,
+            untransformed_roi_tensor,
+            transformed_roi_tensor,
+            label_tensor,
+        )
 
 
 def load_single_dataset(data_path: Path, config: DatasetConfig) -> SensfloorPosesDataset:

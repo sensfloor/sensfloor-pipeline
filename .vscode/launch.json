@@ -5,6 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Collect data",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "data_collection/sensfloor_signals_and_video_collection.py",
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Main (Train & Test)",
             "type": "debugpy",
             "request": "launch",
@@ -28,6 +35,22 @@
             "type": "debugpy",
             "request": "launch",
             "module": "visualizations.visualize_roi_floor",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+        },
+                {
+            "name": "Visualize Rotation",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "visualizations.visualize_rotation",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+        },
+        {
+            "name": "Plot bone lengths",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "visualizations.plot_bone_lengths",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
         }
