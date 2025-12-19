@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import torch
+import trackio
 from torch import Tensor, nn, optim
 from torch.nn.modules.loss import _Loss
 from torch.optim.lr_scheduler import LRScheduler
@@ -109,6 +110,14 @@ class BaseTrainer(metaclass=ABCMeta):
             avg_loss: float = total_loss / len(train_loader)
             avg_accuracy: float = total_accuracy / len(train_loader)
             val_loss, val_accuracy = self.evaluate(validation_loader)
+
+            trackio.log({
+                "epoch": epoch,
+                "train_loss": avg_loss,
+                "train_accuracy": avg_accuracy,
+                "val_loss": val_loss,
+                "val_accuracy": val_accuracy
+            })
 
             self.metrics_list.append(
                 TrainingMetrics(

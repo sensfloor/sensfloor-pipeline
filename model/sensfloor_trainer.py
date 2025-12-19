@@ -37,7 +37,6 @@ class SensfloorTrainer(BaseTrainer):
                                        self.k_max,
                                        self.pose_to_model_dict) * self.amplify_link_loss  # Paper amplifies link loss by 10
         loss = mse_loss + link_loss
-        # TODO: Add loss for too large joints / regularization -> So the model doesnt go local minimum setting all points 0
         return loss
 
     def calculate_accuracy(self, outputs, labels, threshold=0.1):
@@ -46,4 +45,4 @@ class SensfloorTrainer(BaseTrainer):
         dist = torch.linalg.vector_norm(coords - reshaped_labels, dim=2)  # [B, 17]
         correct = (dist < threshold)
         accuracy = correct.float().mean()  # average over all B × 17
-        return accuracy * 100
+        return accuracy.item() * 100

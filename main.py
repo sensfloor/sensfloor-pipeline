@@ -1,7 +1,9 @@
 import argparse
 from pathlib import Path
+from typing import TypedDict
 
 import torch
+import trackio
 from torch.utils.data import DataLoader
 
 from data_loading.links_min_max import get_link_min_max
@@ -17,6 +19,12 @@ from data_collection.mediapipe_pose_extraction import main as extract_poses
 PATCH_WIDTH = 4
 
 
+class Config(TypedDict):
+    epochs: int
+    learning_rate: float
+    batch_size: int
+
+
 def main(do_train: bool, do_test: bool) -> None:
     set_seed(seed=42)
 
@@ -24,6 +32,13 @@ def main(do_train: bool, do_test: bool) -> None:
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     device = torch.device(device)
+
+    config: Config = {"epochs": 1, "learning_rate": 0.001, "batch_size": 64}
+    trackio.init(
+        project="sensfloor",
+        config=dict(config),
+        # space_id="JuliSharow/sensfloor",
+    )
 
     drop_landmarks = [
         PoseLandmark.LEFT_EYE,
@@ -85,7 +100,7 @@ def main(do_train: bool, do_test: bool) -> None:
             scheduler=scheduler,
         )
 
-        trainer.train(train_loader=train_loader, validation_loader=val_loader, epochs=20)
+        trainer.train(train_loader=train_loader, validation_loader=val_loader, epochs=trackio.config["epochs"])
 
     if do_test:
         data_path = Path("./data/2025-12-09_12-57-19-line-felix")
@@ -104,6 +119,7 @@ def main(do_train: bool, do_test: bool) -> None:
         out_path = data_path / "predicted_poses.csv"
         create_predictions(dataloader, kept_landmarks, model, out_path)
 
+    trackio.finish()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
