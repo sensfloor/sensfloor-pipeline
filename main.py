@@ -33,10 +33,10 @@ def main(do_train: bool, do_test: bool) -> None:
     device = "cuda" if torch.cuda.is_available() else "cpu"
     device = torch.device(device)
 
-    config: Config = {"epochs": 1, "learning_rate": 0.001, "batch_size": 64}
+    hyper_params: Config = {"epochs": 1, "learning_rate": 0.001, "batch_size": 64}
     trackio.init(
         project="sensfloor",
-        config=dict(config),
+        config=dict(hyper_params),
         # space_id="JuliSharow/sensfloor",
     )
 
@@ -79,19 +79,23 @@ def main(do_train: bool, do_test: bool) -> None:
         )
         train_loader, val_loader, _ = train_val_test_split(
             data_root_path=Path("./data"),
-            ratios=(0.7, 0.10, 0.20),
+            ratios=(
+                0.01,
+                0.2,
+                0.79,
+            ),
             config=dataset_config,
         )
 
         link_min, link_max = get_link_min_max(do_compute_link_lengths=True)
 
-        optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5)
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, patience=3)
+        optimizer = torch.optim.AdamW(model.parameters(), lr=hyper_params["learning_rate"])
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, patience=3, min_lr=1e-6, factor=0.1)
         trainer = SensfloorTrainer(
             model=model,
             device=device,
             optimizer=optimizer,
-            patience=5,
+            patience=7,
             use_early_stopping=True,
             link_min=link_min,
             link_max=link_max,
@@ -100,14 +104,14 @@ def main(do_train: bool, do_test: bool) -> None:
             scheduler=scheduler,
         )
 
-        trainer.train(train_loader=train_loader, validation_loader=val_loader, epochs=trackio.config["epochs"])
+        trainer.train(train_loader=train_loader, validation_loader=val_loader, epochs=hyper_params["epochs"])
 
     if do_test:
-        data_path = Path("./data/2025-12-09_12-57-19-line-felix")
+        data_path = Path("./data_testing/2025-12-09_15-58-52-line-justin")
         dataset = load_single_dataset(Path(data_path), config=dataset_config)
         dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
 
-        model_path = Path("best_model.pth")
+        model_path = Path("best_model_74.pth")
         model = RegressionModel(
             roi_shape=roi_shape,
             landmarks_out=landmarks_out,
