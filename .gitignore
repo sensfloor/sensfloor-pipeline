@@ -2,8 +2,11 @@
 **/IndoorPy/
 /sensfloor/**/*.mp4
 /sensfloor/docs
+/outputs
 
-/data
+data
+data_exclude
+data_testing
 
 # IDE
 .vscode/*
