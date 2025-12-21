@@ -4,16 +4,16 @@ import numpy as np
 import pandas as pd
 from numpy import ndarray
 
-from data_loading.pose_landmark import LINKS
+from data_loading.pose_landmark import LINKS, PoseLandmark
 
 
-def get_link_min_max(do_compute_link_lengths: bool, traing_folders: Path = Path("./data")):
+def get_link_min_max(do_compute_link_lengths: bool, links: list[tuple[PoseLandmark, PoseLandmark]], traing_folders: Path = Path("./data")):
     link_path = Path("./outputs/link_lengths")
     link_min_path = link_path / "link_min.npy"
     link_max_path = link_path / "link_max.npy"
 
     if do_compute_link_lengths:
-        link_min, link_max = compute_kmin_kmax(traing_folders, lower_percentile=3.0, upper_percentile=97.0)
+        link_min, link_max = compute_kmin_kmax(traing_folders, links=links, lower_percentile=3.0, upper_percentile=97.0)
         np.save(link_min_path, link_min)
         np.save(link_max_path, link_max)
     else:
@@ -23,10 +23,8 @@ def get_link_min_max(do_compute_link_lengths: bool, traing_folders: Path = Path(
     return link_min, link_max
 
 
-def compute_kmin_kmax(train_folder_path: Path, links=None, lower_percentile: float = 3.0,
+def compute_kmin_kmax(train_folder_path: Path, links: list[tuple[PoseLandmark, PoseLandmark]], lower_percentile: float = 3.0,
                       upper_percentile: float = 97.0) -> tuple[ndarray, ndarray]:
-    if links is None:
-        links = LINKS
 
     collected_link_data = [[] for _ in links]
 

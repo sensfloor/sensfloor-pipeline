@@ -15,11 +15,13 @@ class DatasetConfig:
     floor_config: RoIFloorConfig
     drop_landmarks: list[PoseLandmark] | None = None
     normalize_signals: bool = False
+    normalize_to_max: bool = False
 
 
-def normalize_roi(roi: torch.Tensor, idle_floor_value: int) -> torch.Tensor:
+def normalize_roi(roi: torch.Tensor, idle_floor_value: int, normalize_to_max: bool) -> torch.Tensor:
     normalizes_roi = roi - idle_floor_value
-    return normalizes_roi / normalizes_roi.max()
+    normalize_to = normalizes_roi.max() if normalize_to_max else idle_floor_value
+    return normalizes_roi / normalize_to
 
 
 def drop_landmarks(poses: pd.DataFrame, drop_landmarks: list[PoseLandmark]) -> pd.DataFrame:
@@ -101,7 +103,7 @@ class SensfloorPosesDataset(Dataset):
 
         transformed_roi_tensor = untransformed_roi_tensor
         if self.config.normalize_signals:
-            transformed_roi_tensor = normalize_roi(untransformed_roi_tensor, self.config.floor_config.idle_field_value)
+            transformed_roi_tensor = normalize_roi(untransformed_roi_tensor, self.config.floor_config.idle_field_value, self.config.normalize_to_max)
 
         # Get pose
         label = self.poses_df[self.poses_df["frame"] == frame_number].drop(columns=["frame"]).to_numpy()[0]

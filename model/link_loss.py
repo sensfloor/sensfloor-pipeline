@@ -1,16 +1,16 @@
 import torch
 
-from data_loading.pose_landmark import LINKS
+from data_loading.pose_landmark import PoseLandmark
 
 
-def calculate_linkloss(pred_keypoints: torch.Tensor, k_min, k_max, pose_to_model_dict):
+def calculate_linkloss(pred_keypoints: torch.Tensor, k_min, k_max, pose_to_model_dict, links: list[tuple[PoseLandmark, PoseLandmark]]):
     device = pred_keypoints.device
     dtype = pred_keypoints.dtype
-    coords = pred_keypoints.view(-1, len(pose_to_model_dict), 3)  # [B, 17, 3]
+    coords = pred_keypoints.view(-1, len(pose_to_model_dict), 3)  # [B, landmarks_out, 3]
 
     link_lengths = []
 
-    for (a, b) in LINKS:  # a, b are the indices of the joints from media pipe (0-32)
+    for (a, b) in links:  # a, b are the indices of the joints from media pipe (0-32)
         if not a in pose_to_model_dict or not b in pose_to_model_dict:
             print(f"Model outputs do not contain joint with index {a} or {b}, skipping")
             continue

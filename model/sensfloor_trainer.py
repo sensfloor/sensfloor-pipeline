@@ -17,6 +17,8 @@ class SensfloorTrainer(BaseTrainer):
                  link_min: np.ndarray,
                  link_max: np.ndarray,
                  pose_to_model_dict: dict[PoseLandmark, int],
+                 landmarks_out: int,
+                 kept_links: list[tuple[PoseLandmark, PoseLandmark]],
                  scheduler: LRScheduler | None = None,
                  use_early_stopping: bool = True,
                  patience: int = 10,
@@ -31,14 +33,16 @@ class SensfloorTrainer(BaseTrainer):
         self.loss_reduction = loss_reduction
         self.pose_to_model_dict = pose_to_model_dict
         self.k_min, self.k_max = link_min, link_max
+        self.landmarks_out = landmarks_out
+        self.kept_links = kept_links
 
     @staticmethod
-    def calculate_accuracy_2(outputs, labels, threshold=0.1):
-        coords = outputs.view(-1, 17, 3)  # [B, 17, 3] #TODO: parametrize landmarks_out
-        reshaped_labels = labels.view(-1, 17, 3)  # [B, 17, 3] #TODO: parametrize landmarks_out
-        dist = torch.linalg.vector_norm(coords - reshaped_labels, dim=2)  # [B, 17]
+    def calculate_test_accuracy(outputs, labels, landmarks_out: int, threshold=0.1):
+        coords = outputs.view(-1, landmarks_out, 3)  # [B, landmarks_out, 3]
+        reshaped_labels = labels.view(-1, landmarks_out, 3)  # [B, landmarks_out, 3]
+        dist = torch.linalg.vector_norm(coords - reshaped_labels, dim=2)  # [B, landmarks_out]
         correct = (dist < threshold)
-        accuracy = correct.float().mean()  # average over all B × 17
+        accuracy = correct.float().mean()  # average over all B × landmarks_out
         return accuracy.item() * 100
 
     def forward_pass(self, inputs: torch.Tensor):
@@ -48,19 +52,19 @@ class SensfloorTrainer(BaseTrainer):
         mse_loss = nn.MSELoss(reduction=self.loss_reduction)(outputs, labels)
         link_loss = calculate_linkloss(outputs, self.k_min,
                                        self.k_max,
-                                       self.pose_to_model_dict) * self.amplify_link_loss  # Paper amplifies link loss by 10
+                                       self.pose_to_model_dict, links=self.kept_links) * self.amplify_link_loss  # Paper amplifies link loss by 10
         loss = mse_loss + link_loss
         return loss
 
     def calculate_accuracy(self, outputs, labels, threshold=0.1):
-        return self.calculate_accuracy_2(outputs, labels, threshold)
+        return self.calculate_test_accuracy(outputs, labels, self.landmarks_out, threshold)
 
-def get_test_accuracy(model: nn.Module, test_loader: torch.utils.data.DataLoader):
+def get_test_accuracy(model: nn.Module, test_loader: torch.utils.data.DataLoader, landmarks_out: int):
 
     total_accuracy = 0
     for inputs, labels in test_loader:
         outputs = model(inputs)
-        accuracy = SensfloorTrainer.calculate_accuracy_2(outputs, labels)
+        accuracy = SensfloorTrainer.calculate_test_accuracy(outputs, labels, landmarks_out)
         total_accuracy += accuracy
 
     return total_accuracy / len(test_loader)

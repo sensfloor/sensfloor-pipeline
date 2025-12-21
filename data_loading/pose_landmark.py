@@ -37,7 +37,7 @@ class PoseLandmark(IntEnum):
     RIGHT_FOOT_INDEX = 32
 
 
-LINKS = [
+LINKS: list[tuple[PoseLandmark, PoseLandmark]] = [
     (PoseLandmark.LEFT_SHOULDER, PoseLandmark.RIGHT_SHOULDER),
     (PoseLandmark.LEFT_HIP, PoseLandmark.RIGHT_HIP),
     (PoseLandmark.LEFT_SHOULDER, PoseLandmark.LEFT_ELBOW), # put symmetric links next to each other to compare them

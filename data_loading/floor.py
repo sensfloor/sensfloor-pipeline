@@ -23,7 +23,6 @@ class FloorConfig:
     history_maxlen: int
     idle_field_value: int = 127
     active_field_min_value: int = 140
-    do_normalize: bool = True
 
 
 class Floor:
