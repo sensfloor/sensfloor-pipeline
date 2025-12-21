@@ -225,154 +225,187 @@ def get_hyper_param_configs():
         #     "model_name": "amplify link loss 0.1",
         # },
 
-        {
-            "epochs": 30,
-            "learning_rate": 5.5e-5,
-            "batch_size": 64,
-            "seed": random.randint(0, 1_000_000),
-            "split_ratios": (
-                0.79,
-                0.2,
-                0.01,
-            ),
-
-            "patch_width": 4,
-            "roi_x_size": 6,
-            "roi_y_size": 4,
-            "roi_history_maxlen": 10,
-            "roi_size": 3,
-            "do_normalize": True,
-            "normalize_to_max": False,
-
-            "training_data_folders": training_folders,
-            "dropped_landmarks": drop_landmarks_default + [PoseLandmark.LEFT_HEEL,
-                                  PoseLandmark.RIGHT_HEEL,
-                                  PoseLandmark.LEFT_FOOT_INDEX,
-                                  PoseLandmark.RIGHT_FOOT_INDEX,
-                                  ],
-
-            "scheduler_patience": 3,
-            "scheduler_min_lr": 1e-6,
-            "scheduler_factor": 0.1,
-            "trainer_patience": 7,
-            "amplify_link_loss": 1,
-            "mse_loss": "mean",
-
-            "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
-            "model_name": "drop feets",
-        },
-
-        {
-            "epochs": 30,
-            "learning_rate": 5.5e-5,
-            "batch_size": 64,
-            "seed": random.randint(0, 1_000_000),
-            "split_ratios": (
-                0.79,
-                0.2,
-                0.01,
-            ),
-
-            "patch_width": 4,
-            "roi_x_size": 6,
-            "roi_y_size": 4,
-            "roi_history_maxlen": 10,
-            "roi_size": 3,
-            "do_normalize": True,
-            "normalize_to_max": False,
-
-            "training_data_folders": training_folders,
-            "dropped_landmarks": drop_landmarks_default + [PoseLandmark.LEFT_ELBOW,
-                                  PoseLandmark.RIGHT_ELBOW,
-                                  PoseLandmark.LEFT_WRIST,
-                                  PoseLandmark.RIGHT_WRIST,
-                                  ],
-
-            "scheduler_patience": 3,
-            "scheduler_min_lr": 1e-6,
-            "scheduler_factor": 0.1,
-            "trainer_patience": 7,
-            "amplify_link_loss": 1,
-            "mse_loss": "mean",
-
-            "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
-            "model_name": "drop arms",
-        },
-
-        {
-            "epochs": 30,
-            "learning_rate": 5.5e-5,
-            "batch_size": 64,
-            "seed": random.randint(0, 1_000_000),
-            "split_ratios": (
-                0.79,
-                0.2,
-                0.01,
-            ),
-
-            "patch_width": 4,
-            "roi_x_size": 6,
-            "roi_y_size": 4,
-            "roi_history_maxlen": 10,
-            "roi_size": 3,
-            "do_normalize": True,
-            "normalize_to_max": False,
-
-            "training_data_folders": training_folders,
-            "dropped_landmarks": drop_landmarks_default + [PoseLandmark.LEFT_ELBOW,
-                                  PoseLandmark.RIGHT_ELBOW,
-                                  PoseLandmark.LEFT_WRIST,
-                                  PoseLandmark.RIGHT_WRIST,
-                                  PoseLandmark.LEFT_HEEL,
-                                  PoseLandmark.RIGHT_HEEL,
-                                  PoseLandmark.LEFT_FOOT_INDEX,
-                                  PoseLandmark.RIGHT_FOOT_INDEX,
-                                  ],
-
-            "scheduler_patience": 3,
-            "scheduler_min_lr": 1e-6,
-            "scheduler_factor": 0.1,
-            "trainer_patience": 7,
-            "amplify_link_loss": 1,
-            "mse_loss": "mean",
-
-            "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
-            "model_name": "drop arms and feet",
-        },
-
-        {
-            "epochs": 30,
-            "learning_rate": 5.5e-5,
-            "batch_size": 64,
-            "seed": random.randint(0, 1_000_000),
-            "split_ratios": (
-                0.79,
-                0.2,
-                0.01,
-            ),
-
-            "patch_width": 4,
-            "roi_x_size": 6,
-            "roi_y_size": 4,
-            "roi_history_maxlen": 5,
-            "roi_size": 3,
-            "do_normalize": True,
-            "normalize_to_max": False,
-
-            "training_data_folders": training_folders,
-            "dropped_landmarks": drop_landmarks_default,
-
-            "scheduler_patience": 3,
-            "scheduler_min_lr": 1e-6,
-            "scheduler_factor": 0.1,
-            "trainer_patience": 7,
-            "amplify_link_loss": 1,
-            "mse_loss": "mean",
-
-            "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
-            "model_name": "history 5",
-        },
-
+        # {
+        #     "epochs": 30,
+        #     "learning_rate": 5.5e-5,
+        #     "batch_size": 64,
+        #     "seed": random.randint(0, 1_000_000),
+        #     "split_ratios": (
+        #         0.79,
+        #         0.2,
+        #         0.01,
+        #     ),
+        #
+        #     "patch_width": 4,
+        #     "roi_x_size": 6,
+        #     "roi_y_size": 4,
+        #     "roi_history_maxlen": 10,
+        #     "roi_size": 3,
+        #     "do_normalize": True,
+        #     "normalize_to_max": False,
+        #
+        #     "training_data_folders": training_folders,
+        #     "dropped_landmarks": drop_landmarks_default + [PoseLandmark.LEFT_HEEL,
+        #                           PoseLandmark.RIGHT_HEEL,
+        #                           PoseLandmark.LEFT_FOOT_INDEX,
+        #                           PoseLandmark.RIGHT_FOOT_INDEX,
+        #                           ],
+        #
+        #     "scheduler_patience": 3,
+        #     "scheduler_min_lr": 1e-6,
+        #     "scheduler_factor": 0.1,
+        #     "trainer_patience": 7,
+        #     "amplify_link_loss": 1,
+        #     "mse_loss": "mean",
+        #
+        #     "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
+        #     "model_name": "drop feets",
+        # },
+        #
+        # {
+        #     "epochs": 30,
+        #     "learning_rate": 5.5e-5,
+        #     "batch_size": 64,
+        #     "seed": random.randint(0, 1_000_000),
+        #     "split_ratios": (
+        #         0.79,
+        #         0.2,
+        #         0.01,
+        #     ),
+        #
+        #     "patch_width": 4,
+        #     "roi_x_size": 6,
+        #     "roi_y_size": 4,
+        #     "roi_history_maxlen": 10,
+        #     "roi_size": 3,
+        #     "do_normalize": True,
+        #     "normalize_to_max": False,
+        #
+        #     "training_data_folders": training_folders,
+        #     "dropped_landmarks": drop_landmarks_default + [PoseLandmark.LEFT_ELBOW,
+        #                           PoseLandmark.RIGHT_ELBOW,
+        #                           PoseLandmark.LEFT_WRIST,
+        #                           PoseLandmark.RIGHT_WRIST,
+        #                           ],
+        #
+        #     "scheduler_patience": 3,
+        #     "scheduler_min_lr": 1e-6,
+        #     "scheduler_factor": 0.1,
+        #     "trainer_patience": 7,
+        #     "amplify_link_loss": 1,
+        #     "mse_loss": "mean",
+        #
+        #     "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
+        #     "model_name": "drop arms",
+        # },
+        #
+        # {
+        #     "epochs": 30,
+        #     "learning_rate": 5.5e-5,
+        #     "batch_size": 64,
+        #     "seed": random.randint(0, 1_000_000),
+        #     "split_ratios": (
+        #         0.79,
+        #         0.2,
+        #         0.01,
+        #     ),
+        #
+        #     "patch_width": 4,
+        #     "roi_x_size": 6,
+        #     "roi_y_size": 4,
+        #     "roi_history_maxlen": 10,
+        #     "roi_size": 3,
+        #     "do_normalize": True,
+        #     "normalize_to_max": False,
+        #
+        #     "training_data_folders": training_folders,
+        #     "dropped_landmarks": drop_landmarks_default + [PoseLandmark.LEFT_ELBOW,
+        #                           PoseLandmark.RIGHT_ELBOW,
+        #                           PoseLandmark.LEFT_WRIST,
+        #                           PoseLandmark.RIGHT_WRIST,
+        #                           PoseLandmark.LEFT_HEEL,
+        #                           PoseLandmark.RIGHT_HEEL,
+        #                           PoseLandmark.LEFT_FOOT_INDEX,
+        #                           PoseLandmark.RIGHT_FOOT_INDEX,
+        #                           ],
+        #
+        #     "scheduler_patience": 3,
+        #     "scheduler_min_lr": 1e-6,
+        #     "scheduler_factor": 0.1,
+        #     "trainer_patience": 7,
+        #     "amplify_link_loss": 1,
+        #     "mse_loss": "mean",
+        #
+        #     "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
+        #     "model_name": "drop arms and feet",
+        # },
+        #
+        # {
+        #     "epochs": 30,
+        #     "learning_rate": 5.5e-5,
+        #     "batch_size": 64,
+        #     "seed": random.randint(0, 1_000_000),
+        #     "split_ratios": (
+        #         0.79,
+        #         0.2,
+        #         0.01,
+        #     ),
+        #
+        #     "patch_width": 4,
+        #     "roi_x_size": 6,
+        #     "roi_y_size": 4,
+        #     "roi_history_maxlen": 5,
+        #     "roi_size": 3,
+        #     "do_normalize": True,
+        #     "normalize_to_max": False,
+        #
+        #     "training_data_folders": training_folders,
+        #     "dropped_landmarks": drop_landmarks_default,
+        #
+        #     "scheduler_patience": 3,
+        #     "scheduler_min_lr": 1e-6,
+        #     "scheduler_factor": 0.1,
+        #     "trainer_patience": 7,
+        #     "amplify_link_loss": 1,
+        #     "mse_loss": "mean",
+        #
+        #     "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
+        #     "model_name": "history 5",
+        # },
+        #
+        # {
+        #     "epochs": 30,
+        #     "learning_rate": 5.5e-5,
+        #     "batch_size": 64,
+        #     "seed": random.randint(0, 1_000_000),  # used for model_name
+        #     "split_ratios": (
+        #         0.79,
+        #         0.2,
+        #         0.01,
+        #     ),
+        #
+        #     "patch_width": 4,
+        #     "roi_x_size": 6,
+        #     "roi_y_size": 4,
+        #     "roi_history_maxlen": 10,
+        #     "roi_size": 3,
+        #     "do_normalize": True,
+        #     "normalize_to_max": True,
+        #
+        #     "training_data_folders": training_folders,
+        #     "dropped_landmarks": drop_landmarks_default,
+        #
+        #     "scheduler_patience": 3,
+        #     "scheduler_min_lr": 1e-6,
+        #     "scheduler_factor": 0.1,
+        #     "trainer_patience": 7,
+        #     "amplify_link_loss": 1,
+        #     "mse_loss": "mean",
+        #
+        #     "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
+        #     "model_name": "normalize roi to max",
+        #
+        # },
         {
             "epochs": 30,
             "learning_rate": 5.5e-5,
@@ -389,8 +422,8 @@ def get_hyper_param_configs():
             "roi_y_size": 4,
             "roi_history_maxlen": 10,
             "roi_size": 3,
-            "do_normalize": True,
-            "normalize_to_max": True,
+            "do_normalize": False,
+            "normalize_to_max": False,
 
             "training_data_folders": training_folders,
             "dropped_landmarks": drop_landmarks_default,
@@ -403,7 +436,7 @@ def get_hyper_param_configs():
             "mse_loss": "mean",
 
             "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
-            "model_name": "normalize roi",
+            "model_name": "no roi normalization",
 
         },
 
