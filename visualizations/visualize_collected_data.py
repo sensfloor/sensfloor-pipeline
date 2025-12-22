@@ -5,16 +5,16 @@ import pandas as pd
 
 from data_loading.roi_floor import RoIFloor, RoIFloorConfig
 
-DATA_DIR_PATH = Path("data/2025-12-01_12-44-43")
+DATA_DIR_PATH = Path("data/2025-12-16_20-45-38-line-felix")
 READOUT_PATH = DATA_DIR_PATH / "sensfloor_readout.csv"
 VIDEO_PATH = DATA_DIR_PATH / "video.mp4"
 
-SIGNAL_THRESHOLD = 140
+SIGNAL_THRESHOLD = 145
 
 readout_df = pd.read_csv(READOUT_PATH)
 
-display_w = 525
-display_h = 805
+display_w = 400
+display_h = 600
 
 cv2.namedWindow("Floor Heatmap", cv2.WINDOW_NORMAL)
 cv2.namedWindow("Video", cv2.WINDOW_NORMAL)
@@ -55,7 +55,8 @@ while True:
             1,
         )
 
-    cv2.imshow("Floor Heatmap", display_img)
+    heatmap_resized = cv2.resize(display_img, (display_w, display_h), interpolation=cv2.INTER_NEAREST)
+    cv2.imshow("Floor Heatmap", heatmap_resized)
 
     if not ret:
         break
