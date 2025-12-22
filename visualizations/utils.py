@@ -18,7 +18,7 @@ def draw_floor(ax: Axes, floor: np.ndarray, cmap: Colormap, vmin: int = 127, vma
         vmax=vmax,
     )
 
-    ax.grid(which="major", color="w", linestyle="-", linewidth=0.5, alpha=0.3)
+    ax.grid(which="major", color="gray", linestyle="-", linewidth=0.5, alpha=0.3)
 
     fields_per_patch = 4
     x_positions = np.arange(0, y_size_floor_array + 1, fields_per_patch)
@@ -32,6 +32,8 @@ def draw_floor(ax: Axes, floor: np.ndarray, cmap: Colormap, vmin: int = 127, vma
 
     ax.set_xlabel("y")
     ax.set_ylabel("x")
+
+    ax.invert_yaxis()
 
     return image
 
