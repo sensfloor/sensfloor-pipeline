@@ -4,7 +4,7 @@ from pathlib import Path
 import tqdm
 from torch.utils.data import DataLoader
 
-from data_collection.mediapipe_pose_extraction import HEADER
+from data_collection.mediapipe_utils import HEADER
 from data_loading.pose_landmark import PoseLandmark
 from model.pose_estimation_model import RegressionModel
 
