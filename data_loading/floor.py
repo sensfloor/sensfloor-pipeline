@@ -8,10 +8,10 @@ def interpolate_signal(signal: np.ndarray) -> np.ndarray:
     averages = signal.reshape((4, 2)).mean(axis=1)
     return np.array(
         [
-            [averages[3], signal[7], signal[0], averages[0]],
-            [signal[6], averages[3], averages[0], signal[1]],
-            [signal[5], averages[2], averages[1], signal[2]],
-            [averages[2], signal[4], signal[3], averages[1]],
+            [averages[2], signal[5], signal[6], averages[3]],
+            [signal[4], averages[2], averages[3], signal[7]],
+            [signal[3], averages[1], averages[0], signal[0]],
+            [averages[1], signal[2], signal[1], averages[0]],
         ],
     )
 
