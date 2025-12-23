@@ -6,7 +6,6 @@ import trackio
 from torch.utils.data import DataLoader
 
 from configs import HyperParams, data_root, get_hyper_param_configs
-from data_collection.mediapipe_pose_extraction import main as extract_poses
 from data_loading.links_min_max import get_link_min_max
 from data_loading.pose_landmark import PoseLandmark
 from data_loading.roi_floor import RoIFloorConfig
@@ -21,7 +20,6 @@ PATCH_WIDTH = 4
 
 
 def main(do_train: bool, do_test: bool) -> None:
-    extract_poses(date=None)
     all_configs = get_hyper_param_configs()
     for hyper_params in all_configs:
         run_config(do_train, do_test, hyper_params)
@@ -34,7 +32,7 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
     device = get_device()
 
     trackio.init(
-        project="sensfloor",
+        project="sensfloor_cairo",
         config=dict(hyper_params),
         name=hyper_params["model_name"] # trackio checks for duplicate runs and changes the name in that case
         # space_id="JuliSharow/sensfloor", # Push to huggingface

@@ -51,7 +51,7 @@ class HyperParams(TypedDict):
     scheduler_min_lr: float
     scheduler_factor: float
     trainer_patience: int
-    amplify_link_loss: int
+    amplify_link_loss: float
     mse_loss: Literal["mean", "sum"]
 
     # Testing
@@ -61,356 +61,11 @@ class HyperParams(TypedDict):
 
 def get_hyper_param_configs():
     all_configs: list[HyperParams] = [
-        # {
-        #     "epochs": 30,
-        #     "learning_rate": 5.5e-5,
-        #     "batch_size": 64,
-        #     "seed": random.randint(0, 1_000_000),
-        #     "split_ratios": (
-        #         0.79,
-        #         0.2,
-        #         0.01,
-        #     ),
-        #
-        #     "patch_width": 4,
-        #     "roi_x_size": 6,
-        #     "roi_y_size": 4,
-        #     "roi_history_maxlen": 10,
-        #     "roi_size": 3,
-        #     "do_normalize": True,
-        #     "normalize_to_max": False,
-        #
-        #     "training_data_folders": training_folders,
-        #     "dropped_landmarks": drop_landmarks_default,
-        #
-        #     "scheduler_patience": 3,
-        #     "scheduler_min_lr": 1e-6,
-        #     "scheduler_factor": 0.1,
-        #     "trainer_patience": 7,
-        #     "amplify_link_loss": 1,
-        #     "mse_loss": "mean",
-        #
-        #     "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
-        #     "model_name": "base_config",
-        # },
-        # {
-        #     "epochs": 30,
-        #     "learning_rate": 5.5e-5,
-        #     "batch_size": 64,
-        #     "seed": random.randint(0, 1_000_000),
-        #     "split_ratios": (
-        #         0.79,
-        #         0.2,
-        #         0.01,
-        #     ),
-        #
-        #     "patch_width": 4,
-        #     "roi_x_size": 6,
-        #     "roi_y_size": 4,
-        #     "roi_history_maxlen": 15,
-        #     "roi_size": 3,
-        #     "do_normalize": True,
-        #     "normalize_to_max": False,
-        #
-        #     "training_data_folders": training_folders,
-        #     "dropped_landmarks": drop_landmarks_default,
-        #
-        #     "scheduler_patience": 3,
-        #     "scheduler_min_lr": 1e-6,
-        #     "scheduler_factor": 0.1,
-        #     "trainer_patience": 7,
-        #     "amplify_link_loss": 1,
-        #     "mse_loss": "mean",
-        #
-        #     "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
-        #     "model_name": "history 15",
-        # },
-        #
-        # {
-        #     "epochs": 30,
-        #     "learning_rate": 5.5e-5,
-        #     "batch_size": 64,
-        #     "seed": random.randint(0, 1_000_000),
-        #     "split_ratios": (
-        #         0.79,
-        #         0.2,
-        #         0.01,
-        #     ),
-        #
-        #     "patch_width": 4,
-        #     "roi_x_size": 6,
-        #     "roi_y_size": 4,
-        #     "roi_history_maxlen": 10,
-        #     "roi_size": 3,
-        #     "do_normalize": True,
-        #     "normalize_to_max": False,
-        #
-        #     "training_data_folders": training_folders,
-        #     "dropped_landmarks": drop_landmarks_default,
-        #
-        #     "scheduler_patience": 3,
-        #     "scheduler_min_lr": 1e-6,
-        #     "scheduler_factor": 0.1,
-        #     "trainer_patience": 7,
-        #     "amplify_link_loss": 1,
-        #     "mse_loss": "sum",
-        #
-        #     "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
-        #     "model_name": "sum loss",
-        # },
-        #
-        # {
-        #     "epochs": 30,
-        #     "learning_rate": 5.5e-5,
-        #     "batch_size": 64,
-        #     "seed": random.randint(0, 1_000_000),
-        #     "split_ratios": (
-        #         0.79,
-        #         0.2,
-        #         0.01,
-        #     ),
-        #
-        #     "patch_width": 4,
-        #     "roi_x_size": 6,
-        #     "roi_y_size": 4,
-        #     "roi_history_maxlen": 10,
-        #     "roi_size": 3,
-        #     "do_normalize": True,
-        #     "normalize_to_max": False,
-        #
-        #     "training_data_folders": training_folders,
-        #     "dropped_landmarks": drop_landmarks_default,
-        #
-        #     "scheduler_patience": 3,
-        #     "scheduler_min_lr": 1e-6,
-        #     "scheduler_factor": 0.1,
-        #     "trainer_patience": 7,
-        #     "amplify_link_loss": 10,
-        #     "mse_loss": "mean",
-        #
-        #     "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
-        #     "model_name": "amplify link loss 10",
-        # },
-        #
-        # {
-        #     "epochs": 30,
-        #     "learning_rate": 5.5e-5,
-        #     "batch_size": 64,
-        #     "seed": random.randint(0, 1_000_000),
-        #     "split_ratios": (
-        #         0.79,
-        #         0.2,
-        #         0.01,
-        #     ),
-        #
-        #     "patch_width": 4,
-        #     "roi_x_size": 6,
-        #     "roi_y_size": 4,
-        #     "roi_history_maxlen": 10,
-        #     "roi_size": 3,
-        #     "do_normalize": True,
-        #     "normalize_to_max": False,
-        #
-        #     "training_data_folders": training_folders,
-        #     "dropped_landmarks": drop_landmarks_default,
-        #
-        #     "scheduler_patience": 3,
-        #     "scheduler_min_lr": 1e-6,
-        #     "scheduler_factor": 0.1,
-        #     "trainer_patience": 7,
-        #     "amplify_link_loss": 0.1,
-        #     "mse_loss": "mean",
-        #
-        #     "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
-        #     "model_name": "amplify link loss 0.1",
-        # },
-
-        # {
-        #     "epochs": 30,
-        #     "learning_rate": 5.5e-5,
-        #     "batch_size": 64,
-        #     "seed": random.randint(0, 1_000_000),
-        #     "split_ratios": (
-        #         0.79,
-        #         0.2,
-        #         0.01,
-        #     ),
-        #
-        #     "patch_width": 4,
-        #     "roi_x_size": 6,
-        #     "roi_y_size": 4,
-        #     "roi_history_maxlen": 10,
-        #     "roi_size": 3,
-        #     "do_normalize": True,
-        #     "normalize_to_max": False,
-        #
-        #     "training_data_folders": training_folders,
-        #     "dropped_landmarks": drop_landmarks_default + [PoseLandmark.LEFT_HEEL,
-        #                           PoseLandmark.RIGHT_HEEL,
-        #                           PoseLandmark.LEFT_FOOT_INDEX,
-        #                           PoseLandmark.RIGHT_FOOT_INDEX,
-        #                           ],
-        #
-        #     "scheduler_patience": 3,
-        #     "scheduler_min_lr": 1e-6,
-        #     "scheduler_factor": 0.1,
-        #     "trainer_patience": 7,
-        #     "amplify_link_loss": 1,
-        #     "mse_loss": "mean",
-        #
-        #     "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
-        #     "model_name": "drop feets",
-        # },
-        #
-        # {
-        #     "epochs": 30,
-        #     "learning_rate": 5.5e-5,
-        #     "batch_size": 64,
-        #     "seed": random.randint(0, 1_000_000),
-        #     "split_ratios": (
-        #         0.79,
-        #         0.2,
-        #         0.01,
-        #     ),
-        #
-        #     "patch_width": 4,
-        #     "roi_x_size": 6,
-        #     "roi_y_size": 4,
-        #     "roi_history_maxlen": 10,
-        #     "roi_size": 3,
-        #     "do_normalize": True,
-        #     "normalize_to_max": False,
-        #
-        #     "training_data_folders": training_folders,
-        #     "dropped_landmarks": drop_landmarks_default + [PoseLandmark.LEFT_ELBOW,
-        #                           PoseLandmark.RIGHT_ELBOW,
-        #                           PoseLandmark.LEFT_WRIST,
-        #                           PoseLandmark.RIGHT_WRIST,
-        #                           ],
-        #
-        #     "scheduler_patience": 3,
-        #     "scheduler_min_lr": 1e-6,
-        #     "scheduler_factor": 0.1,
-        #     "trainer_patience": 7,
-        #     "amplify_link_loss": 1,
-        #     "mse_loss": "mean",
-        #
-        #     "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
-        #     "model_name": "drop arms",
-        # },
-        #
-        # {
-        #     "epochs": 30,
-        #     "learning_rate": 5.5e-5,
-        #     "batch_size": 64,
-        #     "seed": random.randint(0, 1_000_000),
-        #     "split_ratios": (
-        #         0.79,
-        #         0.2,
-        #         0.01,
-        #     ),
-        #
-        #     "patch_width": 4,
-        #     "roi_x_size": 6,
-        #     "roi_y_size": 4,
-        #     "roi_history_maxlen": 10,
-        #     "roi_size": 3,
-        #     "do_normalize": True,
-        #     "normalize_to_max": False,
-        #
-        #     "training_data_folders": training_folders,
-        #     "dropped_landmarks": drop_landmarks_default + [PoseLandmark.LEFT_ELBOW,
-        #                           PoseLandmark.RIGHT_ELBOW,
-        #                           PoseLandmark.LEFT_WRIST,
-        #                           PoseLandmark.RIGHT_WRIST,
-        #                           PoseLandmark.LEFT_HEEL,
-        #                           PoseLandmark.RIGHT_HEEL,
-        #                           PoseLandmark.LEFT_FOOT_INDEX,
-        #                           PoseLandmark.RIGHT_FOOT_INDEX,
-        #                           ],
-        #
-        #     "scheduler_patience": 3,
-        #     "scheduler_min_lr": 1e-6,
-        #     "scheduler_factor": 0.1,
-        #     "trainer_patience": 7,
-        #     "amplify_link_loss": 1,
-        #     "mse_loss": "mean",
-        #
-        #     "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
-        #     "model_name": "drop arms and feet",
-        # },
-        #
-        # {
-        #     "epochs": 30,
-        #     "learning_rate": 5.5e-5,
-        #     "batch_size": 64,
-        #     "seed": random.randint(0, 1_000_000),
-        #     "split_ratios": (
-        #         0.79,
-        #         0.2,
-        #         0.01,
-        #     ),
-        #
-        #     "patch_width": 4,
-        #     "roi_x_size": 6,
-        #     "roi_y_size": 4,
-        #     "roi_history_maxlen": 5,
-        #     "roi_size": 3,
-        #     "do_normalize": True,
-        #     "normalize_to_max": False,
-        #
-        #     "training_data_folders": training_folders,
-        #     "dropped_landmarks": drop_landmarks_default,
-        #
-        #     "scheduler_patience": 3,
-        #     "scheduler_min_lr": 1e-6,
-        #     "scheduler_factor": 0.1,
-        #     "trainer_patience": 7,
-        #     "amplify_link_loss": 1,
-        #     "mse_loss": "mean",
-        #
-        #     "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
-        #     "model_name": "history 5",
-        # },
-        #
-        # {
-        #     "epochs": 30,
-        #     "learning_rate": 5.5e-5,
-        #     "batch_size": 64,
-        #     "seed": random.randint(0, 1_000_000),  # used for model_name
-        #     "split_ratios": (
-        #         0.79,
-        #         0.2,
-        #         0.01,
-        #     ),
-        #
-        #     "patch_width": 4,
-        #     "roi_x_size": 6,
-        #     "roi_y_size": 4,
-        #     "roi_history_maxlen": 10,
-        #     "roi_size": 3,
-        #     "do_normalize": True,
-        #     "normalize_to_max": True,
-        #
-        #     "training_data_folders": training_folders,
-        #     "dropped_landmarks": drop_landmarks_default,
-        #
-        #     "scheduler_patience": 3,
-        #     "scheduler_min_lr": 1e-6,
-        #     "scheduler_factor": 0.1,
-        #     "trainer_patience": 7,
-        #     "amplify_link_loss": 1,
-        #     "mse_loss": "mean",
-        #
-        #     "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
-        #     "model_name": "normalize roi to max",
-        #
-        # },
         {
             "epochs": 30,
             "learning_rate": 5.5e-5,
             "batch_size": 64,
-            "seed": random.randint(0, 1_000_000),  # used for model_name
+            "seed": random.randint(0, 1_000_000),
             "split_ratios": (
                 0.79,
                 0.2,
@@ -420,9 +75,174 @@ def get_hyper_param_configs():
             "patch_width": 4,
             "roi_x_size": 6,
             "roi_y_size": 4,
-            "roi_history_maxlen": 10,
+            "roi_history_maxlen": 15,
             "roi_size": 3,
-            "do_normalize": False,
+            "do_normalize": True,
+            "normalize_to_max": True,
+
+            "training_data_folders": training_folders,
+            "dropped_landmarks": drop_landmarks_default,
+
+            "scheduler_patience": 3,
+            "scheduler_min_lr": 1e-6,
+            "scheduler_factor": 0.1,
+            "trainer_patience": 7,
+            "amplify_link_loss": 0.1,
+            "mse_loss": "mean",
+
+            "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
+            "model_name": "best config combination",
+        },
+
+        {
+            "epochs": 30,
+            "learning_rate": 5.5e-5,
+            "batch_size": 64,
+            "seed": random.randint(0, 1_000_000),
+            "split_ratios": (
+                0.79,
+                0.2,
+                0.01,
+            ),
+
+            "patch_width": 4,
+            "roi_x_size": 6,
+            "roi_y_size": 4,
+            "roi_history_maxlen": 20,
+            "roi_size": 3,
+            "do_normalize": True,
+            "normalize_to_max": True,
+
+            "training_data_folders": training_folders,
+            "dropped_landmarks": drop_landmarks_default,
+
+            "scheduler_patience": 3,
+            "scheduler_min_lr": 1e-6,
+            "scheduler_factor": 0.1,
+            "trainer_patience": 7,
+            "amplify_link_loss": 0.1,
+            "mse_loss": "mean",
+
+            "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
+            "model_name": "history 20",
+        },
+
+        {
+            "epochs": 30,
+            "learning_rate": 5.5e-5,
+            "batch_size": 64,
+            "seed": random.randint(0, 1_000_000),
+            "split_ratios": (
+                0.79,
+                0.2,
+                0.01,
+            ),
+
+            "patch_width": 4,
+            "roi_x_size": 6,
+            "roi_y_size": 4,
+            "roi_history_maxlen": 25,
+            "roi_size": 3,
+            "do_normalize": True,
+            "normalize_to_max": True,
+
+            "training_data_folders": training_folders,
+            "dropped_landmarks": drop_landmarks_default,
+
+            "scheduler_patience": 3,
+            "scheduler_min_lr": 1e-6,
+            "scheduler_factor": 0.1,
+            "trainer_patience": 7,
+            "amplify_link_loss": 0.1,
+            "mse_loss": "mean",
+
+            "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
+            "model_name": "history 25",
+        },
+
+        {
+            "epochs": 30,
+            "learning_rate": 5.5e-5,
+            "batch_size": 64,
+            "seed": random.randint(0, 1_000_000),
+            "split_ratios": (
+                0.79,
+                0.2,
+                0.01,
+            ),
+
+            "patch_width": 4,
+            "roi_x_size": 6,
+            "roi_y_size": 4,
+            "roi_history_maxlen": 15,
+            "roi_size": 3,
+            "do_normalize": True,
+            "normalize_to_max": True,
+
+            "training_data_folders": training_folders,
+            "dropped_landmarks": drop_landmarks_default,
+
+            "scheduler_patience": 3,
+            "scheduler_min_lr": 1e-6,
+            "scheduler_factor": 0.1,
+            "trainer_patience": 7,
+            "amplify_link_loss": 0.01,
+            "mse_loss": "mean",
+
+            "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
+            "model_name": "link_loss 0.01",
+        },
+
+        {
+            "epochs": 30,
+            "learning_rate": 5.5e-5,
+            "batch_size": 64,
+            "seed": random.randint(0, 1_000_000),
+            "split_ratios": (
+                0.79,
+                0.2,
+                0.01,
+            ),
+
+            "patch_width": 4,
+            "roi_x_size": 6,
+            "roi_y_size": 4,
+            "roi_history_maxlen": 15,
+            "roi_size": 3,
+            "do_normalize": True,
+            "normalize_to_max": True,
+
+            "training_data_folders": training_folders,
+            "dropped_landmarks": drop_landmarks_default,
+
+            "scheduler_patience": 3,
+            "scheduler_min_lr": 1e-6,
+            "scheduler_factor": 0.1,
+            "trainer_patience": 7,
+            "amplify_link_loss": 0.05,
+            "mse_loss": "mean",
+
+            "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
+            "model_name": "link_loss 0.05",
+        },
+
+        {
+            "epochs": 30,
+            "learning_rate": 5.5e-5,
+            "batch_size": 64,
+            "seed": random.randint(0, 1_000_000),
+            "split_ratios": (
+                0.79,
+                0.2,
+                0.01,
+            ),
+
+            "patch_width": 4,
+            "roi_x_size": 6,
+            "roi_y_size": 4,
+            "roi_history_maxlen": 15,
+            "roi_size": 3,
+            "do_normalize": True,
             "normalize_to_max": False,
 
             "training_data_folders": training_folders,
@@ -432,14 +252,177 @@ def get_hyper_param_configs():
             "scheduler_min_lr": 1e-6,
             "scheduler_factor": 0.1,
             "trainer_patience": 7,
-            "amplify_link_loss": 1,
+            "amplify_link_loss": 0.1,
             "mse_loss": "mean",
 
             "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
-            "model_name": "no roi normalization",
-
+            "model_name": "Do not normalize to max",
         },
 
+        {
+            "epochs": 30,
+            "learning_rate": 5.5e-5,
+            "batch_size": 256,
+            "seed": random.randint(0, 1_000_000),
+            "split_ratios": (
+                0.79,
+                0.2,
+                0.01,
+            ),
+
+            "patch_width": 4,
+            "roi_x_size": 6,
+            "roi_y_size": 4,
+            "roi_history_maxlen": 15,
+            "roi_size": 3,
+            "do_normalize": True,
+            "normalize_to_max": True,
+
+            "training_data_folders": training_folders,
+            "dropped_landmarks": drop_landmarks_default,
+
+            "scheduler_patience": 3,
+            "scheduler_min_lr": 1e-6,
+            "scheduler_factor": 0.1,
+            "trainer_patience": 7,
+            "amplify_link_loss": 0.1,
+            "mse_loss": "mean",
+
+            "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
+            "model_name": "batchsize 256",
+        },
+
+        {
+            "epochs": 30,
+            "learning_rate": 5.5e-5,
+            "batch_size": 16,
+            "seed": random.randint(0, 1_000_000),
+            "split_ratios": (
+                0.79,
+                0.2,
+                0.01,
+            ),
+
+            "patch_width": 4,
+            "roi_x_size": 6,
+            "roi_y_size": 4,
+            "roi_history_maxlen": 15,
+            "roi_size": 3,
+            "do_normalize": True,
+            "normalize_to_max": True,
+
+            "training_data_folders": training_folders,
+            "dropped_landmarks": drop_landmarks_default,
+
+            "scheduler_patience": 3,
+            "scheduler_min_lr": 1e-6,
+            "scheduler_factor": 0.1,
+            "trainer_patience": 7,
+            "amplify_link_loss": 0.1,
+            "mse_loss": "mean",
+
+            "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
+            "model_name": "batchsize 16",
+        },
+
+        {
+            "epochs": 30,
+            "learning_rate": 1e-5,
+            "batch_size": 64,
+            "seed": random.randint(0, 1_000_000),
+            "split_ratios": (
+                0.79,
+                0.2,
+                0.01,
+            ),
+
+            "patch_width": 4,
+            "roi_x_size": 6,
+            "roi_y_size": 4,
+            "roi_history_maxlen": 15,
+            "roi_size": 3,
+            "do_normalize": True,
+            "normalize_to_max": True,
+
+            "training_data_folders": training_folders,
+            "dropped_landmarks": drop_landmarks_default,
+
+            "scheduler_patience": 3,
+            "scheduler_min_lr": 1e-6,
+            "scheduler_factor": 0.1,
+            "trainer_patience": 7,
+            "amplify_link_loss": 0.1,
+            "mse_loss": "mean",
+
+            "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
+            "model_name": "lr 1e-5",
+        },
+
+        {
+            "epochs": 30,
+            "learning_rate": 1e-4,
+            "batch_size": 64,
+            "seed": random.randint(0, 1_000_000),
+            "split_ratios": (
+                0.79,
+                0.2,
+                0.01,
+            ),
+
+            "patch_width": 4,
+            "roi_x_size": 6,
+            "roi_y_size": 4,
+            "roi_history_maxlen": 15,
+            "roi_size": 3,
+            "do_normalize": True,
+            "normalize_to_max": True,
+
+            "training_data_folders": training_folders,
+            "dropped_landmarks": drop_landmarks_default,
+
+            "scheduler_patience": 3,
+            "scheduler_min_lr": 1e-6,
+            "scheduler_factor": 0.1,
+            "trainer_patience": 7,
+            "amplify_link_loss": 0.1,
+            "mse_loss": "mean",
+
+            "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
+            "model_name": "lr 1e-4",
+        },
+
+        {
+            "epochs": 30,
+            "learning_rate": 5.5e-5,
+            "batch_size": 64,
+            "seed": random.randint(0, 1_000_000),
+            "split_ratios": (
+                0.79,
+                0.2,
+                0.01,
+            ),
+
+            "patch_width": 4,
+            "roi_x_size": 6,
+            "roi_y_size": 4,
+            "roi_history_maxlen": 15,
+            "roi_size": 3,
+            "do_normalize": False,
+            "normalize_to_max": True,
+
+            "training_data_folders": training_folders,
+            "dropped_landmarks": drop_landmarks_default,
+
+            "scheduler_patience": 3,
+            "scheduler_min_lr": 1e-6,
+            "scheduler_factor": 0.1,
+            "trainer_patience": 7,
+            "amplify_link_loss": 0.1,
+            "mse_loss": "mean",
+
+            "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
+            "model_name": "Do not normalize",
+        },
     ]
 
     for config in all_configs:
