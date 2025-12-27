@@ -78,7 +78,7 @@ def get_hyper_param_configs():
             "roi_history_maxlen": 15,
             "roi_size": 3,
             "do_normalize": True,
-            "normalize_to_max": True,
+            "normalize_to_max": False,
 
             "training_data_folders": training_folders,
             "dropped_landmarks": drop_landmarks_default,
@@ -111,7 +111,7 @@ def get_hyper_param_configs():
             "roi_history_maxlen": 20,
             "roi_size": 3,
             "do_normalize": True,
-            "normalize_to_max": True,
+            "normalize_to_max": False,
 
             "training_data_folders": training_folders,
             "dropped_landmarks": drop_landmarks_default,
@@ -144,7 +144,7 @@ def get_hyper_param_configs():
             "roi_history_maxlen": 25,
             "roi_size": 3,
             "do_normalize": True,
-            "normalize_to_max": True,
+            "normalize_to_max": False,
 
             "training_data_folders": training_folders,
             "dropped_landmarks": drop_landmarks_default,
@@ -177,7 +177,7 @@ def get_hyper_param_configs():
             "roi_history_maxlen": 15,
             "roi_size": 3,
             "do_normalize": True,
-            "normalize_to_max": True,
+            "normalize_to_max": False,
 
             "training_data_folders": training_folders,
             "dropped_landmarks": drop_landmarks_default,
@@ -210,7 +210,7 @@ def get_hyper_param_configs():
             "roi_history_maxlen": 15,
             "roi_size": 3,
             "do_normalize": True,
-            "normalize_to_max": True,
+            "normalize_to_max": False,
 
             "training_data_folders": training_folders,
             "dropped_landmarks": drop_landmarks_default,
@@ -276,7 +276,7 @@ def get_hyper_param_configs():
             "roi_history_maxlen": 15,
             "roi_size": 3,
             "do_normalize": True,
-            "normalize_to_max": True,
+            "normalize_to_max": False,
 
             "training_data_folders": training_folders,
             "dropped_landmarks": drop_landmarks_default,
@@ -309,7 +309,7 @@ def get_hyper_param_configs():
             "roi_history_maxlen": 15,
             "roi_size": 3,
             "do_normalize": True,
-            "normalize_to_max": True,
+            "normalize_to_max": False,
 
             "training_data_folders": training_folders,
             "dropped_landmarks": drop_landmarks_default,
@@ -342,7 +342,7 @@ def get_hyper_param_configs():
             "roi_history_maxlen": 15,
             "roi_size": 3,
             "do_normalize": True,
-            "normalize_to_max": True,
+            "normalize_to_max": False,
 
             "training_data_folders": training_folders,
             "dropped_landmarks": drop_landmarks_default,
@@ -375,7 +375,7 @@ def get_hyper_param_configs():
             "roi_history_maxlen": 15,
             "roi_size": 3,
             "do_normalize": True,
-            "normalize_to_max": True,
+            "normalize_to_max": False,
 
             "training_data_folders": training_folders,
             "dropped_landmarks": drop_landmarks_default,
@@ -408,7 +408,7 @@ def get_hyper_param_configs():
             "roi_history_maxlen": 15,
             "roi_size": 3,
             "do_normalize": False,
-            "normalize_to_max": True,
+            "normalize_to_max": False,
 
             "training_data_folders": training_folders,
             "dropped_landmarks": drop_landmarks_default,
@@ -439,3 +439,6 @@ def get_hyper_param_configs():
     names = [config["model_name"] for config in all_configs]
     print(f"running these configs: {names}")
     return all_configs
+
+
+PROJECT_NAME = "sensfloor_cairo_2"
