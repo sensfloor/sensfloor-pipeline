@@ -62,7 +62,7 @@ def test_getitem_with_multiple_signals():
 def test_normalize_roi_history_1():
     roi = torch.ones((1, 12, 12)) * 127
     roi[0, 10, 10] = 200
-    roi = normalize_roi(roi, 127)
+    roi = normalize_roi(roi, 127, normalize_to_max=True)
     assert roi[0, 10, 10] == 1
     assert roi.sum() == 1
 
@@ -71,7 +71,7 @@ def test_normalize_roi_history_10():
     roi = torch.ones((10, 12, 12)) * 127
     roi[0, :, :] = 177
     roi[7, 1, 1] = 227
-    roi = normalize_roi(roi, 127)
+    roi = normalize_roi(roi, 127, normalize_to_max=True)
 
     assert roi[0, 3, 3] == 0.5  # noqa: PLR2004
     assert roi[7, 1, 1] == 1

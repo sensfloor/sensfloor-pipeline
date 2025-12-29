@@ -27,7 +27,9 @@ fps = cap.get(cv2.CAP_PROP_FPS)
 wait_time = int(1000 / fps)
 
 frame_number = 0
-floor_config = RoIFloorConfig(x_size=6, y_size=4, history_maxlen=10, roi_size=3)
+floor_config = RoIFloorConfig(
+    x_size=6, y_size=4, history_maxlen=10, roi_size=3, active_field_min_value=SIGNAL_THRESHOLD
+)
 floor = RoIFloor(floor_config)
 
 while True:
