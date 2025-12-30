@@ -116,7 +116,7 @@ class SensfloorPosesDataset(Dataset):
 
     def __getitem__(self, index: int) -> tuple[torch.Tensor, torch.Tensor]:
         data = self.get_detailed_data(index)
-        return data.transformed_roi_tensor, data.untransformed_label_tensor
+        return data.transformed_roi_tensor, data.transformed_label_tensor
 
     def get_detailed_data(self, index: int) -> DetailedSensfloorPosesData:
         # Get signal history
