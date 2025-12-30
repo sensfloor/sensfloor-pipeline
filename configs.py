@@ -161,7 +161,7 @@ def get_hyper_param_configs():
             "mse_loss": "mean",
 
             "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
-            "model_name": "lr 5e-4",
+            "model_name": "lr 5e-4 second run",
         },
 
         {
