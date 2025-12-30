@@ -55,6 +55,7 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
         drop_landmarks=drop_landmarks,
         normalize_signals=hyper_params["do_normalize"],
         normalize_to_max=hyper_params["normalize_to_max"],
+        rotate_data=hyper_params["rotate_data"],
     )
 
     roi_shape = (dataset_config.floor_config.roi_size * PATCH_WIDTH, dataset_config.floor_config.roi_size * PATCH_WIDTH)

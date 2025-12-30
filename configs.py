@@ -42,6 +42,7 @@ class HyperParams(TypedDict):
     roi_size: int
     do_normalize: bool
     normalize_to_max: bool
+    rotate_data: bool
 
     training_data_folders: list[str]
     dropped_landmarks: list[PoseLandmark]
@@ -79,6 +80,7 @@ def get_hyper_param_configs():
             "roi_size": 3,
             "do_normalize": True,
             "normalize_to_max": False,
+            "rotate_data": False,
 
             "training_data_folders": training_folders,
             "dropped_landmarks": drop_landmarks_default,
@@ -91,7 +93,7 @@ def get_hyper_param_configs():
             "mse_loss": "mean",
 
             "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
-            "model_name": "best config combination",
+            "model_name": "best config combination 2",
         },
 
         {
@@ -108,43 +110,11 @@ def get_hyper_param_configs():
             "patch_width": 4,
             "roi_x_size": 6,
             "roi_y_size": 4,
-            "roi_history_maxlen": 30,
-            "roi_size": 3,
-            "do_normalize": True,
-            "normalize_to_max": False,
-
-            "training_data_folders": training_folders,
-            "dropped_landmarks": drop_landmarks_default,
-
-            "scheduler_patience": 3,
-            "scheduler_min_lr": 1e-6,
-            "scheduler_factor": 0.1,
-            "trainer_patience": 7,
-            "amplify_link_loss": 0.1,
-            "mse_loss": "mean",
-
-            "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
-            "model_name": "history 30",
-        },
-
-        {
-            "epochs": 30,
-            "learning_rate": 1e-3,
-            "batch_size": 64,
-            "seed": random.randint(0, 1_000_000),
-            "split_ratios": (
-                0.79,
-                0.2,
-                0.01,
-            ),
-
-            "patch_width": 4,
-            "roi_x_size": 6,
-            "roi_y_size": 4,
             "roi_history_maxlen": 25,
             "roi_size": 3,
             "do_normalize": True,
             "normalize_to_max": False,
+            "rotate_data": True,
 
             "training_data_folders": training_folders,
             "dropped_landmarks": drop_landmarks_default,
@@ -157,7 +127,7 @@ def get_hyper_param_configs():
             "mse_loss": "mean",
 
             "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
-            "model_name": "lr 1e-3",
+            "model_name": "rotate data",
         },
 
         {
@@ -178,6 +148,7 @@ def get_hyper_param_configs():
             "roi_size": 3,
             "do_normalize": True,
             "normalize_to_max": False,
+            "rotate_data": False,
 
             "training_data_folders": training_folders,
             "dropped_landmarks": drop_landmarks_default,
@@ -211,6 +182,7 @@ def get_hyper_param_configs():
             "roi_size": 3,
             "do_normalize": True,
             "normalize_to_max": False,
+            "rotate_data": False,
 
             "training_data_folders": training_folders,
             "dropped_landmarks": drop_landmarks_default,
@@ -244,6 +216,7 @@ def get_hyper_param_configs():
             "roi_size": 3,
             "do_normalize": True,
             "normalize_to_max": False,
+            "rotate_data": False,
 
             "training_data_folders": training_folders,
             "dropped_landmarks": drop_landmarks_default,
@@ -277,6 +250,7 @@ def get_hyper_param_configs():
             "roi_size": 3,
             "do_normalize": True,
             "normalize_to_max": False,
+            "rotate_data": False,
 
             "training_data_folders": training_folders,
             "dropped_landmarks": drop_landmarks_default,
