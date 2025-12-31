@@ -144,7 +144,6 @@ class SensfloorPosesDataset(Dataset):
 
         transformed_label_tensor = untransformed_label_tensor
         if self.config.rotate_data:
-            print("Rotate")
             degree = random.choice([0, 90, 180, 270])
             transformed_label_tensor = rotate_pose(untransformed_label_tensor, degree)
             transformed_roi_tensor = rotate_roi(transformed_roi_tensor, degree)
