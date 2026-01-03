@@ -87,15 +87,17 @@ class DetailedSensfloorPosesData:
 
 class SensfloorPosesDataset(Dataset):
     def __init__(
-        self,
-        poses_df: pd.DataFrame,
-        sensfloor_readout_df: pd.DataFrame,
-        config: DatasetConfig,
+            self,
+            poses_df: pd.DataFrame,
+            sensfloor_readout_df: pd.DataFrame,
+            config: DatasetConfig,
+            return_detailed: bool = False,
     ) -> None:
         super().__init__()
         self.poses_df = poses_df
         self.sensfloor_readout_df = sensfloor_readout_df
         self.config = config
+        self.return_detailed = return_detailed
 
         if config.drop_landmarks:
             self.poses_df = drop_landmarks(poses=poses_df, drop_landmarks=config.drop_landmarks)
@@ -114,8 +116,10 @@ class SensfloorPosesDataset(Dataset):
     def __len__(self) -> int:
         return len(self.frames_containing_messages)
 
-    def __getitem__(self, index: int) -> tuple[torch.Tensor, torch.Tensor]:
+    def __getitem__(self, index: int) -> DetailedSensfloorPosesData | tuple[torch.Tensor, torch.Tensor]:
         data = self.get_detailed_data(index)
+        if self.return_detailed:
+            return data
         return data.transformed_roi_tensor, data.transformed_label_tensor
 
     def get_detailed_data(self, index: int) -> DetailedSensfloorPosesData:
@@ -158,13 +162,14 @@ class SensfloorPosesDataset(Dataset):
         )
 
 
-def load_single_dataset(data_path: Path, config: DatasetConfig) -> SensfloorPosesDataset:
+def load_single_dataset(data_path: Path, config: DatasetConfig, return_detailed=False) -> SensfloorPosesDataset:
     poses_df = pd.read_csv(data_path / "video_poses.csv")
     readout_df = pd.read_csv(data_path / "sensfloor_readout.csv")
     return SensfloorPosesDataset(
         poses_df=poses_df,
         sensfloor_readout_df=readout_df,
         config=config,
+        return_detailed = return_detailed,
     )
 
 
@@ -175,10 +180,10 @@ def load_all_datasets(data_root_path: Path, config: DatasetConfig) -> ConcatData
 
 
 def train_val_test_split(
-    data_root_path: Path,
-    ratios: tuple[float, float, float],
-    config: DatasetConfig,
-    batch_size: int,
+        data_root_path: Path,
+        ratios: tuple[float, float, float],
+        config: DatasetConfig,
+        batch_size: int,
 ) -> tuple[DataLoader, DataLoader, DataLoader]:
     if sum(ratios) != 1.0:
         message = "Splitting ratios don't add up to 1!"
