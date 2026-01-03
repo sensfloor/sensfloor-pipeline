@@ -4,6 +4,7 @@ import numpy as np
 import torch
 from torch import nn, optim
 from torch.optim.lr_scheduler import LRScheduler
+from tqdm import tqdm
 
 from data_loading.pose_landmark import PoseLandmark
 from model.base_trainer import BaseTrainer
@@ -60,9 +61,9 @@ class SensfloorTrainer(BaseTrainer):
         return self.calculate_test_accuracy(outputs, labels, self.landmarks_out, threshold)
 
 def get_test_accuracy(model: nn.Module, test_loader: torch.utils.data.DataLoader, landmarks_out: int):
-
-    total_accuracy = 0
-    for inputs, labels in test_loader:
+    model.eval()
+    total_accuracy = 0.0
+    for inputs, labels in tqdm(test_loader):
         outputs = model(inputs)
         accuracy = SensfloorTrainer.calculate_test_accuracy(outputs, labels, landmarks_out)
         total_accuracy += accuracy
