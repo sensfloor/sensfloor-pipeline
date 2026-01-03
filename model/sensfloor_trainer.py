@@ -38,13 +38,19 @@ class SensfloorTrainer(BaseTrainer):
         self.kept_links = kept_links
 
     @staticmethod
-    def calculate_test_accuracy(outputs, labels, landmarks_out: int, threshold=0.1):
+    def calculate_mean_accuracy(outputs, labels, landmarks_out: int, threshold=0.1):
+        joint_accuracy = SensfloorTrainer.calculate_joint_accuracies(outputs,labels,landmarks_out, threshold)
+        accuracy = joint_accuracy.mean()  # average over all B × landmarks_out
+        return accuracy.item() * 100
+
+    @staticmethod
+    def calculate_joint_accuracies(outputs, labels, landmarks_out: int, threshold=0.1):
         coords = outputs.view(-1, landmarks_out, 3)  # [B, landmarks_out, 3]
         reshaped_labels = labels.view(-1, landmarks_out, 3)  # [B, landmarks_out, 3]
         dist = torch.linalg.vector_norm(coords - reshaped_labels, dim=2)  # [B, landmarks_out]
-        correct = (dist < threshold)
-        accuracy = correct.float().mean()  # average over all B × landmarks_out
-        return accuracy.item() * 100
+        correct = (dist < threshold) # values: [True, False, ...]
+        return correct.float() # values: [1, 0, ...]
+
 
     def forward_pass(self, inputs: torch.Tensor):
         return self.model(inputs)
@@ -58,14 +64,17 @@ class SensfloorTrainer(BaseTrainer):
         return loss
 
     def calculate_accuracy(self, outputs, labels, threshold=0.1):
-        return self.calculate_test_accuracy(outputs, labels, self.landmarks_out, threshold)
+        return self.calculate_mean_accuracy(outputs, labels, self.landmarks_out, threshold)
 
-def get_test_accuracy(model: nn.Module, test_loader: torch.utils.data.DataLoader, landmarks_out: int):
+def get_test_accuracy(model: nn.Module, test_loader: torch.utils.data.DataLoader, device, landmarks_out: int):
     model.eval()
+    model.to(device)
     total_accuracy = 0.0
-    for inputs, labels in tqdm(test_loader):
-        outputs = model(inputs)
-        accuracy = SensfloorTrainer.calculate_test_accuracy(outputs, labels, landmarks_out)
-        total_accuracy += accuracy
+    with torch.no_grad():
+        for inputs, labels in tqdm(test_loader):
+            inputs, labels = inputs.to(device), labels.to(device)
+            outputs = model(inputs)
+            accuracy = SensfloorTrainer.calculate_mean_accuracy(outputs, labels, landmarks_out)
+            total_accuracy += accuracy
 
     return total_accuracy / len(test_loader)

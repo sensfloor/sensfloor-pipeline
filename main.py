@@ -125,13 +125,15 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
         model.load_state_dict(state_dict=checkpoint)
 
         # --- Create csv Predictions ---
-        out_path = data_path / f"{hyper_params['model_name']}_predictions.csv"
-        print(f"creating predictions: {out_path}")
-        create_predictions(data_path, dataset_config, kept_landmarks, model, out_path)
+        preds = data_path / f"{hyper_params['model_name']}_predictions.csv"
+        acc = data_path / f"{hyper_params['model_name']}_accuracies.csv"
+        print(f"creating predictions: {preds}")
+        create_predictions(data_path, dataset_config, kept_landmarks, model, preds, acc, device)
 
+        # --- Test Accuracy ---
         test_dataset = load_single_dataset(data_path, config=dataset_config)
-        test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False)
-        test_accuracy = get_test_accuracy(model, test_dataloader, landmarks_out)
+        test_dataloader = DataLoader(test_dataset, batch_size=len(test_dataset), shuffle=False)
+        test_accuracy = get_test_accuracy(model, test_dataloader, device, landmarks_out)
         print(f"test_accuracy for {data_path} is :{test_accuracy}")
         trackio.log({"test_accuracy": test_accuracy})
 
