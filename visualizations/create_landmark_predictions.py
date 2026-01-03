@@ -14,6 +14,7 @@ from model.sensfloor_trainer import SensfloorTrainer
 
 ACC_HEADER = ["frame_number"] + [lm.name for lm in PoseLandmark]
 
+
 def detailed_collate_fn(batch: list[DetailedSensfloorPosesData]):
     # 'batch' is a list of DetailedSensfloorPosesData objects
 
@@ -34,12 +35,12 @@ def create_predictions(data_path: Path,
                        model: RegressionModel,
                        pred_out_path: Path,
                        acc_out_path: Path, device,
-                       total_mediapipe_landmarks: int = 33):
+                       total_mediapipe_landmarks: int = 33,
+                       stop_after_x_batches: int | None = None):
     detailed_dataset = load_single_dataset(data_path, config=dataset_config, return_detailed=True)
     detailed_dataloader = DataLoader(detailed_dataset, batch_size=256, shuffle=False, collate_fn=detailed_collate_fn)
     model.to(device)
     model.eval()
-
 
     with open(pred_out_path, "w", newline="") as f_pred, \
             open(acc_out_path, "w", newline="") as f_acc:
@@ -51,7 +52,8 @@ def create_predictions(data_path: Path,
         acc_writer.writerow(ACC_HEADER)
 
         # for each batch of epoch
-        for batch_tensors, batch_labels, batch_details in tqdm.tqdm(detailed_dataloader):
+        for batch, (batch_tensors, batch_labels, batch_details) in enumerate(
+                tqdm.tqdm(detailed_dataloader, total=stop_after_x_batches, ncols=100)):
 
             batch_tensors = batch_tensors.to(device)
             batch_labels = batch_labels.to(device)
@@ -60,7 +62,8 @@ def create_predictions(data_path: Path,
                 outputs = model(batch_tensors)
 
                 pred_coords = outputs.view(outputs.size(0), len(kept_landmarks), 3)
-                accuarcy = SensfloorTrainer.calculate_joint_accuracies(outputs, batch_labels, landmarks_out=len(kept_landmarks))
+                accuarcy = SensfloorTrainer.calculate_joint_accuracies(outputs, batch_labels,
+                                                                       landmarks_out=len(kept_landmarks))
 
                 pred_cpu = pred_coords.cpu().numpy()
                 accuarcy_cpu = accuarcy.cpu().numpy()
@@ -74,9 +77,9 @@ def create_predictions(data_path: Path,
 
                 # insert kept landmarks into the full rows
                 # for each joint of output
-                for model_prediction_index, kept_landmark in tqdm.tqdm(enumerate(kept_landmarks)):
-                    media_pipe_joint_index = kept_landmark.value # index of the mediapipe landmark
-                    x, y, z = coords[model_prediction_index].tolist() # corresponding model predictions for landmark
+                for model_prediction_index, kept_landmark in enumerate(kept_landmarks):
+                    media_pipe_joint_index = kept_landmark.value  # index of the mediapipe landmark
+                    x, y, z = coords[model_prediction_index].tolist()  # corresponding model predictions for landmark
 
                     base_idx = media_pipe_joint_index * 3
                     full_pred_row[base_idx] = x
@@ -86,4 +89,7 @@ def create_predictions(data_path: Path,
                     full_acc_row[media_pipe_joint_index] = accuracy[model_prediction_index]
 
                 pred_writer.writerow([detailed_data.frame_number] + full_pred_row)
-                acc_writer.writerow( [detailed_data.frame_number] + full_acc_row)
+                acc_writer.writerow([detailed_data.frame_number] + full_acc_row)
+
+            if stop_after_x_batches is not None and batch >= stop_after_x_batches:
+                break
