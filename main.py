@@ -3,6 +3,7 @@ from pathlib import Path
 
 import torch
 import trackio
+from sympy.abc import lamda
 from torch.utils.data import DataLoader
 
 from configs import HyperParams, data_root, get_hyper_param_configs, PROJECT_NAME
@@ -64,7 +65,15 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
     model_name = f"{hyper_params['model_name']}_model.pth"
 
     if do_train:
-        model = RegressionModel(roi_shape=roi_shape, landmarks_out=landmarks_out, history_len=dataset_config.floor_config.history_maxlen)
+        model_path = Path(model_name)
+        model = RegressionModel(
+            roi_shape=roi_shape,
+            landmarks_out=landmarks_out,
+            history_len=dataset_config.floor_config.history_maxlen,
+        )
+
+        checkpoint = torch.load(f=model_path)
+        model.load_state_dict(state_dict=checkpoint)
 
         train_loader, val_loader, _ = train_val_test_split(
             data_root_path=data_root,
@@ -105,8 +114,6 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
 
     if do_test:
         data_path = hyper_params["test_path"]
-        dataset = load_single_dataset(data_path, config=dataset_config)
-        dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
 
         model_path = Path(model_name)
         model = RegressionModel(
@@ -117,10 +124,14 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
         checkpoint = torch.load(f=model_path)
         model.load_state_dict(state_dict=checkpoint)
 
+        # --- Create csv Predictions ---
         out_path = data_path / f"{hyper_params['model_name']}_predictions.csv"
-        create_predictions(dataloader, kept_landmarks, model, out_path)
+        print(f"creating predictions: {out_path}")
+        create_predictions(data_path, dataset_config, kept_landmarks, model, out_path)
 
-        test_accuracy = get_test_accuracy(model, dataloader, landmarks_out)
+        test_dataset = load_single_dataset(data_path, config=dataset_config)
+        test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False)
+        test_accuracy = get_test_accuracy(model, test_dataloader, landmarks_out)
         print(f"test_accuracy for {data_path} is :{test_accuracy}")
         trackio.log({"test_accuracy": test_accuracy})
 

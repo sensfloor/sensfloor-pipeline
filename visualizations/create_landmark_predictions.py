@@ -1,23 +1,42 @@
 import csv
 from pathlib import Path
 
+import torch
 import tqdm
 from torch.utils.data import DataLoader
 
 from data_collection.mediapipe_utils import HEADER
 from data_loading.pose_landmark import PoseLandmark
+from data_loading.sensfloor_dataset import load_single_dataset, \
+    DatasetConfig
 from model.pose_estimation_model import RegressionModel
 
+def detailed_collate_fn(batch: list):
+    # 'batch' is a list of DetailedSensfloorPosesData objects
 
-def create_predictions(dataloader: DataLoader, kept_landmarks: list[PoseLandmark], model: RegressionModel,
+    # 1. Extract and stack tensors for the model (Creates B x C x H x W)
+    #    (Assumes your object has 'transformed_roi_tensor')
+    tensors = torch.stack([item.transformed_roi_tensor for item in batch])
+
+    # 2. Keep the original objects for metadata access
+    detailed_objects = batch
+
+    return tensors, detailed_objects
+
+
+def create_predictions(data_path: Path, dataset_config: DatasetConfig,  kept_landmarks: list[PoseLandmark], model: RegressionModel,
                        out_path: Path, total_mediapipe_landmarks: int = 33):
+    detailed_dataset = load_single_dataset(data_path, config=dataset_config, return_detailed=True)
+    detailed_dataloader = DataLoader(detailed_dataset, batch_size=1, shuffle=False, collate_fn=detailed_collate_fn)
+
     with open(out_path, "w", newline="") as csv_file:
         writer = csv.writer(csv_file)
         writer.writerow(HEADER)
 
-        for frame, data in tqdm.tqdm(enumerate(dataloader), total=len(dataloader)):
-            roi_history, pose = data
-            outputs = model(roi_history)
+        for batch_tensors, batch_details in tqdm.tqdm(detailed_dataloader):
+
+            detailed_data = batch_details[0] #assuming the loader is batch_size 1
+            outputs = model(batch_tensors)
 
             coords = outputs.view(-1, len(kept_landmarks), 3)
 
@@ -33,4 +52,4 @@ def create_predictions(dataloader: DataLoader, kept_landmarks: list[PoseLandmark
                 full_row_data[base_idx + 1] = y
                 full_row_data[base_idx + 2] = z
 
-            writer.writerow([frame] + full_row_data)
+            writer.writerow([detailed_data.frame_number] + full_row_data)
