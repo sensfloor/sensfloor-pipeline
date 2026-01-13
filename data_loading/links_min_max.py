@@ -4,11 +4,13 @@ import numpy as np
 import pandas as pd
 from numpy import ndarray
 
-from data_loading.pose_landmark import LINKS, PoseLandmark
+from data_loading.pose_landmark import PoseLandmark
+from definitions import DATA_PATH, ROOT_PATH
 
 
-def get_link_min_max(do_compute_link_lengths: bool, links: list[tuple[PoseLandmark, PoseLandmark]], traing_folders: Path = Path("./data")):
-    link_path = Path("./outputs/link_lengths")
+def get_link_min_max(do_compute_link_lengths: bool, links: list[tuple[PoseLandmark, PoseLandmark]],
+                     traing_folders: Path = DATA_PATH):
+    link_path = ROOT_PATH / "outputs" / "link_lengths"
     link_min_path = link_path / "link_min.npy"
     link_max_path = link_path / "link_max.npy"
 
@@ -23,9 +25,9 @@ def get_link_min_max(do_compute_link_lengths: bool, links: list[tuple[PoseLandma
     return link_min, link_max
 
 
-def compute_kmin_kmax(train_folder_path: Path, links: list[tuple[PoseLandmark, PoseLandmark]], lower_percentile: float = 3.0,
+def compute_kmin_kmax(train_folder_path: Path, links: list[tuple[PoseLandmark, PoseLandmark]],
+                      lower_percentile: float = 3.0,
                       upper_percentile: float = 97.0) -> tuple[ndarray, ndarray]:
-
     collected_link_data = [[] for _ in links]
 
     folders = [folder for folder in train_folder_path.iterdir() if folder.is_dir()]

@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Literal
 
 import numpy as np
@@ -7,6 +8,7 @@ from torch.optim.lr_scheduler import LRScheduler
 from tqdm import tqdm
 
 from data_loading.pose_landmark import PoseLandmark
+from definitions import ROOT_PATH
 from training.base_trainer import BaseTrainer
 from training.link_loss import calculate_linkloss
 
@@ -25,6 +27,7 @@ class SensfloorTrainer(BaseTrainer):
         scheduler: LRScheduler | None = None,
         use_early_stopping: bool = True,
         patience: int = 10,
+        results_path: Path = ROOT_PATH,
         best_model_name: str = "best_model.pth",
         amplify_link_loss: float = 10,
         loss_reduction: Literal["mean", "sum"] = "mean",
@@ -37,6 +40,7 @@ class SensfloorTrainer(BaseTrainer):
             use_early_stopping=use_early_stopping,
             patience=patience,
             best_model_name=best_model_name,
+            results_path = results_path,
         )
 
         self.amplify_link_loss = amplify_link_loss

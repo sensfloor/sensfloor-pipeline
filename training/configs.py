@@ -1,3 +1,4 @@
+import pickle
 import random
 from pathlib import Path
 from typing import Literal, TypedDict
@@ -5,7 +6,9 @@ from typing import Literal, TypedDict
 import torch
 import trackio
 from torch.utils.data import DataLoader
-from utils import get_device, get_kept_links
+
+from definitions import ROOT_PATH, DATA_PATH
+from training.utils import get_device, get_kept_links
 
 from data_loading.links_min_max import get_link_min_max
 from data_loading.pose_landmark import PoseLandmark
@@ -15,10 +18,9 @@ from training.sensfloor_dataset import DatasetConfig, load_single_dataset, train
 from training.sensfloor_trainer import SensfloorTrainer, get_test_accuracy
 from training.utils import set_seed
 
-from visualization import create_predictions
+from visualization.create_landmark_predictions import create_predictions
 
-data_root = Path("./data")
-training_folders = [f.name for f in data_root.iterdir() if f.is_dir()]
+training_folders = [f.name for f in DATA_PATH.iterdir() if f.is_dir()]
 
 drop_landmarks_default = [
     PoseLandmark.LEFT_EYE,
@@ -77,7 +79,7 @@ class HyperParams(TypedDict):
 def get_hyper_param_configs():
     all_configs: list[HyperParams] = [
         {
-            "epochs": 40,
+            "epochs": 1,
             "learning_rate": 1e-4,
             "batch_size": 32,
             "seed": random.randint(0, 1_000_000),
@@ -102,95 +104,8 @@ def get_hyper_param_configs():
             "trainer_patience": 7,
             "amplify_link_loss": 0.1,
             "mse_loss": "mean",
-            "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
+            "test_path": ROOT_PATH / "data_testing" / "2025-12-09_15-58-52-line-justin",
             "model_name": "best config combination",
-        },
-        {
-            "epochs": 40,
-            "learning_rate": 1e-4,
-            "batch_size": 32,
-            "seed": random.randint(0, 1_000_000),
-            "split_ratios": (
-                0.79,
-                0.2,
-                0.01,
-            ),
-            "patch_width": 4,
-            "roi_x_size": 6,
-            "roi_y_size": 4,
-            "roi_history_maxlen": 25,
-            "roi_size": 3,
-            "do_normalize": True,
-            "normalize_to_max": False,
-            "rotate_data": False,
-            "training_data_folders": training_folders,
-            "dropped_landmarks": drop_landmarks_default,
-            "scheduler_patience": 3,
-            "scheduler_min_lr": 1e-6,
-            "scheduler_factor": 0.1,
-            "trainer_patience": 7,
-            "amplify_link_loss": 0.1,
-            "mse_loss": "mean",
-            "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
-            "model_name": "second basic",
-        },
-        {
-            "epochs": 40,
-            "learning_rate": 1e-4,
-            "batch_size": 32,
-            "seed": random.randint(0, 1_000_000),
-            "split_ratios": (
-                0.79,
-                0.2,
-                0.01,
-            ),
-            "patch_width": 4,
-            "roi_x_size": 6,
-            "roi_y_size": 4,
-            "roi_history_maxlen": 25,
-            "roi_size": 3,
-            "do_normalize": True,
-            "normalize_to_max": False,
-            "rotate_data": True,
-            "training_data_folders": training_folders,
-            "dropped_landmarks": drop_landmarks_default,
-            "scheduler_patience": 3,
-            "scheduler_min_lr": 1e-6,
-            "scheduler_factor": 0.1,
-            "trainer_patience": 7,
-            "amplify_link_loss": 0.1,
-            "mse_loss": "mean",
-            "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
-            "model_name": "Rotate",
-        },
-        {
-            "epochs": 40,
-            "learning_rate": 1e-4,
-            "batch_size": 32,
-            "seed": random.randint(0, 1_000_000),
-            "split_ratios": (
-                0.79,
-                0.2,
-                0.01,
-            ),
-            "patch_width": 4,
-            "roi_x_size": 6,
-            "roi_y_size": 4,
-            "roi_history_maxlen": 25,
-            "roi_size": 3,
-            "do_normalize": True,
-            "normalize_to_max": False,
-            "rotate_data": True,
-            "training_data_folders": training_folders,
-            "dropped_landmarks": drop_landmarks_default,
-            "scheduler_patience": 3,
-            "scheduler_min_lr": 1e-6,
-            "scheduler_factor": 0.1,
-            "trainer_patience": 7,
-            "amplify_link_loss": 0.1,
-            "mse_loss": "mean",
-            "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
-            "model_name": "Rotate Second run",
         },
     ]
 
@@ -211,13 +126,33 @@ def get_hyper_param_configs():
 
 
 PROJECT_NAME = "sensfloor_cairo_4"
-
 PATCH_WIDTH = 4
+MODELS_FOLDER_PATH = ROOT_PATH / "outputs" / "models"
+
+CONFIG_FILE_NAME = "config.pickle"
+
+
+def save_config(config, model_folder: Path):
+    model_folder.mkdir(parents=True, exist_ok=True)
+    print(f"writing to file {model_folder}")
+    with open(model_folder / CONFIG_FILE_NAME, "wb+") as f:
+        pickle.dump(config, f, pickle.HIGHEST_PROTOCOL)
+
+
+def load_config(model_folder: Path) -> HyperParams:
+    with open(model_folder / CONFIG_FILE_NAME, "rb") as f:
+        return pickle.load(f)
 
 
 # TODO: Refactor to two sperate methods -> Train config, Test config
 def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None:
     print(f"hyper params: {hyper_params}")
+
+    model_folder = MODELS_FOLDER_PATH / hyper_params['model_name']
+    model_file_name = "best_model.pth"
+    model_path = model_folder / model_file_name
+
+    save_config(hyper_params, model_folder)
 
     set_seed(seed=hyper_params["seed"])
 
@@ -253,21 +188,15 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
     roi_shape = (dataset_config.floor_config.roi_size * PATCH_WIDTH, dataset_config.floor_config.roi_size * PATCH_WIDTH)
     landmarks_out = len(kept_landmarks)
 
-    model_name = f"{hyper_params['model_name']}_model.pth"
-
     if do_train:
-        model_path = Path(model_name)
         model = RegressionModel(
             roi_shape=roi_shape,
             landmarks_out=landmarks_out,
             history_len=dataset_config.floor_config.history_maxlen,
         )
 
-        checkpoint = torch.load(f=model_path)
-        model.load_state_dict(state_dict=checkpoint)
-
         train_loader, val_loader, _ = train_val_test_split(
-            data_root_path=data_root,
+            data_root_path=DATA_PATH,
             ratios=hyper_params["split_ratios"],
             config=dataset_config,
             batch_size=hyper_params["batch_size"],
@@ -286,7 +215,8 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
 
         trainer = SensfloorTrainer(
             model=model,
-            best_model_name=model_name,
+            best_model_name=model_file_name,
+            results_path=model_folder,
             device=device,
             optimizer=optimizer,
             patience=hyper_params["trainer_patience"],
@@ -306,12 +236,12 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
     if do_test:
         data_path = hyper_params["test_path"]
 
-        model_path = Path(model_name)
         model = RegressionModel(
             roi_shape=roi_shape,
             landmarks_out=landmarks_out,
             history_len=dataset_config.floor_config.history_maxlen,
         )
+
         checkpoint = torch.load(f=model_path)
         model.load_state_dict(state_dict=checkpoint)
 

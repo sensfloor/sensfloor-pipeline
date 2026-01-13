@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import torch
@@ -10,6 +11,8 @@ from torch.nn.modules.loss import _Loss
 from torch.optim.lr_scheduler import LRScheduler
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+
+from definitions import ROOT_PATH
 
 
 @dataclass
@@ -30,6 +33,7 @@ class BaseTrainer(metaclass=ABCMeta):
         scheduler: LRScheduler | None = None,
         use_early_stopping: bool = True,
         patience: int = 10,
+        results_path: Path = ROOT_PATH,
         best_model_name: str = "best_model.pth",
     ):
         self.model: nn.Module = model.to(device)
@@ -42,6 +46,7 @@ class BaseTrainer(metaclass=ABCMeta):
         self.best_val_loss: float = float("inf")
         self.patience_counter: float = 0
         self.metrics_list: list[Any] = []
+        self.results_path: Path = results_path
 
     @abstractmethod
     def forward_pass(self, inputs: torch.Tensor) -> Any:
@@ -67,7 +72,7 @@ class BaseTrainer(metaclass=ABCMeta):
 
     def save_best_model(self, val_loss: float) -> None:
         if val_loss < self.best_val_loss:
-            torch.save(self.model.state_dict(), self.best_model_name)
+            torch.save(self.model.state_dict(), self.results_path / self.best_model_name)
             print(f"Best model updated with validation loss {val_loss:.4f}.")
 
     def train(self, train_loader: DataLoader, validation_loader: DataLoader, epochs: int) -> None:
