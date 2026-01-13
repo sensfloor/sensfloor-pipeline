@@ -7,10 +7,9 @@ from torch.utils.data import DataLoader
 
 from data_collection.mediapipe_utils import HEADER
 from data_loading.pose_landmark import PoseLandmark
-from data_loading.sensfloor_dataset import load_single_dataset, \
-    DatasetConfig, DetailedSensfloorPosesData
-from model.pose_estimation_model import RegressionModel
-from model.sensfloor_trainer import SensfloorTrainer
+from training.pose_estimation_model import RegressionModel
+from training.sensfloor_dataset import DatasetConfig, DetailedSensfloorPosesData, load_single_dataset
+from training.sensfloor_trainer import SensfloorTrainer
 
 ACC_HEADER = ["frame_number"] + [lm.name for lm in PoseLandmark]
 
@@ -29,22 +28,23 @@ def detailed_collate_fn(batch: list[DetailedSensfloorPosesData]):
     return tensors, labels, detailed_objects
 
 
-def create_predictions(data_path: Path,
-                       dataset_config: DatasetConfig,
-                       kept_landmarks: list[PoseLandmark],
-                       model: RegressionModel,
-                       pred_out_path: Path,
-                       acc_out_path: Path, device,
-                       total_mediapipe_landmarks: int = 33,
-                       stop_after_x_batches: int | None = None):
+def create_predictions(
+    data_path: Path,
+    dataset_config: DatasetConfig,
+    kept_landmarks: list[PoseLandmark],
+    model: RegressionModel,
+    pred_out_path: Path,
+    acc_out_path: Path,
+    device,
+    total_mediapipe_landmarks: int = 33,
+    stop_after_x_batches: int | None = None,
+):
     detailed_dataset = load_single_dataset(data_path, config=dataset_config, return_detailed=True)
     detailed_dataloader = DataLoader(detailed_dataset, batch_size=256, shuffle=False, collate_fn=detailed_collate_fn)
     model.to(device)
     model.eval()
 
-    with open(pred_out_path, "w", newline="") as f_pred, \
-            open(acc_out_path, "w", newline="") as f_acc:
-
+    with open(pred_out_path, "w", newline="") as f_pred, open(acc_out_path, "w", newline="") as f_acc:
         pred_writer = csv.writer(f_pred)
         acc_writer = csv.writer(f_acc)
 
@@ -53,8 +53,8 @@ def create_predictions(data_path: Path,
 
         # for each batch of epoch
         for batch, (batch_tensors, batch_labels, batch_details) in enumerate(
-                tqdm.tqdm(detailed_dataloader, total=stop_after_x_batches, ncols=100)):
-
+            tqdm.tqdm(detailed_dataloader, total=stop_after_x_batches, ncols=100),
+        ):
             batch_tensors = batch_tensors.to(device)
             batch_labels = batch_labels.to(device)
 
@@ -62,15 +62,17 @@ def create_predictions(data_path: Path,
                 outputs = model(batch_tensors)
 
                 pred_coords = outputs.view(outputs.size(0), len(kept_landmarks), 3)
-                accuarcy = SensfloorTrainer.calculate_joint_accuracies(outputs, batch_labels,
-                                                                       landmarks_out=len(kept_landmarks))
+                accuarcy = SensfloorTrainer.calculate_joint_accuracies(
+                    outputs,
+                    batch_labels,
+                    landmarks_out=len(kept_landmarks),
+                )
 
                 pred_cpu = pred_coords.cpu().numpy()
                 accuarcy_cpu = accuarcy.cpu().numpy()
 
             # for each output of batch
             for coords, accuracy, detailed_data in zip(pred_cpu, accuarcy_cpu, batch_details):
-
                 # The csv should have all 33 joints even though the model doesnt predict all of them
                 full_pred_row = [None] * (total_mediapipe_landmarks * 3)
                 full_acc_row = [None] * total_mediapipe_landmarks

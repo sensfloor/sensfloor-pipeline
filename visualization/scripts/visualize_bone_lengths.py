@@ -7,7 +7,7 @@ import pandas as pd
 
 from data_loading.pose_landmark import PoseLandmark
 
-POSES_PATH = Path("data/2025-12-01_12-44-43/video_poses.csv")
+POSES_PATH = Path("data/2025-12-16_20-45-38-line-felix/video_poses.csv")
 poses_df = pd.read_csv(POSES_PATH)
 
 

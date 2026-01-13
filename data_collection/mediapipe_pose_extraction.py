@@ -1,4 +1,3 @@
-import argparse
 import csv
 import os
 import time
@@ -11,8 +10,10 @@ from mediapipe import solutions
 from mediapipe.framework.formats import landmark_pb2
 from mediapipe.tasks.python.vision import PoseLandmarkerOptions
 from mediapipe.tasks.python.vision.pose_landmarker import PoseLandmarker
-from data_collection.mediapipe_utils import get_landmarks_header, HEADER
 from tqdm import tqdm
+
+from data_collection.mediapipe_utils import HEADER, get_landmarks_header
+
 
 def draw_landmarks_on_image(rgb_image, detection_result):
     pose_landmarks_list = detection_result.pose_landmarks
@@ -27,10 +28,12 @@ def draw_landmarks_on_image(rgb_image, detection_result):
         pose_landmarks_proto.landmark.extend(
             [
                 landmark_pb2.NormalizedLandmark(
-                    x=landmark.x, y=landmark.y, z=landmark.z
+                    x=landmark.x,
+                    y=landmark.y,
+                    z=landmark.z,
                 )
                 for landmark in pose_landmarks
-            ]
+            ],
         )
         solutions.drawing_utils.draw_landmarks(
             annotated_image,
@@ -60,7 +63,10 @@ def landmarks_to_row(pose_landmarker_result, frame) -> list | None:
 
 
 def read_video(
-    p: Path, options: PoseLandmarkerOptions, draw_image: bool, generate_new_header: bool
+    p: Path,
+    options: PoseLandmarkerOptions,
+    draw_image: bool,
+    generate_new_header: bool,
 ):
     """
     read all frames of a video and write the mediapipe 3D poses into a csv file
@@ -105,7 +111,8 @@ def read_video(
             frame_timestamp_ms = int(time.time() * 1000)
 
             pose_landmarker_result = landmarker.detect_for_video(
-                mp_image, frame_timestamp_ms
+                mp_image,
+                frame_timestamp_ms,
             )
 
             # --- Writing to csv ---
@@ -122,7 +129,8 @@ def read_video(
             # --- Visualization ---
             if draw_image:
                 annotated_image = draw_landmarks_on_image(
-                    mp_image.numpy_view(), pose_landmarker_result
+                    mp_image.numpy_view(),
+                    pose_landmarker_result,
                 )
                 cv2.imshow(
                     "MediaPipe Pose Landmarker",
@@ -136,59 +144,3 @@ def read_video(
 
         cap.release()
         cv2.destroyAllWindows()
-
-
-def main(date: str | None):
-    model_path = "./data_collection/pose_landmarker_full.task"
-
-    BaseOptions = mp.tasks.BaseOptions
-    PoseLandmarker = mp.tasks.vision.PoseLandmarker
-    PoseLandmarkerOptions = mp.tasks.vision.PoseLandmarkerOptions
-    VisionRunningMode = mp.tasks.vision.RunningMode
-
-    # options for Video mode:
-    options = PoseLandmarkerOptions(
-        base_options=BaseOptions(model_asset_path=model_path),
-        running_mode=VisionRunningMode.VIDEO,
-    )
-
-    DATA_PATH = Path("data")
-    if date is not None:
-        read_video(
-            DATA_PATH / date / "video.mp4",
-            options,
-            draw_image=False,
-            generate_new_header=False,
-        )
-    else:
-        print("No video specified. Extracting all videos")
-        for directory in DATA_PATH.iterdir():
-            if directory.is_dir():
-                print(f"Extracting {directory}")
-                read_video(
-                    DATA_PATH / directory.name / "video.mp4",
-                    options,
-                    draw_image=False,
-                    generate_new_header=False,
-                )
-
-
-if __name__ == "__main__":
-    # 1. Create the parser
-    parser = argparse.ArgumentParser(
-        description="Run MediaPipe Pose Landmarker on a specified video file."
-    )
-
-    # 2. Add the video path argument
-    parser.add_argument(
-        "--date",
-        type=str,
-        help="The date of the video to be extracted. Extracting all from data otherwise (e.g., 2025-12-01_12-44-43)",
-    )
-
-    # 3. Parse the arguments
-    args = parser.parse_args()
-
-    # 4. Call the main function with the path from the arguments
-    # We wrap the argument in Path() to ensure it's a pathlib.Path object
-    main(args.date)

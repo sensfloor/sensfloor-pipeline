@@ -1,0 +1,340 @@
+import random
+from pathlib import Path
+from typing import Literal, TypedDict
+
+import torch
+import trackio
+from torch.utils.data import DataLoader
+from utils import get_device, get_kept_links
+
+from data_loading.links_min_max import get_link_min_max
+from data_loading.pose_landmark import PoseLandmark
+from data_loading.roi_floor import RoIFloorConfig
+from training.pose_estimation_model import RegressionModel
+from training.sensfloor_dataset import DatasetConfig, load_single_dataset, train_val_test_split
+from training.sensfloor_trainer import SensfloorTrainer, get_test_accuracy
+from training.utils import set_seed
+
+from visualization import create_predictions
+
+data_root = Path("./data")
+training_folders = [f.name for f in data_root.iterdir() if f.is_dir()]
+
+drop_landmarks_default = [
+    PoseLandmark.LEFT_EYE,
+    PoseLandmark.LEFT_EYE_INNER,
+    PoseLandmark.LEFT_EYE_OUTER,
+    PoseLandmark.RIGHT_EYE,
+    PoseLandmark.RIGHT_EYE_INNER,
+    PoseLandmark.RIGHT_EYE_OUTER,
+    PoseLandmark.MOUTH_RIGHT,
+    PoseLandmark.MOUTH_LEFT,
+    PoseLandmark.RIGHT_EAR,
+    PoseLandmark.LEFT_EAR,
+    PoseLandmark.LEFT_THUMB,
+    PoseLandmark.LEFT_INDEX,
+    PoseLandmark.LEFT_PINKY,
+    PoseLandmark.RIGHT_INDEX,
+    PoseLandmark.RIGHT_THUMB,
+    PoseLandmark.RIGHT_PINKY,
+]
+
+
+class HyperParams(TypedDict):
+    # Training Params
+    epochs: int
+    learning_rate: float
+    batch_size: int
+    seed: int
+    split_ratios: tuple[float, float, float]
+
+    # Model/Data Params
+    patch_width: int
+    roi_x_size: int
+    roi_y_size: int
+    roi_history_maxlen: int
+    roi_size: int
+    do_normalize: bool
+    normalize_to_max: bool
+    rotate_data: bool
+
+    training_data_folders: list[str]
+    dropped_landmarks: list[PoseLandmark]
+
+    # Optimizer/Trainer Params
+    scheduler_patience: int
+    scheduler_min_lr: float
+    scheduler_factor: float
+    trainer_patience: int
+    amplify_link_loss: float
+    mse_loss: Literal["mean", "sum"]
+
+    # Testing
+    test_path: Path
+    model_name: str
+
+
+def get_hyper_param_configs():
+    all_configs: list[HyperParams] = [
+        {
+            "epochs": 40,
+            "learning_rate": 1e-4,
+            "batch_size": 32,
+            "seed": random.randint(0, 1_000_000),
+            "split_ratios": (
+                0.79,
+                0.2,
+                0.01,
+            ),
+            "patch_width": 4,
+            "roi_x_size": 6,
+            "roi_y_size": 4,
+            "roi_history_maxlen": 25,
+            "roi_size": 3,
+            "do_normalize": True,
+            "normalize_to_max": False,
+            "rotate_data": False,
+            "training_data_folders": training_folders,
+            "dropped_landmarks": drop_landmarks_default,
+            "scheduler_patience": 3,
+            "scheduler_min_lr": 1e-6,
+            "scheduler_factor": 0.1,
+            "trainer_patience": 7,
+            "amplify_link_loss": 0.1,
+            "mse_loss": "mean",
+            "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
+            "model_name": "best config combination",
+        },
+        {
+            "epochs": 40,
+            "learning_rate": 1e-4,
+            "batch_size": 32,
+            "seed": random.randint(0, 1_000_000),
+            "split_ratios": (
+                0.79,
+                0.2,
+                0.01,
+            ),
+            "patch_width": 4,
+            "roi_x_size": 6,
+            "roi_y_size": 4,
+            "roi_history_maxlen": 25,
+            "roi_size": 3,
+            "do_normalize": True,
+            "normalize_to_max": False,
+            "rotate_data": False,
+            "training_data_folders": training_folders,
+            "dropped_landmarks": drop_landmarks_default,
+            "scheduler_patience": 3,
+            "scheduler_min_lr": 1e-6,
+            "scheduler_factor": 0.1,
+            "trainer_patience": 7,
+            "amplify_link_loss": 0.1,
+            "mse_loss": "mean",
+            "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
+            "model_name": "second basic",
+        },
+        {
+            "epochs": 40,
+            "learning_rate": 1e-4,
+            "batch_size": 32,
+            "seed": random.randint(0, 1_000_000),
+            "split_ratios": (
+                0.79,
+                0.2,
+                0.01,
+            ),
+            "patch_width": 4,
+            "roi_x_size": 6,
+            "roi_y_size": 4,
+            "roi_history_maxlen": 25,
+            "roi_size": 3,
+            "do_normalize": True,
+            "normalize_to_max": False,
+            "rotate_data": True,
+            "training_data_folders": training_folders,
+            "dropped_landmarks": drop_landmarks_default,
+            "scheduler_patience": 3,
+            "scheduler_min_lr": 1e-6,
+            "scheduler_factor": 0.1,
+            "trainer_patience": 7,
+            "amplify_link_loss": 0.1,
+            "mse_loss": "mean",
+            "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
+            "model_name": "Rotate",
+        },
+        {
+            "epochs": 40,
+            "learning_rate": 1e-4,
+            "batch_size": 32,
+            "seed": random.randint(0, 1_000_000),
+            "split_ratios": (
+                0.79,
+                0.2,
+                0.01,
+            ),
+            "patch_width": 4,
+            "roi_x_size": 6,
+            "roi_y_size": 4,
+            "roi_history_maxlen": 25,
+            "roi_size": 3,
+            "do_normalize": True,
+            "normalize_to_max": False,
+            "rotate_data": True,
+            "training_data_folders": training_folders,
+            "dropped_landmarks": drop_landmarks_default,
+            "scheduler_patience": 3,
+            "scheduler_min_lr": 1e-6,
+            "scheduler_factor": 0.1,
+            "trainer_patience": 7,
+            "amplify_link_loss": 0.1,
+            "mse_loss": "mean",
+            "test_path": Path("./data_testing/2025-12-09_15-58-52-line-justin"),
+            "model_name": "Rotate Second run",
+        },
+    ]
+
+    for config in all_configs:
+        if len(config["model_name"]) == 0:
+            print(f"No Model name configured, taking seed {config['seed']} as name")
+            config["model_name"] = f"{config['seed']}"
+
+    names = [config["model_name"] for config in all_configs]
+    if len(names) != len(set(names)):
+        print("duplicate model names, adding index")
+        for i, config in enumerate(all_configs):
+            config["model_name"] += f"_{i}"
+
+    names = [config["model_name"] for config in all_configs]
+    print(f"running these configs: {names}")
+    return all_configs
+
+
+PROJECT_NAME = "sensfloor_cairo_4"
+
+PATCH_WIDTH = 4
+
+
+# TODO: Refactor to two sperate methods -> Train config, Test config
+def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None:
+    print(f"hyper params: {hyper_params}")
+
+    set_seed(seed=hyper_params["seed"])
+
+    device = get_device()
+
+    trackio.init(
+        project=PROJECT_NAME,
+        config=dict(hyper_params),
+        name=hyper_params["model_name"],  # trackio checks for duplicate runs and changes the name in that case
+        # space_id="JuliSharow/sensfloor", # Push to huggingface
+    )
+
+    drop_landmarks = hyper_params["dropped_landmarks"]
+    kept_landmarks = [lm for lm in PoseLandmark if lm not in drop_landmarks]
+
+    pose_to_model_index_dict = {landmark: i for i, landmark in enumerate(kept_landmarks)}
+
+    floor_config = RoIFloorConfig(
+        x_size=hyper_params["roi_x_size"],
+        y_size=hyper_params["roi_y_size"],
+        history_maxlen=hyper_params["roi_history_maxlen"],
+        roi_size=hyper_params["roi_size"],
+    )
+
+    dataset_config = DatasetConfig(
+        floor_config=floor_config,
+        drop_landmarks=drop_landmarks,
+        normalize_signals=hyper_params["do_normalize"],
+        normalize_to_max=hyper_params["normalize_to_max"],
+        rotate_data=hyper_params["rotate_data"],
+    )
+
+    roi_shape = (dataset_config.floor_config.roi_size * PATCH_WIDTH, dataset_config.floor_config.roi_size * PATCH_WIDTH)
+    landmarks_out = len(kept_landmarks)
+
+    model_name = f"{hyper_params['model_name']}_model.pth"
+
+    if do_train:
+        model_path = Path(model_name)
+        model = RegressionModel(
+            roi_shape=roi_shape,
+            landmarks_out=landmarks_out,
+            history_len=dataset_config.floor_config.history_maxlen,
+        )
+
+        checkpoint = torch.load(f=model_path)
+        model.load_state_dict(state_dict=checkpoint)
+
+        train_loader, val_loader, _ = train_val_test_split(
+            data_root_path=data_root,
+            ratios=hyper_params["split_ratios"],
+            config=dataset_config,
+            batch_size=hyper_params["batch_size"],
+        )
+
+        kept_links = get_kept_links(drop_landmarks)
+        link_min, link_max = get_link_min_max(do_compute_link_lengths=True, links=kept_links)
+
+        optimizer = torch.optim.AdamW(model.parameters(), lr=hyper_params["learning_rate"])
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer=optimizer,
+            patience=hyper_params["scheduler_patience"],
+            min_lr=hyper_params["scheduler_min_lr"],
+            factor=hyper_params["scheduler_factor"],
+        )
+
+        trainer = SensfloorTrainer(
+            model=model,
+            best_model_name=model_name,
+            device=device,
+            optimizer=optimizer,
+            patience=hyper_params["trainer_patience"],
+            use_early_stopping=True,
+            landmarks_out=landmarks_out,
+            kept_links=kept_links,
+            link_min=link_min,
+            link_max=link_max,
+            pose_to_model_dict=pose_to_model_index_dict,
+            amplify_link_loss=hyper_params["amplify_link_loss"],
+            loss_reduction=hyper_params["mse_loss"],
+            scheduler=scheduler,
+        )
+
+        trainer.train(train_loader=train_loader, validation_loader=val_loader, epochs=hyper_params["epochs"])
+
+    if do_test:
+        data_path = hyper_params["test_path"]
+
+        model_path = Path(model_name)
+        model = RegressionModel(
+            roi_shape=roi_shape,
+            landmarks_out=landmarks_out,
+            history_len=dataset_config.floor_config.history_maxlen,
+        )
+        checkpoint = torch.load(f=model_path)
+        model.load_state_dict(state_dict=checkpoint)
+
+        # --- Create csv Predictions ---
+        preds = data_path / f"{hyper_params['model_name']}_predictions.csv"
+        acc = data_path / f"{hyper_params['model_name']}_accuracies.csv"
+        print(f"creating predictions: {preds}")
+        create_predictions(
+            data_path,
+            dataset_config,
+            kept_landmarks,
+            model,
+            preds,
+            acc,
+            device,
+            stop_after_x_batches=None,
+        )
+
+        # --- Test Accuracy ---
+        test_dataset = load_single_dataset(data_path, config=dataset_config)
+        test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False)
+        test_accuracy = get_test_accuracy(model, test_dataloader, device, landmarks_out)
+        print(f"test_accuracy for {data_path} is :{test_accuracy}")
+        trackio.log({"test_accuracy": test_accuracy})
+
+    trackio.finish()

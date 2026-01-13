@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from data_loading.roi_floor import RoIFloorConfig
-from data_loading.sensfloor_dataset import DatasetConfig, load_single_dataset
-from visualizations.utils import draw_floor, draw_roi
+from training.sensfloor_dataset import DatasetConfig, load_single_dataset
+from visualization.utils import draw_floor, draw_roi
 
 DATA_PATH = Path("./data/2025-12-02_12-24-03")
 VIDEO_PATH = DATA_PATH / "video.mp4"

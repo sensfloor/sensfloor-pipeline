@@ -8,7 +8,8 @@
             "name": "Collect data",
             "type": "debugpy",
             "request": "launch",
-            "program": "data_collection/sensfloor_signals_and_video_collection.py",
+            "module": "data_collection.scripts.collect_sensfloor_data_and_video",
+            "cwd": "${workspaceFolder}",
             "console": "integratedTerminal"
         },
         {
@@ -26,7 +27,7 @@
             "name": "Visualize collected data",
             "type": "debugpy",
             "request": "launch",
-            "module": "visualizations.visualize_collected_data",
+            "module": "visualization.scripts.visualize_collected_data",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal"
         },
@@ -34,7 +35,7 @@
             "name": "Visualize RoI floor",
             "type": "debugpy",
             "request": "launch",
-            "module": "visualizations.visualize_roi_floor",
+            "module": "visualization.scripts.visualize_roi_floor",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
         },
@@ -42,15 +43,15 @@
             "name": "Visualize Rotation",
             "type": "debugpy",
             "request": "launch",
-            "module": "visualizations.visualize_rotation",
+            "module": "visualization.scripts.visualize_rotation",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
         },
         {
-            "name": "Plot bone lengths",
+            "name": "Visualize bone lengths",
             "type": "debugpy",
             "request": "launch",
-            "module": "visualizations.plot_bone_lengths",
+            "module": "visualization.scripts.visualize_bone_lengths",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
         }

@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from data_loading.roi_floor import RoIFloorConfig
-from data_loading.sensfloor_dataset import DatasetConfig, load_single_dataset
-from visualizations.utils import draw_floor
+from training.sensfloor_dataset import DatasetConfig, load_single_dataset
+from visualization.utils import draw_floor
 
 DATA_PATH = Path("./data/2025-12-16_20-45-38-line-felix")
 DATA_INDEX = 120
