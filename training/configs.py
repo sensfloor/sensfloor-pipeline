@@ -79,7 +79,7 @@ class HyperParams(TypedDict):
 def get_hyper_param_configs():
     all_configs: list[HyperParams] = [
         {
-            "epochs": 1,
+            "epochs": 40,
             "learning_rate": 1e-4,
             "batch_size": 32,
             "seed": random.randint(0, 1_000_000),
@@ -97,7 +97,11 @@ def get_hyper_param_configs():
             "normalize_to_max": False,
             "rotate_data": False,
             "training_data_folders": training_folders,
-            "dropped_landmarks": drop_landmarks_default,
+            "dropped_landmarks": drop_landmarks_default + [PoseLandmark.LEFT_HEEL,
+                                                           PoseLandmark.RIGHT_HEEL,
+                                                           PoseLandmark.LEFT_FOOT_INDEX,
+                                                           PoseLandmark.RIGHT_FOOT_INDEX,
+                                                           ],
             "scheduler_patience": 3,
             "scheduler_min_lr": 1e-6,
             "scheduler_factor": 0.1,
@@ -105,7 +109,41 @@ def get_hyper_param_configs():
             "amplify_link_loss": 0.1,
             "mse_loss": "mean",
             "test_path": ROOT_PATH / "data_testing" / "2025-12-09_15-58-52-line-justin",
-            "model_name": "best config combination",
+            "model_name": "Best and Drop feet",
+        },
+
+        {
+            "epochs": 40,
+            "learning_rate": 1e-4,
+            "batch_size": 32,
+            "seed": random.randint(0, 1_000_000),
+            "split_ratios": (
+                0.79,
+                0.2,
+                0.01,
+            ),
+            "patch_width": 4,
+            "roi_x_size": 6,
+            "roi_y_size": 4,
+            "roi_history_maxlen": 25,
+            "roi_size": 3,
+            "do_normalize": True,
+            "normalize_to_max": False,
+            "rotate_data": True,
+            "training_data_folders": training_folders,
+            "dropped_landmarks": drop_landmarks_default + [PoseLandmark.LEFT_HEEL,
+                                                           PoseLandmark.RIGHT_HEEL,
+                                                           PoseLandmark.LEFT_FOOT_INDEX,
+                                                           PoseLandmark.RIGHT_FOOT_INDEX,
+                                                           ],
+            "scheduler_patience": 3,
+            "scheduler_min_lr": 1e-6,
+            "scheduler_factor": 0.1,
+            "trainer_patience": 7,
+            "amplify_link_loss": 0.1,
+            "mse_loss": "mean",
+            "test_path": ROOT_PATH / "data_testing" / "2025-12-09_15-58-52-line-justin",
+            "model_name": "Drop feet and rotate",
         },
     ]
 
@@ -125,7 +163,7 @@ def get_hyper_param_configs():
     return all_configs
 
 
-PROJECT_NAME = "sensfloor_cairo_4"
+PROJECT_NAME = "sensfloor_cairo_5"
 PATCH_WIDTH = 4
 MODELS_FOLDER_PATH = ROOT_PATH / "outputs" / "models"
 
