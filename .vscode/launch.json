@@ -54,6 +54,9 @@
             "module": "visualization.scripts.visualize_bone_lengths",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
+            "args": [
+                "--csv", "data/2025-12-02_12-24-03/video_poses.csv",
+            ]
         }
     ]
 }
