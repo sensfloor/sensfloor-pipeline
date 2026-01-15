@@ -13,6 +13,14 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "Extract poses from video",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "data_collection.scripts.extract_mediapipe_poses",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Main (Train & Test)",
             "type": "debugpy",
             "request": "launch",

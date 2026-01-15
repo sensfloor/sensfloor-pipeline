@@ -1,21 +1,20 @@
 import csv
-import os
 import time
 from pathlib import Path
+from typing import Any
 
 import cv2
 import mediapipe as mp
 import numpy as np
 from mediapipe import solutions
 from mediapipe.framework.formats import landmark_pb2
-from mediapipe.tasks.python.vision import PoseLandmarkerOptions
-from mediapipe.tasks.python.vision.pose_landmarker import PoseLandmarker
+from mediapipe.tasks.python.vision.pose_landmarker import PoseLandmarker, PoseLandmarkerResult
 from tqdm import tqdm
 
 from data_collection.mediapipe_utils import HEADER, get_landmarks_header
 
 
-def draw_landmarks_on_image(rgb_image, detection_result):
+def draw_landmarks_on_image(rgb_image: np.ndarray, detection_result: PoseLandmarkerResult) -> np.ndarray:
     pose_landmarks_list = detection_result.pose_landmarks
     annotated_image = np.copy(rgb_image)
 
@@ -44,30 +43,30 @@ def draw_landmarks_on_image(rgb_image, detection_result):
     return annotated_image
 
 
-def write_csv_header(filepath: str, header: list[str]):
+def write_csv_header(csv_path: Path, header: list[str]) -> None:
     """Overwrite filepath and create new csv file with header"""
-    with open(filepath, "w", newline="") as f:
+    with csv_path.open("w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(header)
 
 
-def landmarks_to_row(pose_landmarker_result, frame) -> list | None:
+def landmarks_to_row(pose_landmarker_result: PoseLandmarkerResult, frame: int) -> list | None:
     """Convert pose landmarks to a list matching a CSV row."""
     if not pose_landmarker_result.pose_world_landmarks:
         return None
     landmarks = pose_landmarker_result.pose_world_landmarks[0]
     row = [frame]
-    for l in landmarks:
-        row.extend([l.x, l.y, l.z])
+    for landmark in landmarks:
+        row.extend([landmark.x, landmark.y, landmark.z])
     return row
 
 
 def read_video(
-    p: Path,
-    options: PoseLandmarkerOptions,
-    draw_image: bool,
-    generate_new_header: bool,
-):
+    video_path: Path,
+    options: Any,  # noqa: ANN401
+    draw_image: bool,  # noqa: FBT001
+    generate_new_header: bool,  # noqa: FBT001
+) -> None:
     """
     read all frames of a video and write the mediapipe 3D poses into a csv file
     video_path: path to video file
@@ -75,23 +74,25 @@ def read_video(
     draw_image: Show each frame with the landmark predictions
     generate_new_header: use the first frame to generate a csv header, if set to False, uses HEADER constant instead
     """
-    csv_path = f"{p.parent / p.stem}_poses.csv"
-    if os.path.exists(csv_path):
+    csv_path = video_path.parent / f"{video_path.stem}_poses.csv"
+
+    if csv_path.exists():
         print(f"File {csv_path} already exists, skipping")
         return
     write_csv_header(csv_path, HEADER)
 
     with (
         PoseLandmarker.create_from_options(options) as landmarker,
-        open(csv_path, "a", newline="") as f,
+        csv_path.open("a", newline="") as f,
     ):
         # --- Initializing ---
         print("Pose Landmarker initialized.")
         writer = csv.writer(f)
 
-        cap = cv2.VideoCapture(p)
+        cap = cv2.VideoCapture(str(video_path))
         if not cap.isOpened():
-            raise RuntimeError(f"Error: Could not open {p}")
+            message = f"Error: Could not open {video_path}"
+            raise RuntimeError(message)
 
         # --- Progress bar ---
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
