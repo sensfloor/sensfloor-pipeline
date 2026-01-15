@@ -1,0 +1,14 @@
+name: sensfloor
+channels:
+  - defaults
+dependencies:
+  - python=3.11
+  - matplotlib
+  - numpy
+  - tqdm
+  - pandas
+  - opencv
+  - pip
+  - pip:
+    - torch
+    - mediapipe==0.10.7
