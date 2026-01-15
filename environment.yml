@@ -14,3 +14,4 @@ dependencies:
   - pip:
     - torch
     - mediapipe==0.10.7
+    - pyserial

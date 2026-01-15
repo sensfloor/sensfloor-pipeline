@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+
 from training.utils import SIGNAL_Z
 
 
@@ -50,8 +51,15 @@ class RegressionModel(nn.Module):
             nn.BatchNorm2d(1024),
         )
 
-        self.encoder = nn.Sequential(self.encoder_1, self.encoder_2, self.encoder_3, self.encoder_4, self.encoder_5,
-                                     self.encoder_6, self.encoder_7)
+        self.encoder = nn.Sequential(
+            self.encoder_1,
+            self.encoder_2,
+            self.encoder_3,
+            self.encoder_4,
+            self.encoder_5,
+            self.encoder_6,
+            self.encoder_7,
+        )
 
         dummy_input = torch.zeros((1, history_len, roi_shape[0], roi_shape[1]))
         linear_in_features = self.encoder(dummy_input).numel()
@@ -75,22 +83,21 @@ class RegressionModelMaxPool(nn.Module):
 
         # 12 x 12 # history_len
         self.conv_0 = nn.Sequential(
-            nn.Conv2d(2 * history_len, 32, kernel_size=(3, 3), padding=1),
-            nn.LeakyReLU(),
-            nn.BatchNorm2d(32))
+            nn.Conv2d(2 * history_len, 32, kernel_size=(3, 3), padding=1), nn.LeakyReLU(), nn.BatchNorm2d(32)
+        )
 
         self.conv_1 = nn.Sequential(
             nn.Conv2d(32, 64, kernel_size=(3, 3), padding=1),
             nn.LeakyReLU(),
             nn.BatchNorm2d(64),
-            nn.MaxPool2d(kernel_size=2))
+            nn.MaxPool2d(kernel_size=2),
+        )
 
         # 6 x 6 x history_len
 
         self.conv_2 = nn.Sequential(
-            nn.Conv2d(64, 128, kernel_size=(3, 3), padding=1),
-            nn.LeakyReLU(),
-            nn.BatchNorm2d(128))
+            nn.Conv2d(64, 128, kernel_size=(3, 3), padding=1), nn.LeakyReLU(), nn.BatchNorm2d(128)
+        )
 
         self.conv_3 = nn.Sequential(
             nn.Conv2d(128, 256, kernel_size=(3, 3), padding=1),
@@ -100,14 +107,10 @@ class RegressionModelMaxPool(nn.Module):
         )
 
         self.conv_4 = nn.Sequential(
-            nn.Conv2d(256, 512, kernel_size=(3, 3), padding=1),
-            nn.LeakyReLU(),
-            nn.BatchNorm2d(512))
+            nn.Conv2d(256, 512, kernel_size=(3, 3), padding=1), nn.LeakyReLU(), nn.BatchNorm2d(512)
+        )
 
-        self.conv_5 = nn.Sequential(
-            nn.Conv2d(512, 1024, kernel_size=(5, 5)),
-            nn.LeakyReLU(),
-            nn.BatchNorm2d(1024))
+        self.conv_5 = nn.Sequential(nn.Conv2d(512, 1024, kernel_size=(5, 5)), nn.LeakyReLU(), nn.BatchNorm2d(1024))
 
         self.conv_6 = nn.Sequential(
             nn.Conv2d(1024, 1024, kernel_size=(3, 3), padding=1),
@@ -116,8 +119,9 @@ class RegressionModelMaxPool(nn.Module):
             # nn.MaxPool2d(kernel_size=2)
         )
 
-        self.encoder = nn.Sequential(self.conv_0, self.conv_1, self.conv_2, self.conv_3, self.conv_4, self.conv_5,
-                                     self.conv_6)
+        self.encoder = nn.Sequential(
+            self.conv_0, self.conv_1, self.conv_2, self.conv_3, self.conv_4, self.conv_5, self.conv_6
+        )
 
         dummy_input = torch.zeros((1, history_len, roi_shape[0], roi_shape[1]))
         linear_in_features = self.encoder(dummy_input).numel()
@@ -206,7 +210,8 @@ class HeatMapSigmoidModel(nn.Module):
             nn.BatchNorm3d(64),
         )
         decoder_6 = nn.Sequential(
-            nn.Conv3d(in_channels=64, out_channels=21, kernel_size=3, stride=1, padding=1), nn.Sigmoid()
+            nn.Conv3d(in_channels=64, out_channels=21, kernel_size=3, stride=1, padding=1),
+            nn.Sigmoid(),
         )
 
         self.decoder = nn.Sequential(decoder_1, decoder_2, decoder_3, decoder_4, decoder_5, decoder_6)

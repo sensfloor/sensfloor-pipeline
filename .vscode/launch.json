@@ -5,18 +5,29 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Collect data",
+            "name": "Collect sensfloor and video data",
             "type": "debugpy",
             "request": "launch",
             "module": "data_collection.scripts.collect_sensfloor_data_and_video",
             "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "args": [
+                "--serial-port", "/dev/tty.usbserial-A571V1ZF"
+            ]
         },
         {
             "name": "Extract poses from video",
             "type": "debugpy",
             "request": "launch",
             "module": "data_collection.scripts.extract_mediapipe_poses",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Start live estimation",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "inference.live_estimation",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal"
         },
