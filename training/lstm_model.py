@@ -51,8 +51,8 @@ class SlidingWindowDataset(Dataset):
         return self.windows[idx], self.window_labels[idx]
 
 class LSTMStackModel(nn.Module):
-    def __init__(self, feature_size: int, window_size: int = 30, lstm_hidden: int = 20,
-                 dense_units: int = 20, dense_layers: int = 4, task: str = 'classification'):
+    def __init__(self, feature_size: int, landmarks_out: int, window_size: int = 25, lstm_hidden: int = 20,
+                 dense_units: int = 20, dense_layers: int = 4, ):
         """
         feature_size: number of features per time-step (sensor vector length)
         window_size: length of input sequence (30)
@@ -62,8 +62,6 @@ class LSTMStackModel(nn.Module):
         task: 'classification' or 'regression'
         """
         super().__init__()
-        assert task in ('classification', 'regression')
-        self.task = task
         self.window_size = window_size
 
         # LSTM: batch_first=True so input is [batch, seq_len, feature_size]
@@ -79,12 +77,8 @@ class LSTMStackModel(nn.Module):
             in_features = dense_units
         self.denses = nn.Sequential(*dense_seq)
 
-        # final output
-        if task == 'classification':
-            self.head = nn.Linear(in_features, 2)   # 2 neurons; return logits
-        else:
-            self.head = nn.Linear(in_features, 1)   # single neuron for regression
-            self.final_act = nn.ReLU()              # apply ReLU if paper specifies it
+        self.head = nn.Linear(in_features, landmarks_out)   # single neuron for regression
+        self.final_act = nn.ReLU()              # TODO apply ReLU if paper specifies it
 
     def forward(self, x):
         """
@@ -102,21 +96,7 @@ class LSTMStackModel(nn.Module):
         feats = self.denses(last)                    # [batch, dense_units]
 
         logits = self.head(feats)                    # [batch, out_dim]
-        if self.task == 'classification':
-            return logits  # raw logits -> use CrossEntropyLoss
-        else:
-            return self.final_act(logits)  # apply ReLU for regression
-
-
-# ---------- loss and training skeleton ----------
-def get_loss_fn(task):
-    if task == 'classification':
-        # Paper mentions binary cross-entropy with softmax. In PyTorch common choice:
-        # - if target is integer class labels 0/1 use CrossEntropyLoss (expects logits, not softmax)
-        return nn.CrossEntropyLoss()
-    else:
-        # regression: MSE as the paper said
-        return nn.MSELoss()
+        return self.final_act(logits)                # apply ReLU for regression
 
 
 def train_epoch(model, dataloader, optimizer, loss_fn, device):
@@ -194,7 +174,7 @@ if __name__ == "__main__":
                            task='classification').to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-    loss_fn = get_loss_fn(model.task)
+    loss_fn = nn.MSELoss()
 
     # one epoch
     train_loss = train_epoch(model, loader, optimizer, loss_fn, device)
