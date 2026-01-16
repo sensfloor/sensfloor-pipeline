@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Collect sensfloor and video data",
+            "name": "DATA_COLLECTION – Collect sensfloor and video data",
             "type": "debugpy",
             "request": "launch",
             "module": "data_collection.scripts.collect_sensfloor_data_and_video",
@@ -16,7 +16,7 @@
             ]
         },
         {
-            "name": "Extract poses from video",
+            "name": "DATA_COLLECTION – Extract poses from video",
             "type": "debugpy",
             "request": "launch",
             "module": "data_collection.scripts.extract_mediapipe_poses",
@@ -24,18 +24,31 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "Start live estimation",
+            "name": "INFERENCE – Mock server",
             "type": "debugpy",
             "request": "launch",
-            "module": "inference.live_estimation",
+            "module": "inference.scripts.run_server",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "args": [
+                "--model", "checkpoints/rotation_model.pth", 
+                "--mock-file", "data/2025-12-02_12-24-03/sensfloor_readout.csv"
+            ]
+        },
+        {
+            "name": "INFERENCE – Test client",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "inference.scripts.run_test_client",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal"
         },
         {
-            "name": "Main (Train & Test)",
+            "name": "TRAINING – Train and test model",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/main.py",
+            "module": "training.scripts.train",
+            "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "args": [
                 "--train",
@@ -43,7 +56,7 @@
             ]
         },
         {
-            "name": "Visualize collected data",
+            "name": "VISUALIZATIONS – Collected data",
             "type": "debugpy",
             "request": "launch",
             "module": "visualization.scripts.visualize_collected_data",
@@ -51,7 +64,7 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "Visualize RoI floor",
+            "name": "VISUALIZATIONS – RoI floor",
             "type": "debugpy",
             "request": "launch",
             "module": "visualization.scripts.visualize_roi_floor",
@@ -59,7 +72,7 @@
             "console": "integratedTerminal",
         },
                 {
-            "name": "Visualize Rotation",
+            "name": "VISUALIZATIONS – Rotation",
             "type": "debugpy",
             "request": "launch",
             "module": "visualization.scripts.visualize_rotation",
@@ -67,7 +80,7 @@
             "console": "integratedTerminal",
         },
         {
-            "name": "Visualize bone lengths",
+            "name": "VISUALIZATIONS – Bone lengths",
             "type": "debugpy",
             "request": "launch",
             "module": "visualization.scripts.visualize_bone_lengths",
@@ -77,5 +90,15 @@
                 "--csv", "data/2025-12-02_12-24-03/video_poses.csv",
             ]
         }
-    ]
+    ],
+    "compounds": [
+    {
+      "name": "INFERENCE – Mock server and test client",
+      "configurations": [
+        "INFERENCE – Mock server",
+        "INFERENCE – Test client"
+      ],
+      "stopAll": true
+    }
+  ]
 }

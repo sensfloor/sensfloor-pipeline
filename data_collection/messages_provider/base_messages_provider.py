@@ -1,7 +1,7 @@
 import threading
 from abc import ABC, abstractmethod
 from queue import Queue
-from typing import Any, Protocol
+from typing import Any, Protocol, Self
 
 
 class MessagesProvider(Protocol):
@@ -10,6 +10,8 @@ class MessagesProvider(Protocol):
     def start(self) -> None: ...
     def stop(self) -> None: ...
     def get_messages(self) -> list[dict[str, Any]]: ...
+    def __enter__(self) -> Self: ...
+    def __exit__(self, exc_type, value, traceback) -> bool: ...  # noqa: ANN001
 
 
 class BaseMessagesProvider(ABC, MessagesProvider):
@@ -18,12 +20,20 @@ class BaseMessagesProvider(ABC, MessagesProvider):
         self._stop_event = threading.Event()
         self._thread = None
 
+    def __enter__(self) -> Self:
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, value, traceback) -> bool:  # noqa: ANN001
+        self.stop()
+        return False
+
     @abstractmethod
     def _run(self) -> None:
         pass
 
     def start(self) -> None:
-        self._thread = threading.Thread(target=self._run)
+        self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
 
     def stop(self) -> None:
