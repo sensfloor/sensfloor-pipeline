@@ -3,6 +3,63 @@ import torch.nn as nn
 import torchvision.models as models
 
 
+class RegressionModel(nn.Module):
+    """
+    idea from Yiyue Luo et. all - Intelligent Carpet: Inferring 3D Human Pose from Tactile Signals
+    """
+
+    def __init__(self, history_len: int):
+        # TODO: adapt kernel size, because we have a smaller input?
+        # TODO: consider removing batchnorm, because we want to have value predictions (no sigmoid or classification)
+        super().__init__()
+
+        # 4x4x64
+        self.encoder_1 = nn.Sequential(
+            nn.Conv2d(in_channels=history_len, out_channels=32, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(32),
+        )
+        self.encoder_2 = nn.Sequential(
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(64),
+        )
+        self.encoder_3 = nn.Sequential(
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(128),
+        )
+        self.encoder_4 = nn.Sequential(
+            nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding="valid"),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(256),
+        )
+        self.encoder_5 = nn.Sequential(
+            nn.Conv2d(in_channels=256, out_channels=512, kernel_size=3, stride=1, padding="valid"),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(512),
+        )
+        self.encoder_6 = nn.Sequential(
+            nn.Conv2d(in_channels=512, out_channels=1024, kernel_size=5, stride=1, padding="valid"),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(1024),
+        )
+        self.encoder_7 = nn.Sequential(
+            nn.Conv2d(in_channels=1024, out_channels=1024, kernel_size=3, stride=1, padding="valid"),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(1024),
+        )
+
+        self.encoder = nn.Sequential(self.encoder_1, self.encoder_2, self.encoder_3, self.encoder_4, self.encoder_5,
+                                     self.encoder_6, self.encoder_7)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.encoder(x)
+
+        return x
+
+
+
 class LSTMStackModel(nn.Module):
     def __init__(self, feature_size: int, landmarks_out: int, window_size: int, lstm_hidden: int = 20,
                  dense_units: int = 20, dense_layers: int = 4, ):
@@ -40,10 +97,6 @@ class LSTMStackModel(nn.Module):
             classification: logits shape [batch, 2]
             regression: non-negative scalar per sample [batch, 1] (due to ReLU)
         """
-        b, hist, roi_x, roi_y = x.shape
-
-        x = x.view((b, hist, roi_x * roi_y))
-
         # LSTM
         out, (h_n, c_n) = self.lstm(x)  # out: [batch, seq_len, lstm_hidden]
         # take last timestep output as representation
@@ -58,35 +111,26 @@ class LSTMStackModel(nn.Module):
 
 
 class CNNLSTM(nn.Module):
-    def __init__(self, num_classes, lstm_hidden_size=256, lstm_layers=1):
+    def __init__(self, num_classes, lstm_hidden_size=20, lstm_layers=4):
         super(CNNLSTM, self).__init__()
 
         # 1. Define the CNN (Feature Extractor)
-        # We use a pretrained ResNet50 for this example
-        resnet = models.resnet50(pretrained=True)
+        self.cnn = RegressionModel(history_len=1)
 
         # Remove the final classification layer (fc) so we get the feature vector
-        # ResNet50's feature vector size before 'fc' is 2048
-        modules = list(resnet.children())[:-1]
-        self.cnn = nn.Sequential(*modules)
+        # modules = list(cnn.children())[:-1]
+        # self.cnn = nn.Sequential(*modules)
 
         # 2. Define the LSTM
-        # Input size is 2048 (from ResNet), Hidden size is usually 128/256/512
-        self.lstm = nn.LSTM(input_size=2048,
-                            hidden_size=lstm_hidden_size,
-                            num_layers=lstm_layers,
-                            batch_first=True)
-
-        # 3. Define the Final Classification Layer
-        self.fc = nn.Linear(lstm_hidden_size, num_classes)
+        self.lstm = LSTMStackModel(4096, 99, 25, dense_layers=lstm_layers) #TODO sync all the parameters and make them dynamic
 
     def forward(self, x):
         # x shape: (Batch, Time_Steps, Channels, Height, Width)
-        batch_size, time_steps, C, H, W = x.size()
+        batch_size, history, h, w = x.size()
 
         # --- CNN STEP ---
         # Reshape to (Batch * Time_Steps, C, H, W) so the CNN treats them as independent images
-        c_in = x.view(batch_size * time_steps, C, H, W)
+        c_in = x.view(batch_size * history, 1, h, w)
 
         # Pass through CNN
         c_out = self.cnn(c_in)  # Shape: (Batch * Time, 2048, 1, 1)
@@ -96,29 +140,24 @@ class CNNLSTM(nn.Module):
 
         # --- LSTM STEP ---
         # Reshape back to (Batch, Time_Steps, Features) for the LSTM
-        r_in = c_out.view(batch_size, time_steps, -1)
+        r_in = c_out.view(batch_size, history, -1)
 
         # Pass through LSTM
         # r_out shape: (Batch, Time_Steps, Hidden_Size)
         # hidden shape: (Layers, Batch, Hidden_Size) - we usually ignore this here
-        r_out, (h_n, c_n) = self.lstm(r_in)
+        r_out = self.lstm(r_in)
 
-        # --- CLASSIFICATION STEP ---
-        # We typically take the output of the LAST time step for classification
-        # r_out[:, -1, :] selects the last time step for every batch
-        final_out = self.fc(r_out[:, -1, :])
-
-        return final_out
+        return r_out
 
 
 # Example Usage
 if __name__ == "__main__":
-    # Example: Batch of 4 videos, 10 frames each, 3 channels (RGB), 224x224 res
-    dummy_input = torch.rand(4, 10, 3, 224, 224)
+    # Example: Batch of 32, 25 history, 12x12 res
+    dummy_input = torch.rand(32, 25, 12, 12)
 
-    # Initialize model for 5 classes (e.g., walking, running, sitting, etc.)
-    model = CNNLSTM(num_classes=5)
+    #model = RegressionModel(landmarks_out=99, history_len=25, roi_shape=(12,12))
+    model = CNNLSTM(num_classes=99)
 
     output = model(dummy_input)
     print(f"Input Shape: {dummy_input.shape}")
-    print(f"Output Shape: {output.shape}")  # Should be (4, 5)
+    print(f"Output Shape: {output.shape}")
