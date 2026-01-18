@@ -1,3 +1,4 @@
+import enum
 import pickle
 import random
 from pathlib import Path
@@ -8,12 +9,16 @@ import trackio
 from torch.utils.data import DataLoader
 
 from definitions import ROOT_PATH, DATA_PATH
+from training.models.efficient_cnn import RegressionModelNoBatchnorm, RegressionModelMaxPool, RegressionReducedDim, \
+    RegressionModelBatchnormFirst
+from training.models.efficient_lstm import EfficientCNNLSTM
+from training.models.lstm_model import CNNLSTM
+from training.models.pose_estimation_model import RegressionModel
 from training.utils import get_device, get_kept_links
 
 from data_loading.links_min_max import get_link_min_max
 from data_loading.pose_landmark import PoseLandmark
 from data_loading.roi_floor import RoIFloorConfig
-from training.pose_estimation_model import RegressionModel
 from training.sensfloor_dataset import DatasetConfig, load_single_dataset, train_val_test_split
 from training.sensfloor_trainer import SensfloorTrainer, get_test_accuracy
 from training.utils import set_seed
@@ -21,6 +26,17 @@ from training.utils import set_seed
 from visualization.create_landmark_predictions import create_predictions
 
 training_folders = [f.name for f in DATA_PATH.iterdir() if f.is_dir()]
+
+
+class ModelType(enum.Enum):
+    CNN = 0,
+    CNN_EFFICIENT = 1,
+    CNN_MAX_POOL = 2,
+    CNN_RELU_LAST = 3,
+    CNN_NO_BATCHNORM = 4,
+    CNN_LSTM = 5,
+    CNN_LSTM_EFFICIENT = 6
+
 
 drop_landmarks_default = [
     PoseLandmark.LEFT_EYE,
@@ -62,6 +78,7 @@ class HyperParams(TypedDict):
 
     training_data_folders: list[str]
     dropped_landmarks: list[PoseLandmark]
+    model_type: ModelType
 
     # Optimizer/Trainer Params
     scheduler_patience: int
@@ -80,7 +97,7 @@ def get_hyper_param_configs():
     all_configs: list[HyperParams] = [
         {
             "epochs": 40,
-            "learning_rate": 1e-4,
+            "learning_rate": 1e-3,
             "batch_size": 32,
             "seed": random.randint(0, 1_000_000),
             "split_ratios": (
@@ -102,6 +119,7 @@ def get_hyper_param_configs():
                                                            PoseLandmark.LEFT_FOOT_INDEX,
                                                            PoseLandmark.RIGHT_FOOT_INDEX,
                                                            ],
+            "model_type": ModelType.CNN,
             "scheduler_patience": 3,
             "scheduler_min_lr": 1e-6,
             "scheduler_factor": 0.1,
@@ -110,40 +128,6 @@ def get_hyper_param_configs():
             "mse_loss": "mean",
             "test_path": ROOT_PATH / "data_testing" / "2025-12-09_15-58-52-line-justin",
             "model_name": "Best and Drop feet",
-        },
-
-        {
-            "epochs": 40,
-            "learning_rate": 1e-4,
-            "batch_size": 32,
-            "seed": random.randint(0, 1_000_000),
-            "split_ratios": (
-                0.79,
-                0.2,
-                0.01,
-            ),
-            "patch_width": 4,
-            "roi_x_size": 6,
-            "roi_y_size": 4,
-            "roi_history_maxlen": 25,
-            "roi_size": 3,
-            "do_normalize": True,
-            "normalize_to_max": False,
-            "rotate_data": True,
-            "training_data_folders": training_folders,
-            "dropped_landmarks": drop_landmarks_default + [PoseLandmark.LEFT_HEEL,
-                                                           PoseLandmark.RIGHT_HEEL,
-                                                           PoseLandmark.LEFT_FOOT_INDEX,
-                                                           PoseLandmark.RIGHT_FOOT_INDEX,
-                                                           ],
-            "scheduler_patience": 3,
-            "scheduler_min_lr": 1e-6,
-            "scheduler_factor": 0.1,
-            "trainer_patience": 7,
-            "amplify_link_loss": 0.1,
-            "mse_loss": "mean",
-            "test_path": ROOT_PATH / "data_testing" / "2025-12-09_15-58-52-line-justin",
-            "model_name": "Drop feet and rotate",
         },
     ]
 
@@ -226,12 +210,45 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
     roi_shape = (dataset_config.floor_config.roi_size * PATCH_WIDTH, dataset_config.floor_config.roi_size * PATCH_WIDTH)
     landmarks_out = len(kept_landmarks)
 
+    def get_model(model_type: ModelType) -> torch.nn.Module:
+        match model_type:
+            case ModelType.CNN:
+                return RegressionModel(
+                    roi_shape=roi_shape,
+                    landmarks_out=landmarks_out,
+                    history_len=dataset_config.floor_config.history_maxlen,
+                )
+            case ModelType.CNN_EFFICIENT:
+                return RegressionReducedDim(
+                    roi_shape=roi_shape,
+                    landmarks_out=landmarks_out,
+                    history_len=dataset_config.floor_config.history_maxlen,
+                )
+            case ModelType.CNN_NO_BATCHNORM:
+                return RegressionModelNoBatchnorm(
+                    roi_shape=roi_shape,
+                    landmarks_out=landmarks_out,
+                    history_len=dataset_config.floor_config.history_maxlen,
+                )
+            case ModelType.CNN_RELU_LAST:
+                return RegressionModelBatchnormFirst(
+                    roi_shape=roi_shape,
+                    landmarks_out=landmarks_out,
+                    history_len=dataset_config.floor_config.history_maxlen,
+                )
+            case ModelType.CNN_MAX_POOL:
+                return RegressionModelMaxPool(
+                    roi_shape=roi_shape,
+                    landmarks_out=landmarks_out,
+                    history_len=dataset_config.floor_config.history_maxlen,
+                )
+            case ModelType.CNN_LSTM: # Assumes roi shape (12, 12)
+                return CNNLSTM(num_classes=landmarks_out * 3)
+            case ModelType.CNN_LSTM_EFFICIENT: # Assumes roi shape (12, 12)
+                return EfficientCNNLSTM(num_classes=landmarks_out * 3)
+
     if do_train:
-        model = RegressionModel(
-            roi_shape=roi_shape,
-            landmarks_out=landmarks_out,
-            history_len=dataset_config.floor_config.history_maxlen,
-        )
+        model = get_model(hyper_params["model_type"])
 
         train_loader, val_loader, _ = train_val_test_split(
             data_root_path=DATA_PATH,
@@ -274,12 +291,7 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
     if do_test:
         data_path = hyper_params["test_path"]
 
-        model = RegressionModel(
-            roi_shape=roi_shape,
-            landmarks_out=landmarks_out,
-            history_len=dataset_config.floor_config.history_maxlen,
-        )
-
+        model = get_model(hyper_params["model_type"])
         checkpoint = torch.load(f=model_path)
         model.load_state_dict(state_dict=checkpoint)
 
