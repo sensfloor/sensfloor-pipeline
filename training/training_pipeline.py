@@ -8,19 +8,18 @@ import torch
 import trackio
 from torch.utils.data import DataLoader
 
+from data_loading.links_min_max import get_link_min_max
+from data_loading.pose_landmark import PoseLandmark
+from data_loading.roi_floor import RoIFloorConfig
 from definitions import ROOT_PATH, DATA_PATH
 from training.models.efficient_cnn import RegressionModelNoBatchnorm, RegressionModelMaxPool, RegressionReducedDim, \
     RegressionModelBatchnormFirst
 from training.models.efficient_lstm import EfficientCNNLSTM
 from training.models.lstm_model import CNNLSTM
 from training.models.pose_estimation_model import RegressionModel
-from training.utils import get_device, get_kept_links
-
-from data_loading.links_min_max import get_link_min_max
-from data_loading.pose_landmark import PoseLandmark
-from data_loading.roi_floor import RoIFloorConfig
-from training.sensfloor_dataset import DatasetConfig, load_single_dataset, train_val_test_split
+from training.sensfloor_dataset import DatasetConfig, train_val_test_split, load_single_dataset
 from training.sensfloor_trainer import SensfloorTrainer, get_test_accuracy
+from training.utils import get_device, get_kept_links
 from training.utils import set_seed
 from visualization.create_landmark_predictions import create_predictions
 
@@ -514,10 +513,10 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
         )
 
         # --- Test Accuracy ---
-        # test_dataset = load_single_dataset(data_path, config=dataset_config)
-        # test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False)
-        # test_accuracy = get_test_accuracy(model, test_dataloader, device, landmarks_out)
-        # print(f"test_accuracy for {data_path} is :{test_accuracy}") TODO
-        # trackio.log({"test_accuracy": test_accuracy})
+        test_dataset = load_single_dataset(data_path, config=dataset_config)
+        test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False)
+        test_accuracy = get_test_accuracy(model, test_dataloader, device, landmarks_out)
+        print(f"test_accuracy for {data_path} is :{test_accuracy}")
+        trackio.log({"test_accuracy": test_accuracy})
 
     trackio.finish()
