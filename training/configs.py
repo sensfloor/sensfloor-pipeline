@@ -95,7 +95,7 @@ class HyperParams(TypedDict):
 def get_hyper_param_configs():
     all_configs: list[HyperParams] = [
         {
-            "epochs": 1,
+            "epochs": 40,
             "learning_rate": 1e-3,
             "batch_size": 32,
             "seed": random.randint(0, 1_000_000),
@@ -129,7 +129,7 @@ def get_hyper_param_configs():
             "model_name": "CNN lstm",
         },
         {
-            "epochs": 1,
+            "epochs": 40,
             "learning_rate": 1e-3,
             "batch_size": 32,
             "seed": random.randint(0, 1_000_000),
@@ -163,7 +163,7 @@ def get_hyper_param_configs():
             "model_name": "CNN LSTM Efficient",
         },
         {
-            "epochs": 1,
+            "epochs": 40,
             "learning_rate": 1e-3,
             "batch_size": 32,
             "seed": random.randint(0, 1_000_000),
@@ -197,7 +197,7 @@ def get_hyper_param_configs():
             "model_name": "max pool",
         },
         {
-            "epochs": 1,
+            "epochs": 40,
             "learning_rate": 1e-3,
             "batch_size": 32,
             "seed": random.randint(0, 1_000_000),
@@ -231,7 +231,7 @@ def get_hyper_param_configs():
             "model_name": "test model configs",
         },
         {
-            "epochs": 1,
+            "epochs": 40,
             "learning_rate": 1e-3,
             "batch_size": 32,
             "seed": random.randint(0, 1_000_000),
@@ -265,7 +265,7 @@ def get_hyper_param_configs():
             "model_name": "efficient",
         },
         {
-            "epochs": 1,
+            "epochs": 40,
             "learning_rate": 1e-3,
             "batch_size": 32,
             "seed": random.randint(0, 1_000_000),
@@ -299,7 +299,7 @@ def get_hyper_param_configs():
             "model_name": "CNN relu last",
         },
         {
-            "epochs": 1,
+            "epochs": 40,
             "learning_rate": 1e-3,
             "batch_size": 32,
             "seed": random.randint(0, 1_000_000),
@@ -350,7 +350,7 @@ def get_hyper_param_configs():
     return all_configs
 
 
-PROJECT_NAME = "test model config"
+PROJECT_NAME = "sensfloor_cairo_6"
 PATCH_WIDTH = 4
 MODELS_FOLDER_PATH = ROOT_PATH / "outputs" / "models"
 
