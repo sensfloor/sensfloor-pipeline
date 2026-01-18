@@ -39,7 +39,7 @@ class RegressionReducedDim(nn.Module):
             nn.MaxPool2d(2)
         )
         self.encoder_6 = nn.Sequential(
-            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=5, stride=1, padding=1),
+            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1),
             nn.LeakyReLU(),
             nn.BatchNorm2d(256),
         )
@@ -101,7 +101,7 @@ class LSTMStackModel(nn.Module):
 
 
 class CNNLSTM(nn.Module):
-    def __init__(self, num_classes, lstm_hidden_size=20, lstm_layers=4):
+    def __init__(self, num_classes, lstm_layers=4):
         super(CNNLSTM, self).__init__()
 
         # 1. Define the CNN (Feature Extractor)
@@ -112,7 +112,7 @@ class CNNLSTM(nn.Module):
         # self.cnn = nn.Sequential(*modules)
 
         # 2. Define the LSTM
-        self.lstm = LSTMStackModel(4096, 99, 25,
+        self.lstm = LSTMStackModel(2304, num_classes, 25,
                                    dense_layers=lstm_layers)  # TODO sync all the parameters and make them dynamic
 
     def forward(self, x):

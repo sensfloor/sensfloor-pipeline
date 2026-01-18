@@ -42,7 +42,7 @@ class RegressionReducedDim(nn.Module):
             nn.MaxPool2d(2)
         )
         self.encoder_6 = nn.Sequential(
-            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=5, stride=1, padding=1),
+            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1),
             nn.LeakyReLU(),
             nn.BatchNorm2d(256),
         )
@@ -101,7 +101,7 @@ class RegressionModelMaxPool(nn.Module):
             nn.MaxPool2d(2)
         )
         self.encoder_6 = nn.Sequential(
-            nn.Conv2d(in_channels=512, out_channels=1024, kernel_size=5, stride=1, padding=1),
+            nn.Conv2d(in_channels=512, out_channels=1024, kernel_size=3, stride=1, padding=1),
             nn.LeakyReLU(),
             nn.BatchNorm2d(1024),
         )

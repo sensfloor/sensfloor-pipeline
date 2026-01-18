@@ -22,7 +22,6 @@ from data_loading.roi_floor import RoIFloorConfig
 from training.sensfloor_dataset import DatasetConfig, load_single_dataset, train_val_test_split
 from training.sensfloor_trainer import SensfloorTrainer, get_test_accuracy
 from training.utils import set_seed
-
 from visualization.create_landmark_predictions import create_predictions
 
 training_folders = [f.name for f in DATA_PATH.iterdir() if f.is_dir()]
@@ -96,7 +95,109 @@ class HyperParams(TypedDict):
 def get_hyper_param_configs():
     all_configs: list[HyperParams] = [
         {
-            "epochs": 40,
+            "epochs": 1,
+            "learning_rate": 1e-3,
+            "batch_size": 32,
+            "seed": random.randint(0, 1_000_000),
+            "split_ratios": (
+                0.79,
+                0.2,
+                0.01,
+            ),
+            "patch_width": 4,
+            "roi_x_size": 6,
+            "roi_y_size": 4,
+            "roi_history_maxlen": 25,
+            "roi_size": 3,
+            "do_normalize": True,
+            "normalize_to_max": False,
+            "rotate_data": False,
+            "training_data_folders": training_folders,
+            "dropped_landmarks": drop_landmarks_default + [PoseLandmark.LEFT_HEEL,
+                                                           PoseLandmark.RIGHT_HEEL,
+                                                           PoseLandmark.LEFT_FOOT_INDEX,
+                                                           PoseLandmark.RIGHT_FOOT_INDEX,
+                                                           ],
+            "model_type": ModelType.CNN_LSTM,
+            "scheduler_patience": 3,
+            "scheduler_min_lr": 1e-6,
+            "scheduler_factor": 0.1,
+            "trainer_patience": 7,
+            "amplify_link_loss": 0.1,
+            "mse_loss": "mean",
+            "test_path": ROOT_PATH / "data_testing" / "2025-12-09_15-58-52-line-justin",
+            "model_name": "CNN lstm",
+        },
+        {
+            "epochs": 1,
+            "learning_rate": 1e-3,
+            "batch_size": 32,
+            "seed": random.randint(0, 1_000_000),
+            "split_ratios": (
+                0.79,
+                0.2,
+                0.01,
+            ),
+            "patch_width": 4,
+            "roi_x_size": 6,
+            "roi_y_size": 4,
+            "roi_history_maxlen": 25,
+            "roi_size": 3,
+            "do_normalize": True,
+            "normalize_to_max": False,
+            "rotate_data": False,
+            "training_data_folders": training_folders,
+            "dropped_landmarks": drop_landmarks_default + [PoseLandmark.LEFT_HEEL,
+                                                           PoseLandmark.RIGHT_HEEL,
+                                                           PoseLandmark.LEFT_FOOT_INDEX,
+                                                           PoseLandmark.RIGHT_FOOT_INDEX,
+                                                           ],
+            "model_type": ModelType.CNN_LSTM_EFFICIENT,
+            "scheduler_patience": 3,
+            "scheduler_min_lr": 1e-6,
+            "scheduler_factor": 0.1,
+            "trainer_patience": 7,
+            "amplify_link_loss": 0.1,
+            "mse_loss": "mean",
+            "test_path": ROOT_PATH / "data_testing" / "2025-12-09_15-58-52-line-justin",
+            "model_name": "CNN LSTM Efficient",
+        },
+        {
+            "epochs": 1,
+            "learning_rate": 1e-3,
+            "batch_size": 32,
+            "seed": random.randint(0, 1_000_000),
+            "split_ratios": (
+                0.79,
+                0.2,
+                0.01,
+            ),
+            "patch_width": 4,
+            "roi_x_size": 6,
+            "roi_y_size": 4,
+            "roi_history_maxlen": 25,
+            "roi_size": 3,
+            "do_normalize": True,
+            "normalize_to_max": False,
+            "rotate_data": False,
+            "training_data_folders": training_folders,
+            "dropped_landmarks": drop_landmarks_default + [PoseLandmark.LEFT_HEEL,
+                                                           PoseLandmark.RIGHT_HEEL,
+                                                           PoseLandmark.LEFT_FOOT_INDEX,
+                                                           PoseLandmark.RIGHT_FOOT_INDEX,
+                                                           ],
+            "model_type": ModelType.CNN_MAX_POOL,
+            "scheduler_patience": 3,
+            "scheduler_min_lr": 1e-6,
+            "scheduler_factor": 0.1,
+            "trainer_patience": 7,
+            "amplify_link_loss": 0.1,
+            "mse_loss": "mean",
+            "test_path": ROOT_PATH / "data_testing" / "2025-12-09_15-58-52-line-justin",
+            "model_name": "max pool",
+        },
+        {
+            "epochs": 1,
             "learning_rate": 1e-3,
             "batch_size": 32,
             "seed": random.randint(0, 1_000_000),
@@ -127,7 +228,109 @@ def get_hyper_param_configs():
             "amplify_link_loss": 0.1,
             "mse_loss": "mean",
             "test_path": ROOT_PATH / "data_testing" / "2025-12-09_15-58-52-line-justin",
-            "model_name": "Best and Drop feet",
+            "model_name": "test model configs",
+        },
+        {
+            "epochs": 1,
+            "learning_rate": 1e-3,
+            "batch_size": 32,
+            "seed": random.randint(0, 1_000_000),
+            "split_ratios": (
+                0.79,
+                0.2,
+                0.01,
+            ),
+            "patch_width": 4,
+            "roi_x_size": 6,
+            "roi_y_size": 4,
+            "roi_history_maxlen": 25,
+            "roi_size": 3,
+            "do_normalize": True,
+            "normalize_to_max": False,
+            "rotate_data": False,
+            "training_data_folders": training_folders,
+            "dropped_landmarks": drop_landmarks_default + [PoseLandmark.LEFT_HEEL,
+                                                           PoseLandmark.RIGHT_HEEL,
+                                                           PoseLandmark.LEFT_FOOT_INDEX,
+                                                           PoseLandmark.RIGHT_FOOT_INDEX,
+                                                           ],
+            "model_type": ModelType.CNN_EFFICIENT,
+            "scheduler_patience": 3,
+            "scheduler_min_lr": 1e-6,
+            "scheduler_factor": 0.1,
+            "trainer_patience": 7,
+            "amplify_link_loss": 0.1,
+            "mse_loss": "mean",
+            "test_path": ROOT_PATH / "data_testing" / "2025-12-09_15-58-52-line-justin",
+            "model_name": "efficient",
+        },
+        {
+            "epochs": 1,
+            "learning_rate": 1e-3,
+            "batch_size": 32,
+            "seed": random.randint(0, 1_000_000),
+            "split_ratios": (
+                0.79,
+                0.2,
+                0.01,
+            ),
+            "patch_width": 4,
+            "roi_x_size": 6,
+            "roi_y_size": 4,
+            "roi_history_maxlen": 25,
+            "roi_size": 3,
+            "do_normalize": True,
+            "normalize_to_max": False,
+            "rotate_data": False,
+            "training_data_folders": training_folders,
+            "dropped_landmarks": drop_landmarks_default + [PoseLandmark.LEFT_HEEL,
+                                                           PoseLandmark.RIGHT_HEEL,
+                                                           PoseLandmark.LEFT_FOOT_INDEX,
+                                                           PoseLandmark.RIGHT_FOOT_INDEX,
+                                                           ],
+            "model_type": ModelType.CNN_RELU_LAST,
+            "scheduler_patience": 3,
+            "scheduler_min_lr": 1e-6,
+            "scheduler_factor": 0.1,
+            "trainer_patience": 7,
+            "amplify_link_loss": 0.1,
+            "mse_loss": "mean",
+            "test_path": ROOT_PATH / "data_testing" / "2025-12-09_15-58-52-line-justin",
+            "model_name": "CNN relu last",
+        },
+        {
+            "epochs": 1,
+            "learning_rate": 1e-3,
+            "batch_size": 32,
+            "seed": random.randint(0, 1_000_000),
+            "split_ratios": (
+                0.79,
+                0.2,
+                0.01,
+            ),
+            "patch_width": 4,
+            "roi_x_size": 6,
+            "roi_y_size": 4,
+            "roi_history_maxlen": 25,
+            "roi_size": 3,
+            "do_normalize": True,
+            "normalize_to_max": False,
+            "rotate_data": False,
+            "training_data_folders": training_folders,
+            "dropped_landmarks": drop_landmarks_default + [PoseLandmark.LEFT_HEEL,
+                                                           PoseLandmark.RIGHT_HEEL,
+                                                           PoseLandmark.LEFT_FOOT_INDEX,
+                                                           PoseLandmark.RIGHT_FOOT_INDEX,
+                                                           ],
+            "model_type": ModelType.CNN_NO_BATCHNORM,
+            "scheduler_patience": 3,
+            "scheduler_min_lr": 1e-6,
+            "scheduler_factor": 0.1,
+            "trainer_patience": 7,
+            "amplify_link_loss": 0.1,
+            "mse_loss": "mean",
+            "test_path": ROOT_PATH / "data_testing" / "2025-12-09_15-58-52-line-justin",
+            "model_name": "No batchnorm",
         },
     ]
 
@@ -147,7 +350,7 @@ def get_hyper_param_configs():
     return all_configs
 
 
-PROJECT_NAME = "sensfloor_cairo_5"
+PROJECT_NAME = "test model config"
 PATCH_WIDTH = 4
 MODELS_FOLDER_PATH = ROOT_PATH / "outputs" / "models"
 
@@ -307,14 +510,14 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
             preds,
             acc,
             device,
-            stop_after_x_batches=None,
+            stop_after_x_batches=1,
         )
 
         # --- Test Accuracy ---
-        test_dataset = load_single_dataset(data_path, config=dataset_config)
-        test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False)
-        test_accuracy = get_test_accuracy(model, test_dataloader, device, landmarks_out)
-        print(f"test_accuracy for {data_path} is :{test_accuracy}")
-        trackio.log({"test_accuracy": test_accuracy})
+        # test_dataset = load_single_dataset(data_path, config=dataset_config)
+        # test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False)
+        # test_accuracy = get_test_accuracy(model, test_dataloader, device, landmarks_out)
+        # print(f"test_accuracy for {data_path} is :{test_accuracy}") TODO
+        # trackio.log({"test_accuracy": test_accuracy})
 
     trackio.finish()
