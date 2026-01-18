@@ -1,6 +1,7 @@
 import argparse
 
-from training.configs import get_hyper_param_configs, run_config
+from training.configs import get_hyper_param_configs
+from training.training_pipeline import run_config
 
 
 def main(do_train: bool, do_test: bool) -> None:
