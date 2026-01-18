@@ -1,9 +1,6 @@
 import pickle
 from pathlib import Path
 
-import pickle
-from pathlib import Path
-
 import torch
 import trackio
 from torch.utils.data import DataLoader
@@ -29,14 +26,14 @@ MODELS_FOLDER_PATH = ROOT_PATH / "outputs" / "models"
 CONFIG_FILE_NAME = "config.pickle"
 
 
-def save_config(config, model_folder: Path):
+def save_config(config, model_folder: Path): # TODO Make jsonable
     model_folder.mkdir(parents=True, exist_ok=True)
     print(f"writing to file {model_folder}")
     with open(model_folder / CONFIG_FILE_NAME, "wb+") as f:
         pickle.dump(config, f, pickle.HIGHEST_PROTOCOL)
 
 
-def load_config(model_folder: Path) -> HyperParams:
+def load_config(model_folder: Path) -> HyperParams: # TODO Make jsonable
     with open(model_folder / CONFIG_FILE_NAME, "rb") as f:
         return pickle.load(f)
 
@@ -50,9 +47,7 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
     model_path = model_folder / model_file_name
 
     save_config(hyper_params, model_folder)
-
     set_seed(seed=hyper_params["seed"])
-
     device = get_device()
 
     trackio.init(
@@ -62,8 +57,8 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
         # space_id="JuliSharow/sensfloor", # Push to huggingface
     )
 
-    drop_landmarks = hyper_params["dropped_landmarks"]
-    kept_landmarks = [lm for lm in PoseLandmark if lm not in drop_landmarks]
+    kept_landmarks = hyper_params["kept_landmarks"]
+    drop_landmarks = [lm for lm in PoseLandmark if lm not in kept_landmarks]
 
     pose_to_model_index_dict = {landmark: i for i, landmark in enumerate(kept_landmarks)}
 
@@ -117,9 +112,9 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
                     landmarks_out=landmarks_out,
                     history_len=dataset_config.floor_config.history_maxlen,
                 )
-            case ModelType.CNN_LSTM: # Assumes roi shape (12, 12)
+            case ModelType.CNN_LSTM:  # TODO Assumes roi shape (12, 12)
                 return CNNLSTM(num_classes=landmarks_out * 3)
-            case ModelType.CNN_LSTM_EFFICIENT: # Assumes roi shape (12, 12)
+            case ModelType.CNN_LSTM_EFFICIENT:  # TODO Assumes roi shape (12, 12)
                 return EfficientCNNLSTM(num_classes=landmarks_out * 3)
 
     if do_train:

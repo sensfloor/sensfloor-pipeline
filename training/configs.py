@@ -27,6 +27,12 @@ drop_landmarks_default = [
     PoseLandmark.RIGHT_PINKY,
 ]
 
+kept_landmarks_default = [l for l in PoseLandmark if not l in drop_landmarks_default]
+
+drop_feet_landmarks = [PoseLandmark.LEFT_HEEL, PoseLandmark.RIGHT_HEEL, PoseLandmark.LEFT_FOOT_INDEX,
+                       PoseLandmark.RIGHT_FOOT_INDEX]
+
+
 class ModelType(Enum):
     CNN = 0,
     CNN_EFFICIENT = 1,
@@ -35,6 +41,7 @@ class ModelType(Enum):
     CNN_NO_BATCHNORM = 4,
     CNN_LSTM = 5,
     CNN_LSTM_EFFICIENT = 6
+
 
 class HyperParams(TypedDict):
     # Training Params
@@ -55,7 +62,7 @@ class HyperParams(TypedDict):
     rotate_data: bool
 
     training_data_folders: list[str]
-    dropped_landmarks: list[PoseLandmark]
+    kept_landmarks: list[PoseLandmark]
     model_type: ModelType
 
     # Optimizer/Trainer Params
@@ -91,11 +98,7 @@ ALL_CONFIGS: list[HyperParams] = [
         "normalize_to_max": False,
         "rotate_data": False,
         "training_data_folders": training_folders,
-        "dropped_landmarks": drop_landmarks_default + [PoseLandmark.LEFT_HEEL,
-                                                       PoseLandmark.RIGHT_HEEL,
-                                                       PoseLandmark.LEFT_FOOT_INDEX,
-                                                       PoseLandmark.RIGHT_FOOT_INDEX,
-                                                       ],
+        "kept_landmarks": [l for l in kept_landmarks_default if not l in drop_feet_landmarks],
         "model_type": ModelType.CNN_LSTM,
         "scheduler_patience": 3,
         "scheduler_min_lr": 1e-6,
@@ -125,11 +128,7 @@ ALL_CONFIGS: list[HyperParams] = [
         "normalize_to_max": False,
         "rotate_data": False,
         "training_data_folders": training_folders,
-        "dropped_landmarks": drop_landmarks_default + [PoseLandmark.LEFT_HEEL,
-                                                       PoseLandmark.RIGHT_HEEL,
-                                                       PoseLandmark.LEFT_FOOT_INDEX,
-                                                       PoseLandmark.RIGHT_FOOT_INDEX,
-                                                       ],
+        "kept_landmarks": [l for l in kept_landmarks_default if not l in drop_feet_landmarks],
         "model_type": ModelType.CNN_LSTM_EFFICIENT,
         "scheduler_patience": 3,
         "scheduler_min_lr": 1e-6,
@@ -159,11 +158,7 @@ ALL_CONFIGS: list[HyperParams] = [
         "normalize_to_max": False,
         "rotate_data": False,
         "training_data_folders": training_folders,
-        "dropped_landmarks": drop_landmarks_default + [PoseLandmark.LEFT_HEEL,
-                                                       PoseLandmark.RIGHT_HEEL,
-                                                       PoseLandmark.LEFT_FOOT_INDEX,
-                                                       PoseLandmark.RIGHT_FOOT_INDEX,
-                                                       ],
+        "kept_landmarks": [l for l in kept_landmarks_default if not l in drop_feet_landmarks],
         "model_type": ModelType.CNN_MAX_POOL,
         "scheduler_patience": 3,
         "scheduler_min_lr": 1e-6,
@@ -193,11 +188,7 @@ ALL_CONFIGS: list[HyperParams] = [
         "normalize_to_max": False,
         "rotate_data": False,
         "training_data_folders": training_folders,
-        "dropped_landmarks": drop_landmarks_default + [PoseLandmark.LEFT_HEEL,
-                                                       PoseLandmark.RIGHT_HEEL,
-                                                       PoseLandmark.LEFT_FOOT_INDEX,
-                                                       PoseLandmark.RIGHT_FOOT_INDEX,
-                                                       ],
+        "kept_landmarks": [l for l in kept_landmarks_default if not l in drop_feet_landmarks],
         "model_type": ModelType.CNN,
         "scheduler_patience": 3,
         "scheduler_min_lr": 1e-6,
@@ -227,11 +218,7 @@ ALL_CONFIGS: list[HyperParams] = [
         "normalize_to_max": False,
         "rotate_data": False,
         "training_data_folders": training_folders,
-        "dropped_landmarks": drop_landmarks_default + [PoseLandmark.LEFT_HEEL,
-                                                       PoseLandmark.RIGHT_HEEL,
-                                                       PoseLandmark.LEFT_FOOT_INDEX,
-                                                       PoseLandmark.RIGHT_FOOT_INDEX,
-                                                       ],
+        "kept_landmarks": [l for l in kept_landmarks_default if not l in drop_feet_landmarks],
         "model_type": ModelType.CNN_EFFICIENT,
         "scheduler_patience": 3,
         "scheduler_min_lr": 1e-6,
@@ -261,11 +248,7 @@ ALL_CONFIGS: list[HyperParams] = [
         "normalize_to_max": False,
         "rotate_data": False,
         "training_data_folders": training_folders,
-        "dropped_landmarks": drop_landmarks_default + [PoseLandmark.LEFT_HEEL,
-                                                       PoseLandmark.RIGHT_HEEL,
-                                                       PoseLandmark.LEFT_FOOT_INDEX,
-                                                       PoseLandmark.RIGHT_FOOT_INDEX,
-                                                       ],
+        "kept_landmarks": [l for l in kept_landmarks_default if not l in drop_feet_landmarks],
         "model_type": ModelType.CNN_RELU_LAST,
         "scheduler_patience": 3,
         "scheduler_min_lr": 1e-6,
@@ -295,11 +278,7 @@ ALL_CONFIGS: list[HyperParams] = [
         "normalize_to_max": False,
         "rotate_data": False,
         "training_data_folders": training_folders,
-        "dropped_landmarks": drop_landmarks_default + [PoseLandmark.LEFT_HEEL,
-                                                       PoseLandmark.RIGHT_HEEL,
-                                                       PoseLandmark.LEFT_FOOT_INDEX,
-                                                       PoseLandmark.RIGHT_FOOT_INDEX,
-                                                       ],
+        "kept_landmarks": [l for l in kept_landmarks_default if not l in drop_feet_landmarks],
         "model_type": ModelType.CNN_NO_BATCHNORM,
         "scheduler_patience": 3,
         "scheduler_min_lr": 1e-6,
@@ -311,6 +290,7 @@ ALL_CONFIGS: list[HyperParams] = [
         "model_name": "No batchnorm",
     },
 ]
+
 
 def get_hyper_param_configs():
     for config in ALL_CONFIGS:
@@ -328,5 +308,17 @@ def get_hyper_param_configs():
     print(f"running these configs: {names}")
     return ALL_CONFIGS
 
+
 PROJECT_NAME = "sensfloor_cairo_6"
 
+if __name__ == '__main__':
+    drop_before = drop_landmarks_default + [PoseLandmark.LEFT_HEEL,
+                                                       PoseLandmark.RIGHT_HEEL,
+                                                       PoseLandmark.LEFT_FOOT_INDEX,
+                                                       PoseLandmark.RIGHT_FOOT_INDEX,
+                                                       ]
+
+    kept_after = [l for l in kept_landmarks_default if not l in drop_feet_landmarks]
+
+    print(len(drop_before), len(kept_after))
+    print([l for l in drop_before if l in kept_after])

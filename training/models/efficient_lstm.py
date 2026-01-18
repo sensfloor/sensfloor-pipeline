@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 
-class EfficientCNNLSTM(nn.Module):
+class EfficientCNNLSTM(nn.Module):  # TODO Change dataset to have real sequences
     def __init__(self, num_classes=99):
         super().__init__()
 
