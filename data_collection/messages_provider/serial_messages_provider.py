@@ -3,6 +3,8 @@ from typing import Any
 
 from serial import Serial
 
+from data_collection.message_validator import MessageValidator
+
 from .base_messages_provider import BaseMessagesProvider
 
 START_BYTE = 0xFD
@@ -28,11 +30,17 @@ def message_to_dict(message: bytes, timestamp_ns: int) -> dict[str, Any]:
 
 
 class SerialMessagesProvider(BaseMessagesProvider):
-    def __init__(self, serial_port: str, baudrate: int = 115200) -> None:
+    def __init__(
+        self,
+        serial_port: str,
+        baudrate: int = 115200,
+        message_validator: MessageValidator | None = None,
+    ) -> None:
         super().__init__()
         self.serial_port = serial_port
         self.baudrate = baudrate
         self._start_time_ns = 0
+        self.message_validator = message_validator
 
     def _run(self) -> None:
         self._start_time_ns = time.perf_counter_ns()
@@ -49,8 +57,9 @@ class SerialMessagesProvider(BaseMessagesProvider):
 
                 if len(rest) == MESSAGE_LENGTH - 1:
                     message_bytes = byte + rest
-                    self.messages_queue.put(
-                        message_to_dict(message_bytes, int(time.perf_counter_ns() - self._start_time_ns)),
-                    )
+                    message_dict = message_to_dict(message_bytes, int(time.perf_counter_ns() - self._start_time_ns))
+
+                    if self.message_validator is None or self.message_validator(message_dict):
+                        self.messages_queue.put(message_dict)
                 else:
                     pass  # Skip invalid message

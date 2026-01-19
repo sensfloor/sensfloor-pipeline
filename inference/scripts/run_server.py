@@ -5,8 +5,8 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from data_collection.messages_provider import CSVMessagesProvider, SerialMessagesProvider
-from data_collection.messages_provider.base_messages_provider import MessagesProvider
+from data_collection.message_validator import PositionValidator
+from data_collection.messages_provider import CSVMessagesProvider, MessagesProvider, SerialMessagesProvider
 from data_loading.roi_floor import RoIFloor, RoIFloorConfig
 from inference.websocket import Websocket
 from training.pose_estimation_model import RegressionModel
@@ -16,7 +16,8 @@ from training.utils import get_device
 def get_message_provider(mock_file: Path | None, serial_port: str | None) -> MessagesProvider:
     if mock_file is None and serial_port is not None:
         print(f"Use serial messages provider with port {serial_port}")
-        return SerialMessagesProvider(serial_port)
+        message_validator = PositionValidator(min_x=1, max_x=6, min_y=1, max_y=4)
+        return SerialMessagesProvider(serial_port, message_validator=message_validator)
 
     if mock_file is not None:
         print(f"Use csv messages provider with file {mock_file}")
@@ -46,7 +47,6 @@ def main(fps: int, model_path: Path, mock_file: Path | None, serial_port: str | 
     with Websocket() as websocket, messages_provider:
         frame_interval_length = 1.0 / fps
 
-        messages_provider.start()
         while True:
             frame_start_time = time.perf_counter()
 
@@ -116,4 +116,4 @@ def parse_arguments() -> argparse.Namespace:
 
 if __name__ == "__main__":
     args = parse_arguments()
-    main(fps=1, model_path=args.model, mock_file=args.mock_file, serial_port=args.serial_port)
+    main(fps=15, model_path=args.model, mock_file=args.mock_file, serial_port=args.serial_port)

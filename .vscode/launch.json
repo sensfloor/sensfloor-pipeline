@@ -12,7 +12,8 @@
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "args": [
-                "--serial-port", "/dev/tty.usbserial-A571V1ZF"
+                "--serial-port",
+                "/dev/tty.usbserial-A571V1ZF"
             ]
         },
         {
@@ -31,8 +32,24 @@
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "args": [
-                "--model", "checkpoints/rotation_model.pth", 
-                "--mock-file", "data/2025-12-02_12-24-03/sensfloor_readout.csv"
+                "--model",
+                "checkpoints/rotation_model.pth",
+                "--mock-file",
+                "data/2025-12-02_12-24-03/sensfloor_readout.csv"
+            ]
+        },
+        {
+            "name": "INFERENCE – Server",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "inference.scripts.run_server",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "args": [
+                "--model",
+                "checkpoints/rotation_model.pth",
+                "--serial-port",
+                "/dev/tty.usbserial-A571V1ZF"
             ]
         },
         {
@@ -71,7 +88,7 @@
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
         },
-                {
+        {
             "name": "VISUALIZATIONS – Rotation",
             "type": "debugpy",
             "request": "launch",
@@ -87,18 +104,27 @@
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "args": [
-                "--csv", "data/2025-12-02_12-24-03/video_poses.csv",
+                "--csv",
+                "data/2025-12-02_12-24-03/video_poses.csv",
             ]
         }
     ],
     "compounds": [
-    {
-      "name": "INFERENCE – Mock server and test client",
-      "configurations": [
-        "INFERENCE – Mock server",
-        "INFERENCE – Test client"
-      ],
-      "stopAll": true
-    }
-  ]
+        {
+            "name": "INFERENCE – Mock server and test client",
+            "configurations": [
+                "INFERENCE – Mock server",
+                "INFERENCE – Test client"
+            ],
+            "stopAll": true
+        },
+        {
+            "name": "INFERENCE – Server and test client",
+            "configurations": [
+                "INFERENCE – Server",
+                "INFERENCE – Test client"
+            ],
+            "stopAll": true
+        }
+    ]
 }
