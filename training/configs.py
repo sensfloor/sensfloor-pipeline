@@ -1,5 +1,6 @@
+import json
 import random
-from enum import Enum
+from enum import Enum, IntEnum
 from pathlib import Path
 from typing import TypedDict, Literal
 
@@ -311,14 +312,86 @@ def get_hyper_param_configs():
 
 PROJECT_NAME = "sensfloor_cairo_6"
 
-if __name__ == '__main__':
-    drop_before = drop_landmarks_default + [PoseLandmark.LEFT_HEEL,
-                                                       PoseLandmark.RIGHT_HEEL,
-                                                       PoseLandmark.LEFT_FOOT_INDEX,
-                                                       PoseLandmark.RIGHT_FOOT_INDEX,
-                                                       ]
 
-    kept_after = [l for l in kept_landmarks_default if not l in drop_feet_landmarks]
+class HyperParamsEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Path):
+            return str(obj)
+        if isinstance(obj, Enum):
+            return obj.name
+        return super().default(obj)
 
-    print(len(drop_before), len(kept_after))
-    print([l for l in drop_before if l in kept_after])
+
+CONFIG_FILE_NAME = "config.json"
+
+def save_hyperparams(params: HyperParams, folder_path: str | Path, file_name: str = CONFIG_FILE_NAME) -> None:
+    """Saves HyperParams to a JSON file, handling Enums and Paths."""
+    with open(folder_path / file_name, 'w') as f:
+        json.dump(params, f, cls=HyperParamsEncoder, indent=4)
+    print(f"Hyperparams saved to {folder_path}")
+
+
+def load_hyperparams(folder_path: str | Path, file_name: str = CONFIG_FILE_NAME) -> HyperParams:
+    """
+    Loads HyperParams from JSON and restores specific Python types
+    (Path, Tuple, Enums) that JSON converts to basic types.
+    """
+    with open(folder_path / file_name, 'r') as f:
+        data = json.load(f)
+
+    # --- Handle "complex" objects ---
+    if "test_path" in data:
+        data["test_path"] = Path(data["test_path"])
+
+    if "split_ratios" in data:
+        data["split_ratios"] = tuple(data["split_ratios"])
+
+    if "kept_landmarks" in data:
+        data["kept_landmarks"] = [PoseLandmark[name] for name in data["kept_landmarks"]]
+
+    if "model_type" in data:
+        data["model_type"] = ModelType[data["model_type"]]
+
+    return data
+
+
+# --- Usage Example ---
+if __name__ == "__main__":
+    # Create dummy data
+    params: HyperParams = {
+        "epochs": 100,
+        "learning_rate": 0.001,
+        "batch_size": 32,
+        "seed": 42,
+        "split_ratios": (0.7, 0.2, 0.1),
+        "patch_width": 64,
+        "roi_x_size": 128,
+        "roi_y_size": 128,
+        "roi_history_maxlen": 10,
+        "roi_size": 256,
+        "do_normalize": True,
+        "normalize_to_max": False,
+        "rotate_data": True,
+        "training_data_folders": ["/data/set1", "/data/set2"],
+        "kept_landmarks": [PoseLandmark.NOSE, PoseLandmark.LEFT_EYE],
+        "model_type": ModelType.CNN_LSTM,
+        "scheduler_patience": 5,
+        "scheduler_min_lr": 1e-6,
+        "scheduler_factor": 0.1,
+        "trainer_patience": 10,
+        "amplify_link_loss": 1.5,
+        "mse_loss": "mean",
+        "test_path": Path("./tests"),
+        "model_name": "pose_v1"
+    }
+
+    # Save
+    save_hyperparams(params, ROOT_PATH)
+
+    # Load
+    loaded_params = load_hyperparams(ROOT_PATH)
+
+    # Verify complex types were restored correctly
+    print(f"Restored test_path type: {type(loaded_params['test_path'])}")  # <class 'pathlib.Path'>
+    print(f"Restored split_ratios type: {type(loaded_params['split_ratios'])}")  # <class 'tuple'>
+    print(f"Restored Enum: {loaded_params['kept_landmarks'][0]}")  # PoseLandmark.NOSE

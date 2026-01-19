@@ -1,7 +1,7 @@
-from enum import IntEnum
+from enum import Enum
 
 
-class PoseLandmark(IntEnum):
+class PoseLandmark(Enum):
     NOSE = 0
     LEFT_EYE_INNER = 1
     LEFT_EYE = 2
@@ -40,7 +40,7 @@ class PoseLandmark(IntEnum):
 LINKS: list[tuple[PoseLandmark, PoseLandmark]] = [
     (PoseLandmark.LEFT_SHOULDER, PoseLandmark.RIGHT_SHOULDER),
     (PoseLandmark.LEFT_HIP, PoseLandmark.RIGHT_HIP),
-    (PoseLandmark.LEFT_SHOULDER, PoseLandmark.LEFT_ELBOW), # put symmetric links next to each other to compare them
+    (PoseLandmark.LEFT_SHOULDER, PoseLandmark.LEFT_ELBOW),  # put symmetric links next to each other to compare them
     (PoseLandmark.RIGHT_SHOULDER, PoseLandmark.RIGHT_ELBOW),
     (PoseLandmark.LEFT_SHOULDER, PoseLandmark.LEFT_HIP),
     (PoseLandmark.RIGHT_SHOULDER, PoseLandmark.RIGHT_HIP),

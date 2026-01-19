@@ -1,6 +1,3 @@
-import pickle
-from pathlib import Path
-
 import torch
 import trackio
 from torch.utils.data import DataLoader
@@ -9,7 +6,7 @@ from data_loading.links_min_max import get_link_min_max
 from data_loading.pose_landmark import PoseLandmark
 from data_loading.roi_floor import RoIFloorConfig
 from definitions import ROOT_PATH, DATA_PATH
-from training.configs import HyperParams, ModelType, PROJECT_NAME
+from training.configs import HyperParams, ModelType, PROJECT_NAME, ALL_CONFIGS, save_hyperparams
 from training.models.efficient_cnn import RegressionModelNoBatchnorm, RegressionModelMaxPool, RegressionReducedDim, \
     RegressionModelBatchnormFirst
 from training.models.efficient_lstm import EfficientCNNLSTM
@@ -23,19 +20,6 @@ from visualization.create_landmark_predictions import create_predictions
 
 PATCH_WIDTH = 4
 MODELS_FOLDER_PATH = ROOT_PATH / "outputs" / "models"
-CONFIG_FILE_NAME = "config.pickle"
-
-
-def save_config(config, model_folder: Path): # TODO Make jsonable
-    model_folder.mkdir(parents=True, exist_ok=True)
-    print(f"writing to file {model_folder}")
-    with open(model_folder / CONFIG_FILE_NAME, "wb+") as f:
-        pickle.dump(config, f, pickle.HIGHEST_PROTOCOL)
-
-
-def load_config(model_folder: Path) -> HyperParams: # TODO Make jsonable
-    with open(model_folder / CONFIG_FILE_NAME, "rb") as f:
-        return pickle.load(f)
 
 
 # TODO: Refactor to two sperate methods -> Train config, Test config
@@ -46,7 +30,7 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
     model_file_name = "best_model.pth"
     model_path = model_folder / model_file_name
 
-    save_config(hyper_params, model_folder)
+    save_hyperparams(hyper_params, model_folder)
     set_seed(seed=hyper_params["seed"])
     device = get_device()
 
@@ -188,3 +172,7 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
         trackio.log({"test_accuracy": test_accuracy})
 
     trackio.finish()
+
+
+if __name__ == '__main__':
+    save_hyperparams(ALL_CONFIGS[0], ROOT_PATH)
