@@ -71,6 +71,38 @@ def get_unique_frames_with_poses(sensfloor_readout: pd.DataFrame, poses: pd.Data
     # Return all frame unique numbers for which poses exist
     return unique_readout_frames[frames_containing_messages_mask]
 
+def shift(arr, num, fill_value=np.nan):
+    arr = np.roll(arr,num)
+    if num < 0:
+        arr[num:] = fill_value
+    elif num > 0:
+        arr[:num] = fill_value
+    return arr
+
+def shift5(arr, num, fill_value=np.nan):
+    result = np.empty_like(arr)
+    if num > 0:
+        result[:num] = fill_value
+        result[num:] = arr[:-num]
+    elif num < 0:
+        result[num:] = fill_value
+        result[:num] = arr[-num:]
+    else:
+        result[:] = arr
+    return result
+
+# TODO: go through all unique frames with pose and save signals in dataframe and filter in dataset for the id -> get all values for that sequence
+def get_sequences(sensfloor_readout: pd.DataFrame, poses: pd.DataFrame) -> np.ndarray:
+    # Get all the frames with messages
+    unique_readout_frames = sensfloor_readout["frame_number"].unique()
+    # Check if for these frames also poses exist
+    frames_containing_messages_mask = np.isin(unique_readout_frames, poses["frame"].unique())
+    # Return all frame unique numbers for which poses exist
+    unique_frames_with_poses = unique_readout_frames[frames_containing_messages_mask]
+    sequences = (unique_readout_frames - shift(unique_frames_with_poses, 1, fill_value=0)).clip(min=10) - 10
+    sequences_mask = sequences > 0
+    return unique_frames_with_poses[sequences_mask]
+
 
 @dataclass
 class DetailedSensfloorPosesData:

@@ -12,7 +12,7 @@ from training.models.efficient_cnn import RegressionModelNoBatchnorm, Regression
 from training.models.LSTM.efficient_lstm import EfficientCNNLSTM
 from training.models.LSTM.lstm_model import CNNLSTM
 from training.models.pose_estimation_model import RegressionModel
-from training.sensfloor_dataset import DatasetConfig, train_val_test_split, load_single_dataset
+from training.models.LSTM.lstm_dataset import DatasetConfig, train_val_test_split, load_single_dataset
 from training.sensfloor_trainer import SensfloorTrainer, get_test_accuracy
 from training.utils import get_device, get_kept_links
 from training.utils import set_seed
