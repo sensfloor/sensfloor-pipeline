@@ -96,10 +96,10 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
                     landmarks_out=landmarks_out,
                     history_len=dataset_config.floor_config.history_maxlen,
                 )
-            case ModelType.CNN_LSTM:  # TODO Assumes roi shape (12, 12)
-                return CNNLSTM(num_classes=landmarks_out * 3)
-            case ModelType.CNN_LSTM_EFFICIENT:  # TODO Assumes roi shape (12, 12)
-                return EfficientCNNLSTM(num_classes=landmarks_out * 3)
+            case ModelType.CNN_LSTM:   # TODO try different parameter inputs
+                return CNNLSTM(num_classes=landmarks_out * 3, roi_shape=roi_shape)
+            case ModelType.CNN_LSTM_EFFICIENT: # TODO try different parameter inputs
+                return EfficientCNNLSTM(num_classes=landmarks_out * 3, roi_shape=roi_shape)
 
     if do_train:
         model = get_model(hyper_params["model_type"])

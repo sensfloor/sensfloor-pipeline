@@ -8,9 +8,6 @@ class RegressionReducedDim(nn.Module):
     """
 
     def __init__(self, roi_shape: tuple[int, int], history_len: int, landmarks_out: int):
-        # TODO: adapt kernel size, because we have a smaller input?
-        # TODO: consider removing batchnorm, because we want to have value predictions (no sigmoid or classification)
-        # TODO: consider switching ReLU and Batchnorm
         super().__init__()
 
         # 4x4x64
@@ -67,9 +64,6 @@ class RegressionModelMaxPool(nn.Module):
     """
 
     def __init__(self, roi_shape: tuple[int, int], history_len: int, landmarks_out: int):
-        # TODO: adapt kernel size, because we have a smaller input?
-        # TODO: consider removing batchnorm, because we want to have value predictions (no sigmoid or classification)
-        # TODO: consider switching ReLU and Batchnorm
         super().__init__()
 
         # 4x4x64
@@ -131,8 +125,6 @@ class RegressionModelBatchnormFirst(nn.Module):
     """
 
     def __init__(self, roi_shape: tuple[int, int], history_len: int, landmarks_out: int):
-        # TODO: adapt kernel size, because we have a smaller input?
-        # TODO: consider removing batchnorm, because we want to have value predictions (no sigmoid or classification)
         super().__init__()
 
         # 4x4x64
@@ -192,7 +184,6 @@ class RegressionModelNoBatchnorm(nn.Module):
     """
 
     def __init__(self, roi_shape: tuple[int, int], history_len: int, landmarks_out: int):
-        # TODO: adapt kernel size, because we have a smaller input?
         super().__init__()
 
         # 4x4x64
