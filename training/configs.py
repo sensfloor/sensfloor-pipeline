@@ -54,8 +54,8 @@ class HyperParams(TypedDict):
 
     # Model/Data Params
     patch_width: int
-    roi_x_size: int
-    roi_y_size: int
+    floor_x_size: int
+    floor_y_size: int
     roi_history_maxlen: int
     roi_size: int
     do_normalize: bool
@@ -91,8 +91,8 @@ ALL_CONFIGS: list[HyperParams] = [
             0.01,
         ),
         "patch_width": 4,
-        "roi_x_size": 6,
-        "roi_y_size": 4,
+        "floor_x_size": 6,
+        "floor_y_size": 4,
         "roi_history_maxlen": 25,
         "roi_size": 3,
         "do_normalize": True,
@@ -100,7 +100,7 @@ ALL_CONFIGS: list[HyperParams] = [
         "rotate_data": False,
         "training_data_folders": training_folders,
         "kept_landmarks": [l for l in kept_landmarks_default if not l in drop_feet_landmarks],
-        "model_type": ModelType.CNN_LSTM,
+        "model_type": ModelType.CNN,
         "scheduler_patience": 3,
         "scheduler_min_lr": 1e-6,
         "scheduler_factor": 0.1,
@@ -108,7 +108,7 @@ ALL_CONFIGS: list[HyperParams] = [
         "amplify_link_loss": 0.1,
         "mse_loss": "mean",
         "test_path": ROOT_PATH / "data_testing" / "2025-12-09_15-58-52-line-justin",
-        "model_name": "CNN lstm",
+        "model_name": "Rotate data",
     },
     {
         "epochs": 40,
@@ -121,8 +121,8 @@ ALL_CONFIGS: list[HyperParams] = [
             0.01,
         ),
         "patch_width": 4,
-        "roi_x_size": 6,
-        "roi_y_size": 4,
+        "floor_x_size": 6,
+        "floor_y_size": 4,
         "roi_history_maxlen": 25,
         "roi_size": 3,
         "do_normalize": True,
@@ -151,8 +151,8 @@ ALL_CONFIGS: list[HyperParams] = [
             0.01,
         ),
         "patch_width": 4,
-        "roi_x_size": 6,
-        "roi_y_size": 4,
+        "floor_x_size": 6,
+        "floor_y_size": 4,
         "roi_history_maxlen": 25,
         "roi_size": 3,
         "do_normalize": True,
@@ -181,8 +181,8 @@ ALL_CONFIGS: list[HyperParams] = [
             0.01,
         ),
         "patch_width": 4,
-        "roi_x_size": 6,
-        "roi_y_size": 4,
+        "floor_x_size": 6,
+        "floor_y_size": 4,
         "roi_history_maxlen": 25,
         "roi_size": 3,
         "do_normalize": True,
@@ -211,8 +211,8 @@ ALL_CONFIGS: list[HyperParams] = [
             0.01,
         ),
         "patch_width": 4,
-        "roi_x_size": 6,
-        "roi_y_size": 4,
+        "floor_x_size": 6,
+        "floor_y_size": 4,
         "roi_history_maxlen": 25,
         "roi_size": 3,
         "do_normalize": True,
@@ -241,8 +241,8 @@ ALL_CONFIGS: list[HyperParams] = [
             0.01,
         ),
         "patch_width": 4,
-        "roi_x_size": 6,
-        "roi_y_size": 4,
+        "floor_x_size": 6,
+        "floor_y_size": 4,
         "roi_history_maxlen": 25,
         "roi_size": 3,
         "do_normalize": True,
@@ -271,8 +271,8 @@ ALL_CONFIGS: list[HyperParams] = [
             0.01,
         ),
         "patch_width": 4,
-        "roi_x_size": 6,
-        "roi_y_size": 4,
+        "floor_x_size": 6,
+        "floor_y_size": 4,
         "roi_history_maxlen": 25,
         "roi_size": 3,
         "do_normalize": True,
@@ -324,19 +324,20 @@ class HyperParamsEncoder(json.JSONEncoder):
 
 CONFIG_FILE_NAME = "config.json"
 
-def save_hyperparams(params: HyperParams, folder_path: str | Path, file_name: str = CONFIG_FILE_NAME) -> None:
+def save_hyperparams(params: HyperParams, folder_path: Path, file_name: str = CONFIG_FILE_NAME) -> None:
     """Saves HyperParams to a JSON file, handling Enums and Paths."""
-    with open(folder_path / file_name, 'w') as f:
+    folder_path.mkdir(exist_ok=True, parents=True)
+    with (folder_path / file_name).open('w') as f:
         json.dump(params, f, cls=HyperParamsEncoder, indent=4)
     print(f"Hyperparams saved to {folder_path}")
 
 
-def load_hyperparams(folder_path: str | Path, file_name: str = CONFIG_FILE_NAME) -> HyperParams:
+def load_hyperparams(folder_path: Path, file_name: str = CONFIG_FILE_NAME) -> HyperParams:
     """
     Loads HyperParams from JSON and restores specific Python types
     (Path, Tuple, Enums) that JSON converts to basic types.
     """
-    with open(folder_path / file_name, 'r') as f:
+    with (folder_path / file_name).open('r') as f:
         data = json.load(f)
 
     # --- Handle "complex" objects ---
@@ -365,8 +366,8 @@ if __name__ == "__main__":
         "seed": 42,
         "split_ratios": (0.7, 0.2, 0.1),
         "patch_width": 64,
-        "roi_x_size": 128,
-        "roi_y_size": 128,
+        "floor_x_size": 128,
+        "floor_y_size": 128,
         "roi_history_maxlen": 10,
         "roi_size": 256,
         "do_normalize": True,

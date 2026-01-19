@@ -6,15 +6,10 @@ from data_loading.links_min_max import get_link_min_max
 from data_loading.pose_landmark import PoseLandmark
 from data_loading.roi_floor import RoIFloorConfig
 from definitions import ROOT_PATH, DATA_PATH
-from training.configs import HyperParams, ModelType, PROJECT_NAME, ALL_CONFIGS, save_hyperparams
-from training.models.efficient_cnn import RegressionModelNoBatchnorm, RegressionModelMaxPool, RegressionReducedDim, \
-    RegressionModelBatchnormFirst
-from training.models.LSTM.efficient_lstm import EfficientCNNLSTM
-from training.models.LSTM.lstm_model import CNNLSTM
-from training.models.pose_estimation_model import RegressionModel
+from training.configs import HyperParams, PROJECT_NAME, ALL_CONFIGS, save_hyperparams
 from training.models.LSTM.lstm_dataset import DatasetConfig, train_val_test_split, load_single_dataset
 from training.sensfloor_trainer import SensfloorTrainer, get_test_accuracy
-from training.utils import get_device, get_kept_links
+from training.utils import get_device, get_kept_links, get_model
 from training.utils import set_seed
 from visualization.create_landmark_predictions import create_predictions
 
@@ -47,8 +42,8 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
     pose_to_model_index_dict = {landmark: i for i, landmark in enumerate(kept_landmarks)}
 
     floor_config = RoIFloorConfig(
-        x_size=hyper_params["roi_x_size"],
-        y_size=hyper_params["roi_y_size"],
+        x_size=hyper_params["floor_x_size"],
+        y_size=hyper_params["floor_y_size"],
         history_maxlen=hyper_params["roi_history_maxlen"],
         roi_size=hyper_params["roi_size"],
     )
@@ -64,45 +59,8 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
     roi_shape = (dataset_config.floor_config.roi_size * PATCH_WIDTH, dataset_config.floor_config.roi_size * PATCH_WIDTH)
     landmarks_out = len(kept_landmarks)
 
-    def get_model(model_type: ModelType) -> torch.nn.Module:
-        match model_type:
-            case ModelType.CNN:
-                return RegressionModel(
-                    roi_shape=roi_shape,
-                    landmarks_out=landmarks_out,
-                    history_len=dataset_config.floor_config.history_maxlen,
-                )
-            case ModelType.CNN_EFFICIENT:
-                return RegressionReducedDim(
-                    roi_shape=roi_shape,
-                    landmarks_out=landmarks_out,
-                    history_len=dataset_config.floor_config.history_maxlen,
-                )
-            case ModelType.CNN_NO_BATCHNORM:
-                return RegressionModelNoBatchnorm(
-                    roi_shape=roi_shape,
-                    landmarks_out=landmarks_out,
-                    history_len=dataset_config.floor_config.history_maxlen,
-                )
-            case ModelType.CNN_RELU_LAST:
-                return RegressionModelBatchnormFirst(
-                    roi_shape=roi_shape,
-                    landmarks_out=landmarks_out,
-                    history_len=dataset_config.floor_config.history_maxlen,
-                )
-            case ModelType.CNN_MAX_POOL:
-                return RegressionModelMaxPool(
-                    roi_shape=roi_shape,
-                    landmarks_out=landmarks_out,
-                    history_len=dataset_config.floor_config.history_maxlen,
-                )
-            case ModelType.CNN_LSTM:   # TODO try different parameter inputs
-                return CNNLSTM(num_classes=landmarks_out * 3, roi_shape=roi_shape)
-            case ModelType.CNN_LSTM_EFFICIENT: # TODO try different parameter inputs
-                return EfficientCNNLSTM(num_classes=landmarks_out * 3, roi_shape=roi_shape)
-
     if do_train:
-        model = get_model(hyper_params["model_type"])
+        model = get_model(roi_shape, landmarks_out, dataset_config, hyper_params["model_type"])
 
         train_loader, val_loader, _ = train_val_test_split(
             data_root_path=DATA_PATH,
@@ -145,7 +103,7 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
     if do_test:
         data_path = hyper_params["test_path"]
 
-        model = get_model(hyper_params["model_type"])
+        model = get_model(roi_shape, landmarks_out, dataset_config, hyper_params["model_type"])
         checkpoint = torch.load(f=model_path)
         model.load_state_dict(state_dict=checkpoint)
 

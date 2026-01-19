@@ -4,6 +4,13 @@ import numpy as np
 import torch
 
 from data_loading.pose_landmark import LINKS
+from training.configs import ModelType
+from training.models.LSTM.efficient_lstm import EfficientCNNLSTM
+from training.models.LSTM.lstm_model import CNNLSTM
+from training.models.dataset_utils import DatasetConfig
+from training.models.efficient_cnn import RegressionReducedDim, RegressionModelNoBatchnorm, \
+    RegressionModelBatchnormFirst, RegressionModelMaxPool
+from training.models.pose_estimation_model import RegressionModel
 
 SIGNAL_Z = 18  # required for heatmap model, needs to be even
 
@@ -42,3 +49,41 @@ def set_seed(seed: int = 42):
 
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
+
+
+def get_model(roi_shape: tuple[int, int], landmarks_out: int, dataset_config: DatasetConfig, model_type: ModelType) -> torch.nn.Module:
+    match model_type:
+        case ModelType.CNN:
+            return RegressionModel(
+                roi_shape=roi_shape,
+                landmarks_out=landmarks_out,
+                history_len=dataset_config.floor_config.history_maxlen,
+            )
+        case ModelType.CNN_EFFICIENT:
+            return RegressionReducedDim(
+                roi_shape=roi_shape,
+                landmarks_out=landmarks_out,
+                history_len=dataset_config.floor_config.history_maxlen,
+            )
+        case ModelType.CNN_NO_BATCHNORM:
+            return RegressionModelNoBatchnorm(
+                roi_shape=roi_shape,
+                landmarks_out=landmarks_out,
+                history_len=dataset_config.floor_config.history_maxlen,
+            )
+        case ModelType.CNN_RELU_LAST:
+            return RegressionModelBatchnormFirst(
+                roi_shape=roi_shape,
+                landmarks_out=landmarks_out,
+                history_len=dataset_config.floor_config.history_maxlen,
+            )
+        case ModelType.CNN_MAX_POOL:
+            return RegressionModelMaxPool(
+                roi_shape=roi_shape,
+                landmarks_out=landmarks_out,
+                history_len=dataset_config.floor_config.history_maxlen,
+            )
+        case ModelType.CNN_LSTM:   # TODO try different parameter inputs
+            return CNNLSTM(num_classes=landmarks_out * 3, roi_shape=roi_shape)
+        case ModelType.CNN_LSTM_EFFICIENT: # TODO try different parameter inputs
+            return EfficientCNNLSTM(num_classes=landmarks_out * 3, roi_shape=roi_shape)

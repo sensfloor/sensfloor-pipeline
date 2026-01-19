@@ -1,6 +1,5 @@
 import torch
 from torch import nn
-from training.utils import SIGNAL_Z
 
 
 class RegressionModel(nn.Module):
