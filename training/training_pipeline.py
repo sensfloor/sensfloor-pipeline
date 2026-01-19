@@ -9,8 +9,8 @@ from definitions import ROOT_PATH, DATA_PATH
 from training.configs import HyperParams, ModelType, PROJECT_NAME, ALL_CONFIGS, save_hyperparams
 from training.models.efficient_cnn import RegressionModelNoBatchnorm, RegressionModelMaxPool, RegressionReducedDim, \
     RegressionModelBatchnormFirst
-from training.models.efficient_lstm import EfficientCNNLSTM
-from training.models.lstm_model import CNNLSTM
+from training.models.LSTM.efficient_lstm import EfficientCNNLSTM
+from training.models.LSTM.lstm_model import CNNLSTM
 from training.models.pose_estimation_model import RegressionModel
 from training.sensfloor_dataset import DatasetConfig, train_val_test_split, load_single_dataset
 from training.sensfloor_trainer import SensfloorTrainer, get_test_accuracy
