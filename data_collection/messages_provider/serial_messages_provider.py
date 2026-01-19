@@ -40,18 +40,17 @@ class SerialMessagesProvider(BaseMessagesProvider):
             # Read messages until script terminates
             while not self._stop_event.is_set():
                 # Collect all bytes of a message
-                while True:
-                    byte = ser.read(size=1)
+                byte = ser.read(size=1)
 
-                    if not byte or byte[0] != START_BYTE:
-                        continue
+                if not byte or byte[0] != START_BYTE:
+                    continue
 
-                    rest = ser.read(MESSAGE_LENGTH - 1)
+                rest = ser.read(MESSAGE_LENGTH - 1)
 
-                    if len(rest) == MESSAGE_LENGTH - 1:
-                        message_bytes = byte + rest
-                        self.messages_queue.put(
-                            message_to_dict(message_bytes, int(time.perf_counter_ns() - self._start_time_ns)),
-                        )
-                    else:
-                        pass  # Skip invalid message
+                if len(rest) == MESSAGE_LENGTH - 1:
+                    message_bytes = byte + rest
+                    self.messages_queue.put(
+                        message_to_dict(message_bytes, int(time.perf_counter_ns() - self._start_time_ns)),
+                    )
+                else:
+                    pass  # Skip invalid message
