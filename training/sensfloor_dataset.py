@@ -3,20 +3,28 @@ from pathlib import Path
 
 import pandas as pd
 import torch
-from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split
+from torch.utils.data import ConcatDataset, DataLoader, Dataset, Subset
 
 from data_loading.roi_floor import create_roi_floor
-from training.models.dataset_utils import DatasetConfig, normalize_roi, rotate_pose, rotate_roi, drop_landmarks, \
-    remove_noise_messages, get_unique_frames_with_poses, DetailedSensfloorPosesData
+from training.models.dataset_utils import (
+    DatasetConfig,
+    DetailedSensfloorPosesData,
+    drop_landmarks,
+    get_unique_frames_with_poses,
+    normalize_roi,
+    remove_noise_messages,
+    rotate_pose,
+    rotate_roi,
+)
 
 
 class SensfloorPosesDataset(Dataset):
     def __init__(
-            self,
-            poses_df: pd.DataFrame,
-            sensfloor_readout_df: pd.DataFrame,
-            config: DatasetConfig,
-            return_detailed: bool = False,
+        self,
+        poses_df: pd.DataFrame,
+        sensfloor_readout_df: pd.DataFrame,
+        config: DatasetConfig,
+        return_detailed: bool = False,
     ) -> None:
         super().__init__()
         self.poses_df = poses_df
@@ -94,35 +102,60 @@ def load_single_dataset(data_path: Path, config: DatasetConfig, return_detailed=
         poses_df=poses_df,
         sensfloor_readout_df=readout_df,
         config=config,
-        return_detailed = return_detailed,
+        return_detailed=return_detailed,
     )
 
 
-def load_all_datasets(data_root_path: Path, config: DatasetConfig) -> ConcatDataset[SensfloorPosesDataset]:
+def load_all_datasets(
+    data_root_path: Path,
+    config: DatasetConfig,
+    ratios: tuple[float, float, float],
+) -> tuple[
+    ConcatDataset[SensfloorPosesDataset],
+    ConcatDataset[SensfloorPosesDataset],
+    ConcatDataset[SensfloorPosesDataset],
+]:
     folders = [folder for folder in data_root_path.iterdir() if folder.is_dir()]
-    datasets = [load_single_dataset(folder, config) for folder in folders]
-    return ConcatDataset(datasets)
+
+    train_datasets = []
+    val_datasets = []
+    test_datasets = []
+
+    for folder in folders:
+        dataset = load_single_dataset(folder, config)
+        train_count = int(ratios[0] * len(dataset))
+        val_count = int(ratios[1] * len(dataset))
+
+        indices = list(range(len(dataset)))
+        train_idx = indices[:train_count]
+        val_idx = indices[train_count : train_count + val_count]
+        test_idx = indices[train_count + val_count :]
+
+        train_datasets.append(Subset(dataset, train_idx))
+        val_datasets.append(Subset(dataset, val_idx))
+        test_datasets.append(Subset(dataset, test_idx))
+
+    return ConcatDataset(train_datasets), ConcatDataset(val_datasets), ConcatDataset(test_datasets)
 
 
 def train_val_test_split(
-        data_root_path: Path,
-        ratios: tuple[float, float, float],
-        config: DatasetConfig,
-        batch_size: int,
+    data_root_path: Path,
+    ratios: tuple[float, float, float],
+    config: DatasetConfig,
+    batch_size: int,
 ) -> tuple[DataLoader, DataLoader, DataLoader]:
-    if sum(ratios) != 1.0:
-        message = "Splitting ratios don't add up to 1!"
-        raise RuntimeError(message)
+    train_dataset, val_dataset, test_dataset = load_all_datasets(
+        data_root_path=data_root_path,
+        config=config,
+        ratios=ratios,
+    )
 
-    dataset = load_all_datasets(data_root_path=data_root_path, config=config)
+    print(f"Training dataset length: {len(train_dataset)}")
+    print(f"Validation dataset length: {len(val_dataset)}")
+    print(f"Test dataset length: {len(test_dataset)}")
 
-    # TODO: Split dataset for different recording sessions
-    train_subset, val_subset, test_subset = random_split(dataset=dataset, lengths=ratios)
-
-    print(f"training dataset length: {len(train_subset)}")
-
-    train_dataloader = DataLoader(train_subset, batch_size=batch_size, shuffle=True)
-    val_dataloader = DataLoader(val_subset, batch_size=batch_size, shuffle=False)
-    test_dataloader = DataLoader(test_subset, batch_size=8, shuffle=False)
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+    test_dataloader = DataLoader(test_dataset, batch_size=8, shuffle=False)
 
     return train_dataloader, val_dataloader, test_dataloader

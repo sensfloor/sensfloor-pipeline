@@ -5,12 +5,11 @@ from torch.utils.data import DataLoader
 from data_loading.links_min_max import get_link_min_max
 from data_loading.pose_landmark import PoseLandmark
 from data_loading.roi_floor import RoIFloorConfig
-from definitions import ROOT_PATH, DATA_PATH
-from training.configs import HyperParams, PROJECT_NAME, ALL_CONFIGS, save_hyperparams
-from training.models.LSTM.lstm_dataset import DatasetConfig, train_val_test_split, load_single_dataset
+from definitions import DATA_PATH, ROOT_PATH
+from training.configs import ALL_CONFIGS, PROJECT_NAME, HyperParams, save_hyperparams
+from training.sensfloor_dataset import DatasetConfig, load_single_dataset, train_val_test_split
 from training.sensfloor_trainer import SensfloorTrainer, get_test_accuracy
-from training.utils import get_device, get_kept_links, get_model
-from training.utils import set_seed
+from training.utils import get_device, get_kept_links, get_model, set_seed
 from visualization.create_landmark_predictions import create_predictions
 
 PATCH_WIDTH = 4
@@ -21,7 +20,7 @@ MODELS_FOLDER_PATH = ROOT_PATH / "outputs" / "models"
 def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None:
     print(f"hyper params: {hyper_params}")
 
-    model_folder = MODELS_FOLDER_PATH / hyper_params['model_name']
+    model_folder = MODELS_FOLDER_PATH / hyper_params["model_name"]
     model_file_name = "best_model.pth"
     model_path = model_folder / model_file_name
 
@@ -123,6 +122,7 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
         )
 
         # --- Test Accuracy ---
+        # TODO: Use test set
         test_dataset = load_single_dataset(data_path, config=dataset_config)
         test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False)
         test_accuracy = get_test_accuracy(model, test_dataloader, device, landmarks_out)
@@ -132,5 +132,5 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
     trackio.finish()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     save_hyperparams(ALL_CONFIGS[0], ROOT_PATH)

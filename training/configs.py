@@ -1,8 +1,8 @@
 import json
 import random
-from enum import Enum, IntEnum
+from enum import Enum
 from pathlib import Path
-from typing import TypedDict, Literal
+from typing import Literal, TypedDict
 
 from data_loading.pose_landmark import PoseLandmark
 from definitions import DATA_PATH, ROOT_PATH
@@ -28,22 +28,27 @@ drop_landmarks_default = [
     PoseLandmark.RIGHT_PINKY,
 ]
 
-kept_landmarks_default = [l for l in PoseLandmark if not l in drop_landmarks_default]
+kept_landmarks_default = [l for l in PoseLandmark if l not in drop_landmarks_default]
 
-drop_feet_landmarks = [PoseLandmark.LEFT_HEEL, PoseLandmark.RIGHT_HEEL, PoseLandmark.LEFT_FOOT_INDEX,
-                       PoseLandmark.RIGHT_FOOT_INDEX]
+drop_feet_landmarks = [
+    PoseLandmark.LEFT_HEEL,
+    PoseLandmark.RIGHT_HEEL,
+    PoseLandmark.LEFT_FOOT_INDEX,
+    PoseLandmark.RIGHT_FOOT_INDEX,
+]
 
 
 class ModelType(Enum):
-    CNN = 0,
-    CNN_EFFICIENT = 1,
-    CNN_MAX_POOL = 2,
-    CNN_RELU_LAST = 3,
-    CNN_NO_BATCHNORM = 4,
-    CNN_LSTM = 5,
+    CNN = (0,)
+    CNN_EFFICIENT = (1,)
+    CNN_MAX_POOL = (2,)
+    CNN_RELU_LAST = (3,)
+    CNN_NO_BATCHNORM = (4,)
+    CNN_LSTM = (5,)
     CNN_LSTM_EFFICIENT = 6
 
 
+# TODO: Add train/val/test split ratios to config and save folders used for training
 class HyperParams(TypedDict):
     # Training Params
     epochs: int
@@ -99,7 +104,7 @@ ALL_CONFIGS: list[HyperParams] = [
         "normalize_to_max": False,
         "rotate_data": False,
         "training_data_folders": training_folders,
-        "kept_landmarks": [l for l in kept_landmarks_default if not l in drop_feet_landmarks],
+        "kept_landmarks": [l for l in kept_landmarks_default if l not in drop_feet_landmarks],
         "model_type": ModelType.CNN,
         "scheduler_patience": 3,
         "scheduler_min_lr": 1e-6,
@@ -129,7 +134,7 @@ ALL_CONFIGS: list[HyperParams] = [
         "normalize_to_max": False,
         "rotate_data": False,
         "training_data_folders": training_folders,
-        "kept_landmarks": [l for l in kept_landmarks_default if not l in drop_feet_landmarks],
+        "kept_landmarks": [l for l in kept_landmarks_default if l not in drop_feet_landmarks],
         "model_type": ModelType.CNN_LSTM_EFFICIENT,
         "scheduler_patience": 3,
         "scheduler_min_lr": 1e-6,
@@ -159,7 +164,7 @@ ALL_CONFIGS: list[HyperParams] = [
         "normalize_to_max": False,
         "rotate_data": False,
         "training_data_folders": training_folders,
-        "kept_landmarks": [l for l in kept_landmarks_default if not l in drop_feet_landmarks],
+        "kept_landmarks": [l for l in kept_landmarks_default if l not in drop_feet_landmarks],
         "model_type": ModelType.CNN_MAX_POOL,
         "scheduler_patience": 3,
         "scheduler_min_lr": 1e-6,
@@ -189,7 +194,7 @@ ALL_CONFIGS: list[HyperParams] = [
         "normalize_to_max": False,
         "rotate_data": False,
         "training_data_folders": training_folders,
-        "kept_landmarks": [l for l in kept_landmarks_default if not l in drop_feet_landmarks],
+        "kept_landmarks": [l for l in kept_landmarks_default if l not in drop_feet_landmarks],
         "model_type": ModelType.CNN,
         "scheduler_patience": 3,
         "scheduler_min_lr": 1e-6,
@@ -219,7 +224,7 @@ ALL_CONFIGS: list[HyperParams] = [
         "normalize_to_max": False,
         "rotate_data": False,
         "training_data_folders": training_folders,
-        "kept_landmarks": [l for l in kept_landmarks_default if not l in drop_feet_landmarks],
+        "kept_landmarks": [l for l in kept_landmarks_default if l not in drop_feet_landmarks],
         "model_type": ModelType.CNN_EFFICIENT,
         "scheduler_patience": 3,
         "scheduler_min_lr": 1e-6,
@@ -249,7 +254,7 @@ ALL_CONFIGS: list[HyperParams] = [
         "normalize_to_max": False,
         "rotate_data": False,
         "training_data_folders": training_folders,
-        "kept_landmarks": [l for l in kept_landmarks_default if not l in drop_feet_landmarks],
+        "kept_landmarks": [l for l in kept_landmarks_default if l not in drop_feet_landmarks],
         "model_type": ModelType.CNN_RELU_LAST,
         "scheduler_patience": 3,
         "scheduler_min_lr": 1e-6,
@@ -279,7 +284,7 @@ ALL_CONFIGS: list[HyperParams] = [
         "normalize_to_max": False,
         "rotate_data": False,
         "training_data_folders": training_folders,
-        "kept_landmarks": [l for l in kept_landmarks_default if not l in drop_feet_landmarks],
+        "kept_landmarks": [l for l in kept_landmarks_default if l not in drop_feet_landmarks],
         "model_type": ModelType.CNN_NO_BATCHNORM,
         "scheduler_patience": 3,
         "scheduler_min_lr": 1e-6,
@@ -324,10 +329,11 @@ class HyperParamsEncoder(json.JSONEncoder):
 
 CONFIG_FILE_NAME = "config.json"
 
+
 def save_hyperparams(params: HyperParams, folder_path: Path, file_name: str = CONFIG_FILE_NAME) -> None:
     """Saves HyperParams to a JSON file, handling Enums and Paths."""
     folder_path.mkdir(exist_ok=True, parents=True)
-    with (folder_path / file_name).open('w') as f:
+    with (folder_path / file_name).open("w") as f:
         json.dump(params, f, cls=HyperParamsEncoder, indent=4)
     print(f"Hyperparams saved to {folder_path}")
 
@@ -337,7 +343,7 @@ def load_hyperparams(folder_path: Path, file_name: str = CONFIG_FILE_NAME) -> Hy
     Loads HyperParams from JSON and restores specific Python types
     (Path, Tuple, Enums) that JSON converts to basic types.
     """
-    with (folder_path / file_name).open('r') as f:
+    with (folder_path / file_name).open("r") as f:
         data = json.load(f)
 
     # --- Handle "complex" objects ---
@@ -383,7 +389,7 @@ if __name__ == "__main__":
         "amplify_link_loss": 1.5,
         "mse_loss": "mean",
         "test_path": Path("./tests"),
-        "model_name": "pose_v1"
+        "model_name": "pose_v1",
     }
 
     # Save
