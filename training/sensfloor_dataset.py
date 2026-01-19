@@ -55,7 +55,7 @@ def rotate_roi(roi: torch.Tensor, degree: int) -> torch.Tensor:
 def drop_landmarks(poses: pd.DataFrame, drop_landmarks: list[PoseLandmark]) -> pd.DataFrame:
     columns_to_drop = []
     for landmark in drop_landmarks:
-        columns_to_drop += [f"x{landmark}", f"y{landmark}", f"z{landmark}"]
+        columns_to_drop += [f"x{landmark.value}", f"y{landmark.value}", f"z{landmark.value}"]
 
     return poses.drop(columns=columns_to_drop)
 

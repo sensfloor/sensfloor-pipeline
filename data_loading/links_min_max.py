@@ -36,13 +36,13 @@ def compute_kmin_kmax(train_folder_path: Path, links: list[tuple[PoseLandmark, P
         csv_path = folder / "video_poses.csv"
         df = pd.read_csv(csv_path)
         for i, (a, b) in enumerate(links):
-            xa = df[f"x{a}"].to_numpy()
-            ya = df[f"y{a}"].to_numpy()
-            za = df[f"z{a}"].to_numpy()
+            xa = df[f"x{a.value}"].to_numpy()
+            ya = df[f"y{a.value}"].to_numpy()
+            za = df[f"z{a.value}"].to_numpy()
 
-            xb = df[f"x{b}"].to_numpy()
-            yb = df[f"y{b}"].to_numpy()
-            zb = df[f"z{b}"].to_numpy()
+            xb = df[f"x{a.value}"].to_numpy()
+            yb = df[f"y{a.value}"].to_numpy()
+            zb = df[f"z{a.value}"].to_numpy()
 
             # calculate all pair of distances between joint a and joint b for all frames
             dx = xa - xb
