@@ -59,6 +59,7 @@ def get_model(
     landmarks_out: int,
     history_maxlen: int,
     model_type: ModelType,
+    return_hidden_states: bool = False,
 ) -> torch.nn.Module:
     match model_type:
         case ModelType.CNN:
@@ -92,6 +93,7 @@ def get_model(
                 history_len=history_maxlen,
             )
         case ModelType.CNN_LSTM:  # TODO try different parameter inputs
+             # TODO add return_hidden_states logic
             return CNNLSTM(num_classes=landmarks_out * 3, roi_shape=roi_shape)
         case ModelType.CNN_LSTM_EFFICIENT:  # TODO try different parameter inputs
-            return EfficientCNNLSTM(num_classes=landmarks_out * 3, roi_shape=roi_shape)
+            return EfficientCNNLSTM(num_classes=landmarks_out * 3, roi_shape=roi_shape, return_hidden_states=return_hidden_states)

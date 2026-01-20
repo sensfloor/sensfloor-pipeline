@@ -5,12 +5,12 @@ import torch
 
 from data_loading.pose_landmark import PoseLandmark
 from data_loading.roi_floor import RoIFloor, RoIFloorConfig
-from training.configs import load_hyperparams
+from training.configs import load_hyperparams, ModelType
 from training.models.dataset_utils import normalize_roi
 from training.utils import get_device, get_model
 
 
-def load_model(model_folder: Path) -> tuple[torch.nn.Module, torch.device]:
+def load_model(model_folder: Path) -> tuple[torch.nn.Module, torch.device, ModelType]:
     model_file = model_folder / "best_model.pth"
     config = load_hyperparams(model_folder)
     model = get_model(
@@ -18,13 +18,14 @@ def load_model(model_folder: Path) -> tuple[torch.nn.Module, torch.device]:
         len(config["kept_landmarks"]),
         config["roi_history_maxlen"],
         config["model_type"],
+        return_hidden_states = True,
     )
 
     device = get_device()
     model.load_state_dict(torch.load(model_file, map_location=device))
     model.to(device)
 
-    return model, device
+    return model, device, config["model_type"]
 
 
 def load_data_transformations(model_folder: Path) -> Callable[[torch.Tensor], torch.Tensor]:

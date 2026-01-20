@@ -35,7 +35,7 @@
                 "--model",
                 "outputs/models/Rotate data",
                 "--mock-file",
-                "data/2025-12-02_12-24-03/sensfloor_readout.csv"
+                "data_testing/2025-12-16_12-07-42-rikuto-shorts/sensfloor_readout.csv"
             ]
         },
         {
@@ -105,7 +105,7 @@
             "console": "integratedTerminal",
             "args": [
                 "--csv",
-                "data/2025-12-02_12-24-03/video_poses.csv",
+                "data_testing/2025-12-16_12-07-42-rikuto-shorts/sensfloor_readout.csv",
             ]
         }
     ],

@@ -7,8 +7,9 @@ import pandas as pd
 from data_loading.roi_floor import RoIFloorConfig
 from training.sensfloor_dataset import DatasetConfig, load_single_dataset
 from visualization.utils import draw_floor
+from definitions import ROOT_PATH
 
-DATA_PATH = Path("./data/2025-12-16_20-45-38-line-felix")
+DATA_PATH = ROOT_PATH / "data/2025-12-16_20-45-38-line-felix"
 DATA_INDEX = 120
 df = pd.read_csv(DATA_PATH / "video_poses.csv")
 
