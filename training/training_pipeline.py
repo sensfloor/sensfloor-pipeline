@@ -58,15 +58,16 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
     roi_shape = (dataset_config.floor_config.roi_size * PATCH_WIDTH, dataset_config.floor_config.roi_size * PATCH_WIDTH)
     landmarks_out = len(kept_landmarks)
 
+    train_loader, val_loader, test_loader = train_val_test_split(
+        data_root_path=DATA_PATH,
+        ratios=hyper_params["split_ratios"],
+        config=dataset_config,
+        batch_size=hyper_params["batch_size"],
+    )
+
     if do_train:
         model = get_model(roi_shape, landmarks_out, dataset_config.floor_config.history_maxlen, hyper_params["model_type"])
 
-        train_loader, val_loader, _ = train_val_test_split(
-            data_root_path=DATA_PATH,
-            ratios=hyper_params["split_ratios"],
-            config=dataset_config,
-            batch_size=hyper_params["batch_size"],
-        )
 
         kept_links = get_kept_links(drop_landmarks)
         link_min, link_max = get_link_min_max(do_compute_link_lengths=True, links=kept_links)
@@ -100,7 +101,7 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
         trainer.train(train_loader=train_loader, validation_loader=val_loader, epochs=hyper_params["epochs"])
 
     if do_test:
-        data_path = hyper_params["test_path"]
+        data_path = hyper_params["create_predictions_path"]
 
         model = get_model(roi_shape, landmarks_out, dataset_config.floor_config.history_maxlen, hyper_params["model_type"])
         checkpoint = torch.load(f=model_path)
@@ -122,11 +123,8 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
         )
 
         # --- Test Accuracy ---
-        # TODO: Use test set
-        test_dataset = load_single_dataset(data_path, config=dataset_config)
-        test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False)
-        test_accuracy = get_test_accuracy(model, test_dataloader, device, landmarks_out)
-        print(f"test_accuracy for {data_path} is :{test_accuracy}")
+        test_accuracy = get_test_accuracy(model, test_loader, device, landmarks_out)
+        print(f"test_accuracy is :{test_accuracy}")
         trackio.log({"test_accuracy": test_accuracy})
 
     trackio.finish()

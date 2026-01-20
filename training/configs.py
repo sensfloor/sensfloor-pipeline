@@ -80,7 +80,7 @@ class HyperParams(TypedDict):
     mse_loss: Literal["mean", "sum"]
 
     # Testing
-    test_path: Path
+    create_predictions_path: Path
     model_name: str
 
 
@@ -112,7 +112,7 @@ ALL_CONFIGS: list[HyperParams] = [
         "trainer_patience": 7,
         "amplify_link_loss": 0.1,
         "mse_loss": "mean",
-        "test_path": ROOT_PATH / "data_testing" / "2025-12-09_15-58-52-line-justin",
+        "create_predictions_path": ROOT_PATH / "data_testing" / "2025-12-16_12-07-42-rikuto-shorts",
         "model_name": "Rotate data and drop feet",
     },
     {
@@ -142,7 +142,7 @@ ALL_CONFIGS: list[HyperParams] = [
         "trainer_patience": 7,
         "amplify_link_loss": 0.1,
         "mse_loss": "mean",
-        "test_path": ROOT_PATH / "data_testing" / "2025-12-09_15-58-52-line-justin",
+        "create_predictions_path": ROOT_PATH / "data_testing" / "2025-12-16_12-07-42-rikuto-shorts",
         "model_name": "Best Config and Drop feet",
     },
 ]
@@ -197,8 +197,8 @@ def load_hyperparams(folder_path: Path, file_name: str = CONFIG_FILE_NAME) -> Hy
         data = json.load(f)
 
     # --- Handle "complex" objects ---
-    if "test_path" in data:
-        data["test_path"] = Path(data["test_path"])
+    if "create_predictions_path" in data:
+        data["create_predictions_path"] = Path(data["create_predictions_path"])
 
     if "split_ratios" in data:
         data["split_ratios"] = tuple(data["split_ratios"])
