@@ -87,7 +87,7 @@ class HyperParams(TypedDict):
 ALL_CONFIGS: list[HyperParams] = [
     {
         "epochs": 40,
-        "learning_rate": 1e-3,
+        "learning_rate": 1e-4,
         "batch_size": 32,
         "seed": random.randint(0, 1_000_000),
         "split_ratios": (
@@ -113,11 +113,11 @@ ALL_CONFIGS: list[HyperParams] = [
         "amplify_link_loss": 0.1,
         "mse_loss": "mean",
         "test_path": ROOT_PATH / "data_testing" / "2025-12-09_15-58-52-line-justin",
-        "model_name": "Rotate data",
+        "model_name": "Rotate data and drop feet",
     },
     {
         "epochs": 40,
-        "learning_rate": 1e-3,
+        "learning_rate": 1e-4,
         "batch_size": 32,
         "seed": random.randint(0, 1_000_000),
         "split_ratios": (
@@ -143,7 +143,7 @@ ALL_CONFIGS: list[HyperParams] = [
         "amplify_link_loss": 0.1,
         "mse_loss": "mean",
         "test_path": ROOT_PATH / "data_testing" / "2025-12-09_15-58-52-line-justin",
-        "model_name": "No rotation",
+        "model_name": "Best Config and Drop feet",
     },
 ]
 
@@ -165,7 +165,7 @@ def get_hyper_param_configs():
     return ALL_CONFIGS
 
 
-PROJECT_NAME = "sensfloor_cairo_7"
+PROJECT_NAME = "sensfloor_cairo_8"
 
 
 class HyperParamsEncoder(json.JSONEncoder):
@@ -211,44 +211,3 @@ def load_hyperparams(folder_path: Path, file_name: str = CONFIG_FILE_NAME) -> Hy
 
     return data
 
-
-# --- Usage Example ---
-if __name__ == "__main__":
-    # Create dummy data
-    params: HyperParams = {
-        "epochs": 100,
-        "learning_rate": 0.001,
-        "batch_size": 32,
-        "seed": 42,
-        "split_ratios": (0.7, 0.2, 0.1),
-        "patch_width": 64,
-        "floor_x_size": 128,
-        "floor_y_size": 128,
-        "roi_history_maxlen": 10,
-        "roi_size": 256,
-        "do_normalize": True,
-        "normalize_to_max": False,
-        "rotate_data": True,
-        "training_data_folders": ["/data/set1", "/data/set2"],
-        "kept_landmarks": [PoseLandmark.NOSE, PoseLandmark.LEFT_EYE],
-        "model_type": ModelType.CNN_LSTM,
-        "scheduler_patience": 5,
-        "scheduler_min_lr": 1e-6,
-        "scheduler_factor": 0.1,
-        "trainer_patience": 10,
-        "amplify_link_loss": 1.5,
-        "mse_loss": "mean",
-        "test_path": Path("./tests"),
-        "model_name": "pose_v1",
-    }
-
-    # Save
-    save_hyperparams(params, ROOT_PATH)
-
-    # Load
-    loaded_params = load_hyperparams(ROOT_PATH)
-
-    # Verify complex types were restored correctly
-    print(f"Restored test_path type: {type(loaded_params['test_path'])}")  # <class 'pathlib.Path'>
-    print(f"Restored split_ratios type: {type(loaded_params['split_ratios'])}")  # <class 'tuple'>
-    print(f"Restored Enum: {loaded_params['kept_landmarks'][0]}")  # PoseLandmark.NOSE
