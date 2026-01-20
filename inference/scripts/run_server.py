@@ -7,10 +7,8 @@ import torch
 
 from data_collection.message_validator import PositionValidator
 from data_collection.messages_provider import CSVMessagesProvider, MessagesProvider, SerialMessagesProvider
-from data_loading.roi_floor import RoIFloor, RoIFloorConfig
+from inference.model_loading import load_data_transformations, load_floor, load_model, load_pose_landmark_mapping
 from inference.websocket import Websocket
-from training.pose_estimation_model import RegressionModel
-from training.utils import get_device
 
 
 def get_message_provider(mock_file: Path | None, serial_port: str | None) -> MessagesProvider:
@@ -28,21 +26,15 @@ def get_message_provider(mock_file: Path | None, serial_port: str | None) -> Mes
 
 
 @torch.no_grad()
-def main(fps: int, model_path: Path, mock_file: Path | None, serial_port: str | None) -> None:
-    history_maxlen = 25
-    roi_size = 3
-    floor_config = RoIFloorConfig(x_size=6, y_size=4, history_maxlen=history_maxlen, roi_size=roi_size)
+def main(fps: int, model_folder: Path, mock_file: Path | None, serial_port: str | None) -> None:
+    model, device = load_model(model_folder)
+    transform_data = load_data_transformations(model_folder)
+    floor, floor_config = load_floor(model_folder)
+    pose_landmark_mapping = load_pose_landmark_mapping(model_folder)
 
-    device = get_device()
-    model = RegressionModel(
-        roi_shape=(12, 12),
-        landmarks_out=17,
-        history_len=history_maxlen,
-    )
-    model.load_state_dict(torch.load(model_path, map_location=device))
+    print(f"Run model on {device}")
     model.eval()
 
-    floor = RoIFloor(floor_config)
     messages_provider = get_message_provider(mock_file, serial_port)
     with Websocket() as websocket, messages_provider:
         frame_interval_length = 1.0 / fps
@@ -64,6 +56,8 @@ def main(fps: int, model_path: Path, mock_file: Path | None, serial_port: str | 
 
             if roi is not None:
                 x = torch.Tensor(roi.history).unsqueeze(0)
+                x = x.to(device)
+                x = transform_data(x)
                 outputs = model(x)
                 joints: list = outputs.reshape(-1, 3).cpu().tolist()
 
@@ -71,7 +65,10 @@ def main(fps: int, model_path: Path, mock_file: Path | None, serial_port: str | 
                     "x_roi": int(roi.x),
                     "y_roi": int(roi.y),
                     "roi_size": int(floor_config.roi_size),
-                    "joints": [{"joint": "???", "x": joint[0], "y": joint[1], "z": joint[2]} for joint in joints],
+                    "joints": [
+                        {"joint": pose_landmark_mapping[i].name, "x": joint[0], "y": joint[1], "z": joint[2]}
+                        for i, joint in enumerate(joints)
+                    ],
                 }
 
                 websocket.send_poses(message)
@@ -95,7 +92,7 @@ def parse_arguments() -> argparse.Namespace:
         "--model",
         type=Path,
         required=True,
-        help="Path to model weights file",
+        help="Path to model folder containing weights and configuration file",
     )
 
     parser.add_argument(
@@ -116,4 +113,4 @@ def parse_arguments() -> argparse.Namespace:
 
 if __name__ == "__main__":
     args = parse_arguments()
-    main(fps=15, model_path=args.model, mock_file=args.mock_file, serial_port=args.serial_port)
+    main(fps=15, model_folder=args.model, mock_file=args.mock_file, serial_port=args.serial_port)

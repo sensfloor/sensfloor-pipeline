@@ -59,7 +59,7 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
     landmarks_out = len(kept_landmarks)
 
     if do_train:
-        model = get_model(roi_shape, landmarks_out, dataset_config, hyper_params["model_type"])
+        model = get_model(roi_shape, landmarks_out, dataset_config.floor_config.history_maxlen, hyper_params["model_type"])
 
         train_loader, val_loader, _ = train_val_test_split(
             data_root_path=DATA_PATH,
@@ -102,7 +102,7 @@ def run_config(do_train: bool, do_test: bool, hyper_params: HyperParams) -> None
     if do_test:
         data_path = hyper_params["test_path"]
 
-        model = get_model(roi_shape, landmarks_out, dataset_config, hyper_params["model_type"])
+        model = get_model(roi_shape, landmarks_out, dataset_config.floor_config.history_maxlen, hyper_params["model_type"])
         checkpoint = torch.load(f=model_path)
         model.load_state_dict(state_dict=checkpoint)
 

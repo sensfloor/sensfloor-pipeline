@@ -33,7 +33,7 @@
             "console": "integratedTerminal",
             "args": [
                 "--model",
-                "checkpoints/rotation_model.pth",
+                "outputs/models/Rotate data",
                 "--mock-file",
                 "data/2025-12-02_12-24-03/sensfloor_readout.csv"
             ]
@@ -47,7 +47,7 @@
             "console": "integratedTerminal",
             "args": [
                 "--model",
-                "checkpoints/rotation_model.pth",
+                "outputs/models/Rotate data",
                 "--serial-port",
                 "/dev/tty.usbserial-A571V1ZF"
             ]
