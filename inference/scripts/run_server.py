@@ -9,6 +9,7 @@ from data_collection.message_validator import PositionValidator
 from data_collection.messages_provider import CSVMessagesProvider, MessagesProvider, SerialMessagesProvider
 from inference.model_loading import load_data_transformations, load_floor, load_model, load_pose_landmark_mapping
 from inference.websocket import Websocket
+from training.configs import ModelType
 
 
 def get_message_provider(mock_file: Path | None, serial_port: str | None) -> MessagesProvider:
@@ -27,18 +28,19 @@ def get_message_provider(mock_file: Path | None, serial_port: str | None) -> Mes
 
 @torch.no_grad()
 def main(fps: int, model_folder: Path, mock_file: Path | None, serial_port: str | None) -> None:
-    model, device = load_model(model_folder)
+    model, device, model_type = load_model(model_folder)
     transform_data = load_data_transformations(model_folder)
     floor, floor_config = load_floor(model_folder)
     pose_landmark_mapping = load_pose_landmark_mapping(model_folder)
 
-    print(f"Run model on {device}")
+    print(f"Run model({model_type.name}) on {device}")
     model.eval()
 
     messages_provider = get_message_provider(mock_file, serial_port)
     with Websocket() as websocket, messages_provider:
         frame_interval_length = 1.0 / fps
 
+        h_c = None # used to store history if model is LSTM
         while True:
             frame_start_time = time.perf_counter()
 
@@ -58,7 +60,13 @@ def main(fps: int, model_folder: Path, mock_file: Path | None, serial_port: str 
                 x = torch.Tensor(roi.history).unsqueeze(0)
                 x = x.to(device)
                 x = transform_data(x)
-                outputs = model(x)
+                
+                # TODO add logic to reset h_c if there were e.g. 15 frames without signal
+                if model_type in [ModelType.CNN_LSTM, ModelType.CNN_LSTM_EFFICIENT]:
+                    outputs, (h_c) = model(x, h_c)
+                else:
+                    outputs = model(x)
+
                 joints: list = outputs.reshape(-1, 3).cpu().tolist()
 
                 message = {

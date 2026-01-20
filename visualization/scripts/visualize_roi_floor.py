@@ -8,8 +8,9 @@ import numpy as np
 from data_loading.roi_floor import RoIFloorConfig
 from training.sensfloor_dataset import DatasetConfig, load_single_dataset
 from visualization.utils import draw_floor, draw_roi
+from definitions import ROOT_PATH
 
-DATA_PATH = Path("./data/2025-12-02_12-24-03")
+DATA_PATH = ROOT_PATH / "data_testing/2025-12-16_12-07-42-rikuto-shorts"
 VIDEO_PATH = DATA_PATH / "video.mp4"
 
 floor_config = RoIFloorConfig(

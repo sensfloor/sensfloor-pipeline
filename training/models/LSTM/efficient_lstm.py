@@ -3,8 +3,10 @@ import torch.nn as nn
 
 
 class EfficientCNNLSTM(nn.Module):  # TODO Change dataset to have real sequences
-    def __init__(self, num_classes: int, roi_shape: tuple[int, int], hidden_size=256, num_layers=2):
+    def __init__(self, num_classes: int, roi_shape: tuple[int, int], hidden_size=256, num_layers=2, return_hidden_states: bool = False):
         super().__init__()
+
+        self.return_hidden_states = return_hidden_states
 
         self.cnn = nn.Sequential(
             # Layer 1: 12x12 -> 12x12
@@ -43,7 +45,7 @@ class EfficientCNNLSTM(nn.Module):  # TODO Change dataset to have real sequences
             nn.Linear(128, num_classes)
         )
 
-    def forward(self, x):
+    def forward(self, x, h_c: tuple | None = None):
         # x: (Batch, C, H, W)
         if x.dim() == 4:
             x = x.unsqueeze(2)  # (B, T, 1, H, W)
@@ -60,13 +62,20 @@ class EfficientCNNLSTM(nn.Module):  # TODO Change dataset to have real sequences
 
         # LSTM Pass
         r_in = features.view(b, t, -1)
-        r_out, _ = self.lstm(r_in)  # (B, T, 256)
+
+        if self.return_hidden_states and h_c is not None:
+            r_out, (h_n, c_n) = self.lstm(r_in, h_c)  # (B, T, 256)
+        else:
+            r_out, (h_n, c_n) = self.lstm(r_in)  # (B, T, 256)
 
         # Regression on the LAST frame
         last_frame_feat = r_out[:, -1, :]
         pred = self.regressor(last_frame_feat)
 
-        return pred
+        if self.return_hidden_states:
+            return pred, (h_n, c_n)
+        else:
+            return pred
 
 # Example Usage
 if __name__ == "__main__":
