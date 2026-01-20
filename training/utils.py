@@ -94,6 +94,6 @@ def get_model(
             )
         case ModelType.CNN_LSTM:  # TODO try different parameter inputs
              # TODO add return_hidden_states logic
-            return CNNLSTM(num_classes=landmarks_out * 3, roi_shape=roi_shape)
+            return CNNLSTM(num_classes=landmarks_out * 3, roi_shape=roi_shape, return_hidden_states=return_hidden_states)
         case ModelType.CNN_LSTM_EFFICIENT:  # TODO try different parameter inputs
             return EfficientCNNLSTM(num_classes=landmarks_out * 3, roi_shape=roi_shape, return_hidden_states=return_hidden_states)

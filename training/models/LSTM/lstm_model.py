@@ -80,7 +80,7 @@ class LSTMStackModel(nn.Module):
         """
         x: [batch, seq_len=window_size, feature_size]
         """
-        out, (h_n, c_n) = self.lstm(x, h_c)  # Input None for first state and training # out: [batch, seq_len, lstm_hidden]
+        out, (h_n, c_n) = self.lstm(x, h_c)  # out: [batch, seq_len, lstm_hidden]
 
         # take last timestep output as representation
         last = out[:, -1, :]  # [batch, lstm_hidden]
@@ -111,16 +111,14 @@ class CNNLSTM(nn.Module):
         # x shape: (Batch, Channels, Height, Width)
         batch_size, history, h, w = x.size()
 
-        # Reshape to (Batch * Time_Steps, C, H, W) so the CNN treats them as independent images
+        # Reshape to (Batch * Time_Steps, C, H, W) to apply same transformation for each input in sequence
         c_in = x.view(batch_size * history, 1, h, w)
 
-        # Pass through CNN
-        c_out = self.cnn(c_in)  # Shape: (Batch * Time, 2048, 1, 1)
+        c_out = self.cnn(c_in)  # Shape: (Batch * Time, c_out, 1, 1)
 
         # Flatten the CNN output
-        c_out = c_out.view(c_out.size(0), -1)  # Shape: (Batch * Time, 2048)
+        c_out = c_out.view(c_out.size(0), -1)  # Shape: (Batch * Time, c_out)
 
-        # --- LSTM STEP ---
         # Reshape back to (Batch, Time_Steps, Features) for the LSTM
         r_in = c_out.view(batch_size, history, -1)
 
