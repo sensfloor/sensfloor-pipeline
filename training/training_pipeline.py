@@ -6,14 +6,13 @@ from data_loading.links_min_max import get_link_min_max
 from data_loading.pose_landmark import PoseLandmark
 from data_loading.roi_floor import RoIFloorConfig
 from definitions import DATA_PATH, ROOT_PATH
-from training.configs import ALL_CONFIGS, PROJECT_NAME, HyperParams, save_hyperparams
+from training.configs import ALL_CONFIGS, PROJECT_NAME, HyperParams, save_hyperparams, MODELS_FOLDER_PATH
 from training.sensfloor_dataset import DatasetConfig, load_single_dataset, train_val_test_split
 from training.sensfloor_trainer import SensfloorTrainer, get_test_accuracy
 from training.utils import get_device, get_kept_links, get_model, set_seed
 from visualization.create_landmark_predictions import create_predictions
 
 PATCH_WIDTH = 4
-MODELS_FOLDER_PATH = ROOT_PATH / "outputs" / "models"
 
 
 # TODO: Refactor to two sperate methods -> Train config, Test config
