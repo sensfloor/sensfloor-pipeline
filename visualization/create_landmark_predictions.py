@@ -7,9 +7,9 @@ from torch.utils.data import DataLoader
 
 from data_collection.mediapipe_utils import HEADER
 from data_loading.pose_landmark import PoseLandmark
-from training.models.pose_estimation_model import RegressionModel
+from training.models.CNN.pose_estimation_model import RegressionModel
 from training.sensfloor_dataset import DatasetConfig, DetailedSensfloorPosesData, load_single_dataset
-from training.sensfloor_trainer import SensfloorTrainer
+from training.trainer.sensfloor_trainer import SensfloorTrainer
 
 ACC_HEADER = ["frame_number"] + [lm.name for lm in PoseLandmark]
 
