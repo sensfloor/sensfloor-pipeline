@@ -76,24 +76,26 @@ class LSTMStackModel(nn.Module):
         self.denses = nn.Sequential(*dense_seq)
         self.head = nn.Linear(in_features, landmarks_out)  # single neuron for regression
 
-    def forward(self, x: torch.Tensor):
+    def forward(self, x, h_c: tuple | None = None):
         """
         x: [batch, seq_len=window_size, feature_size]
         """
-        out, (h_n, c_n) = self.lstm(x)  # out: [batch, seq_len, lstm_hidden]
+        out, (h_n, c_n) = self.lstm(x, h_c)  # Input None for first state and training # out: [batch, seq_len, lstm_hidden]
 
         # take last timestep output as representation
         last = out[:, -1, :]  # [batch, lstm_hidden]
 
         feats = self.denses(last)  # [batch, dense_units]
         logits = self.head(feats)  # [batch, out_dim]
-        return logits
+        return logits, (h_n, c_n)
 
 
 class CNNLSTM(nn.Module):
     def __init__(self, num_classes: int, roi_shape: tuple[int, int], lstm_hidden: int = 128,
-                 dense_units: int = 64, dense_layers: int = 4): # TODO try different parameter inputs
+                 dense_units: int = 64, dense_layers: int = 4, return_hidden_states: bool = False): # TODO try different parameter inputs
         super(CNNLSTM, self).__init__()
+
+        self.return_hidden_states = return_hidden_states
 
         self.cnn = RegressionReducedDim(history_len=1)
 
@@ -124,11 +126,14 @@ class CNNLSTM(nn.Module):
 
         return r_in
 
-    def forward(self, x):
+    def forward(self, x, h_c: tuple | None = None):
         r_in = self._forward_cnn(x)
-        r_out = self.lstm(r_in)
+        r_out, (h_n, c_n) = self.lstm(r_in, h_c)  # Input None for first state and training
 
-        return r_out
+        if self.return_hidden_states:
+            return r_out, (h_n, c_n)
+        else:
+            return r_out
 
 
 # Example Usage
