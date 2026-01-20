@@ -146,12 +146,16 @@ ALL_CONFIGS: list[HyperParams] = [
     },
 ]
 
-
+MODELS_FOLDER_PATH = ROOT_PATH / "outputs" / "models"
 def get_hyper_param_configs():
     for config in ALL_CONFIGS:
         if len(config["model_name"]) == 0:
             print(f"No Model name configured, taking seed {config['seed']} as name")
             config["model_name"] = f"{config['seed']}"
+        model_folder = MODELS_FOLDER_PATH / config["model_name"]
+        if model_folder.is_dir():
+            print(f"Model name exists, taking seed {config['seed']} as name to prevent overwriting")
+            config["model_name"] = f"{config["model_name"]}_{config['seed']}"
 
     names = [config["model_name"] for config in ALL_CONFIGS]
     if len(names) != len(set(names)):
