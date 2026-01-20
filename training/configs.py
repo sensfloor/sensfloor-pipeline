@@ -48,7 +48,6 @@ class ModelType(Enum):
     CNN_LSTM_EFFICIENT = 6
 
 
-# TODO: Add train/val/test split ratios to config and save folders used for training
 class HyperParams(TypedDict):
     # Training Params
     epochs: int
@@ -165,7 +164,7 @@ def get_hyper_param_configs():
     return ALL_CONFIGS
 
 
-PROJECT_NAME = "sensfloor_cairo_8"
+PROJECT_NAME = "sensfloor_cairo_9"
 
 
 class HyperParamsEncoder(json.JSONEncoder):
