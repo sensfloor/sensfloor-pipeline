@@ -73,12 +73,16 @@
             ]
         },
         {
-            "name": "VISUALIZATIONS – Collected data",
+            "name": "VISUALIZATIONS – Collected video and readout",
             "type": "debugpy",
             "request": "launch",
             "module": "visualization.scripts.visualize_collected_data",
             "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "args": [
+                "--data", "data/2025-12-16_18-43-45-line-rik",
+                "--signal-threshold", "145"
+            ]
         },
         {
             "name": "VISUALIZATIONS – RoI floor",
