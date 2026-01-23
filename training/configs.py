@@ -267,6 +267,8 @@ ALL_CONFIGS: list[HyperParams] = [
 ]
 
 MODELS_FOLDER_PATH = ROOT_PATH / "outputs" / "models"
+
+
 def get_hyper_param_configs():
     for config in ALL_CONFIGS:
         if len(config["model_name"]) == 0:
@@ -275,7 +277,7 @@ def get_hyper_param_configs():
         model_folder = MODELS_FOLDER_PATH / config["model_name"]
         if model_folder.is_dir():
             print(f"Model name exists, taking seed {config['seed']} as name to prevent overwriting")
-            config["model_name"] = f"{config["model_name"]}_{config['seed']}"
+            config["model_name"] = f"{config['model_name']}_{config['seed']}"
 
     names = [config["model_name"] for config in ALL_CONFIGS]
     if len(names) != len(set(names)):
@@ -333,4 +335,3 @@ def load_hyperparams(folder_path: Path, file_name: str = CONFIG_FILE_NAME) -> Hy
         data["model_type"] = ModelType[data["model_type"]]
 
     return data
-

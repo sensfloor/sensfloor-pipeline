@@ -17,8 +17,8 @@ def main(data_dir: Path) -> None:
     floor_config = RoIFloorConfig(
         x_size=6,
         y_size=4,
-        history_maxlen=10,
-        roi_size=3,
+        history_maxlen=15,
+        roi_size=4,
         active_field_min_value=140,
     )
 
@@ -29,7 +29,7 @@ def main(data_dir: Path) -> None:
 
     # Load dataset
     dataset = load_single_dataset(data_path=data_dir, config=dataset_config)
-    data = dataset.get_detailed_data(10)
+    data = dataset.get_detailed_data(45)
     roi = data.floor.get_roi()
 
     if roi is None:
@@ -63,7 +63,8 @@ def main(data_dir: Path) -> None:
     for timestamp, ax in enumerate(axs.flatten()):
         image = draw_floor(ax, data.floor.history[timestamp], cmap)
 
-        _ = draw_roi(ax, roi.x, roi.y, floor_config.roi_size)
+        if floor_config.roi_size is not None:
+            _ = draw_roi(ax, roi.x, roi.y, floor_config.roi_size)
 
         ax.set_title(f"ROI at frame {(data.frame_number - len(axs.flatten()) + 1) + timestamp}")
     if image:

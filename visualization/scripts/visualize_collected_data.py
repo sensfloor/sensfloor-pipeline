@@ -5,6 +5,7 @@ import cv2
 import pandas as pd
 
 from data_loading.roi_floor import RoIFloor, RoIFloorConfig
+from data_loading.roi_offset_strategy import get_exhaustive_offsets
 
 
 def main(data_dir: Path, signal_threshold: int) -> None:
@@ -33,6 +34,7 @@ def main(data_dir: Path, signal_threshold: int) -> None:
         history_maxlen=10,
         roi_size=3,
         active_field_min_value=signal_threshold,
+        offset_strategy=get_exhaustive_offsets,
     )
     floor = RoIFloor(floor_config)
 
@@ -49,14 +51,16 @@ def main(data_dir: Path, signal_threshold: int) -> None:
 
         display_img = cv2.cvtColor(current_floor, cv2.COLOR_GRAY2BGR)
         if roi is not None:
-            x = roi.x * 4
-            y = roi.y * 4
-            size = floor.roi_size
+            x = roi.x * floor.PATCH_SIZE
+            y = roi.y * floor.PATCH_SIZE
+            roi_size = floor.roi_size
+
+            assert roi_size is not None, "ROI size must be specified for visualization"  # noqa: S101
 
             cv2.rectangle(
                 display_img,
                 (y, x),
-                (y + size * 4 - 1, x + size * 4 - 1),
+                (y + roi_size * floor.PATCH_SIZE - 1, x + roi_size * floor.PATCH_SIZE - 1),
                 (0, 0, 255),
                 1,
             )

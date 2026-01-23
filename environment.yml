@@ -10,6 +10,7 @@ dependencies:
   - tqdm
   - pandas
   - opencv
+  - pytest
   - pip
   - pip:
     - torch

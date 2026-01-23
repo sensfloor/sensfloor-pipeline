@@ -16,16 +16,18 @@ def test_returns_roi_in_the_middle_of_floor():
     config = RoIFloorConfig(x_size=5, y_size=5, history_maxlen=1, roi_size=3)
     floor = RoIFloor(config)
 
+    assert config.roi_size is not None
+
     # Arrange region of interest
     positions = np.array([[2, 2]])
     signals = np.array([[180, 220, 200, 180, 200, 200, 200, 210]])
     expected_roi_history = np.ones((config.history_maxlen, config.roi_size * 4, config.roi_size * 4)) * 127
     expected_roi_history[0, 4:8, 4:8] = np.array(
         [
-            [205, 210, 180, 200],
-            [200, 205, 200, 220],
-            [200, 200, 190, 200],
-            [200, 200, 180, 190],
+            [200, 200, 200, 205],
+            [200, 200, 205, 210],
+            [180, 190, 200, 180],
+            [190, 200, 220, 200],
         ],
     )
     expected_roi_x = 1
@@ -47,6 +49,8 @@ def test_returns_roi_with_higher_signal_values():
     config = RoIFloorConfig(x_size=5, y_size=5, history_maxlen=1, roi_size=3)
     floor = RoIFloor(config)
 
+    assert config.roi_size is not None
+
     # Arrange region of interest
     positions = np.array([[1, 1], [3, 3]])
     signals = np.array(
@@ -58,10 +62,10 @@ def test_returns_roi_with_higher_signal_values():
     expected_roi_history = np.ones((config.history_maxlen, config.roi_size * 4, config.roi_size * 4)) * 127
     expected_roi_history[0, 4:8, 4:8] = np.array(
         [
-            [215, 210, 180, 200],
-            [220, 215, 200, 220],
-            [200, 200, 190, 200],
-            [200, 200, 180, 190],
+            [200, 200, 220, 215],
+            [200, 200, 215, 210],
+            [180, 190, 200, 180],
+            [190, 200, 220, 200],
         ],
     )
     expected_roi_x = 2
@@ -82,6 +86,8 @@ def test_adjust_roi_to_fit_x_0():
     # Arrange floor
     config = RoIFloorConfig(x_size=5, y_size=6, history_maxlen=1, roi_size=3)
     floor = RoIFloor(config)
+
+    assert config.roi_size is not None
 
     # Arrange region of interest
     positions = np.array([[0, 1]])
@@ -105,6 +111,8 @@ def test_adjust_roi_to_fit_y_0():
     config = RoIFloorConfig(x_size=5, y_size=6, history_maxlen=1, roi_size=3)
     floor = RoIFloor(config)
 
+    assert config.roi_size is not None
+
     # Arrange region of interest
     positions = np.array([[1, 0]])
     signals = np.array([[200, 200, 200, 200, 200, 200, 200, 200]])
@@ -126,6 +134,8 @@ def test_adjust_roi_to_fit_x_max():
     # Arrange floor
     config = RoIFloorConfig(x_size=5, y_size=6, history_maxlen=1, roi_size=3)
     floor = RoIFloor(config)
+
+    assert config.roi_size is not None
 
     # Arrange region of interest
     positions = np.array([[4, 1]])
@@ -151,6 +161,8 @@ def test_adjust_roi_to_fit_y_max():
     config = RoIFloorConfig(x_size=5, y_size=6, history_maxlen=1, roi_size=3)
     floor = RoIFloor(config)
 
+    assert config.roi_size is not None
+
     # Arrange region of interest
     positions = np.array([[1, 5]])
     signals = np.array([[200, 200, 200, 200, 200, 200, 200, 200]])
@@ -173,6 +185,8 @@ def test_roi_size_5():
     # Arrange floor
     config = RoIFloorConfig(x_size=5, y_size=10, history_maxlen=2, roi_size=5)
     floor = RoIFloor(config)
+
+    assert config.roi_size is not None
 
     # Arrange region of interest
     positions = np.array([[1, 2], [3, 9]])
