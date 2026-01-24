@@ -2,7 +2,7 @@ import argparse
 from pathlib import Path
 
 from training.configs import TrainingConfiguration
-from training.training_pipeline import CONFIG_FILE_NAME, run_config
+from training.training_pipeline import CONFIG_FILE_NAME, create_hold_out_predictions
 
 
 def parse_args() -> argparse.Namespace:
@@ -13,10 +13,9 @@ def parse_args() -> argparse.Namespace:
 
 def main(model_dir: Path) -> None:
     configuration = TrainingConfiguration.load(model_dir / CONFIG_FILE_NAME)
-    run_config(do_train=False, do_test=True, configuration=configuration)
+    create_hold_out_predictions(configuration)
 
 
 if __name__ == "__main__":
     args = parse_args()
-
     main(args.model)

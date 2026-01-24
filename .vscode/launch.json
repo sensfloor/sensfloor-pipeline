@@ -33,9 +33,9 @@
             "console": "integratedTerminal",
             "args": [
                 "--model",
-                "outputs/models/Rotate data",
+                "outputs/models/CNN_LSTM",
                 "--mock-file",
-                "data_testing/2025-12-16_12-07-42-rikuto-shorts/sensfloor_readout.csv"
+                "data/test/sensfloor_readout-2.csv"
             ]
         },
         {
@@ -47,7 +47,7 @@
             "console": "integratedTerminal",
             "args": [
                 "--model",
-                "outputs/models/Rotate data",
+                "outputs/models/CNN_LSTM",
                 "--serial-port",
                 "/dev/tty.usbserial-A571V1ZF"
             ]
@@ -61,22 +61,18 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "TRAINING – Train and test model",
+            "name": "TRAINING – Train model",
             "type": "debugpy",
             "request": "launch",
             "module": "training.scripts.train",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
-            "args": [
-                "--train",
-                "--test",
-            ]
         },
         {
-            "name": "TRAINING – Test model",
+            "name": "TRAINING – Create hold out predictions",
             "type": "debugpy",
             "request": "launch",
-            "module": "training.scripts.test",
+            "module": "training.scripts.create_hold_out_predictions",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "args": ["--model", "outputs/models/CNN_LSTM"]

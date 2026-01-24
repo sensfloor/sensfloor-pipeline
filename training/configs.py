@@ -8,14 +8,14 @@ from typing import Any, Self
 from pydantic import BaseModel, ConfigDict, field_serializer, field_validator
 
 from data_loading.pose_landmark import PoseLandmark
-from definitions import DATA_PATH, ROOT_PATH
+from definitions import HOLD_OUT_DATA_PATH, MODELS_FOLDER_PATH, TRAIN_DATA_PATH
 
 CONFIG_FILE_NAME = "config.json"
-MODELS_FOLDER_PATH = ROOT_PATH / "outputs" / "models"
 PROJECT_NAME = "sensfloor_cairo_10.1"
 
 
-training_folders = [directory.name for directory in DATA_PATH.iterdir() if directory.is_dir()]
+training_folders = [directory.name for directory in TRAIN_DATA_PATH.iterdir() if directory.is_dir()]
+hold_out_folders = [directory.name for directory in HOLD_OUT_DATA_PATH.iterdir() if directory.is_dir()]
 
 
 landmarks = [
@@ -81,7 +81,7 @@ class TrainingConfiguration(BaseModel):
     amplify_link_loss: float
 
     # Testing
-    create_predictions_path: str
+    hold_out_data_folder: list[str]
     model_name: str
 
     @field_serializer("model_type")
@@ -142,7 +142,7 @@ _BASE_CONFIG = TrainingConfiguration(
     scheduler_factor=0.1,
     trainer_patience=7,
     amplify_link_loss=0.1,
-    create_predictions_path="2025-12-16_12-07-42-rikuto-shorts",
+    hold_out_data_folder=hold_out_folders,
     model_name="CNN_LSTM",
 )
 
