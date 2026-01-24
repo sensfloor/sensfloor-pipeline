@@ -1,0 +1,9 @@
+- Move dataset transforms into their own module
+- Move dataset code into a separate module
+- Move models into their own modules
+- Move link loss into its own module
+- Convert config into a dataclass
+- Split train and test methods
+- Instead of get_kept_links, load links from the config (also adapt the dataset)
+- Extend metrics (replace accuracy with L1 distance; report link loss and MSE separately)
+- During training, save the loss in the model folder

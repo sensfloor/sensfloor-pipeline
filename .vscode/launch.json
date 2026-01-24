@@ -73,6 +73,15 @@
             ]
         },
         {
+            "name": "TRAINING – Test model",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "training.scripts.test",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "args": ["--model", "outputs/models/CNN_LSTM"]
+        },
+        {
             "name": "VISUALIZATIONS – Collected video and readout",
             "type": "debugpy",
             "request": "launch",

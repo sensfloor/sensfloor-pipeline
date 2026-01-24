@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-from data_loading.floor import Floor, FloorConfig
+from data_loading.floor import PATCH_SIZE, Floor, FloorConfig
 from data_loading.roi_offset_strategy import OffsetStrategy, get_center_offsets
 
 
@@ -56,7 +56,7 @@ class RoIFloor(Floor):
         max_signal_sum = 0
         roi = None
         for x_roi_top_left, y_roi_top_left in unique_roi_positions:
-            roi_range = self.roi_size * self.PATCH_SIZE
+            roi_range = self.roi_size * PATCH_SIZE
             roi_history = self.history[
                 :,
                 x_roi_top_left : x_roi_top_left + roi_range,
@@ -66,7 +66,7 @@ class RoIFloor(Floor):
             signal_sum = roi_history.sum()
             if signal_sum > max_signal_sum:
                 max_signal_sum = signal_sum
-                roi = RoI(x_roi_top_left // self.PATCH_SIZE, y_roi_top_left // self.PATCH_SIZE, roi_history)
+                roi = RoI(x_roi_top_left // PATCH_SIZE, y_roi_top_left // PATCH_SIZE, roi_history)
 
         return roi
 
@@ -95,10 +95,10 @@ class RoIFloor(Floor):
         if top_left <= 0:
             return 0
 
-        if (top_left + self.roi_size) * self.PATCH_SIZE > self.patches.shape[axis]:
-            return self.patches.shape[axis] - self.roi_size * self.PATCH_SIZE
+        if (top_left + self.roi_size) * PATCH_SIZE > self.patches.shape[axis]:
+            return self.patches.shape[axis] - self.roi_size * PATCH_SIZE
 
-        return top_left * self.PATCH_SIZE
+        return top_left * PATCH_SIZE
 
 
 def create_roi_floor(config: RoIFloorConfig, sensfloor_readout: pd.DataFrame, frame_number: int) -> RoIFloor:

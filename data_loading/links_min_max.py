@@ -5,13 +5,13 @@ import pandas as pd
 from numpy import ndarray
 
 from data_loading.pose_landmark import PoseLandmark
-from definitions import DATA_PATH, ROOT_PATH
+from definitions import ROOT_PATH
 
 
 def get_link_min_max(
     do_compute_link_lengths: bool,
     links: list[tuple[PoseLandmark, PoseLandmark]],
-    traing_folders: Path = DATA_PATH,
+    traing_folders: Path,
 ):
     link_path = ROOT_PATH / "outputs" / "link_lengths"
     link_min_path = link_path / "link_min.npy"

@@ -25,6 +25,9 @@ class FloorConfig:
     active_field_min_value: int = 140
 
 
+PATCH_SIZE = 4
+
+
 class Floor:
     """
     Class that models a x by y patches SensFloor with 8 fields per patch.
@@ -34,13 +37,11 @@ class Floor:
     - [active_field_value, 255]: Movement detected -> Signal value untouched
     """
 
-    PATCH_SIZE = 4
-
     def __init__(self, config: FloorConfig) -> None:
         self.config = config
         self.history_queue = deque(maxlen=config.history_maxlen)
         self.patches = (
-            np.ones((config.x_size * self.PATCH_SIZE, config.y_size * self.PATCH_SIZE)) * config.idle_field_value
+            np.ones((config.x_size * PATCH_SIZE, config.y_size * PATCH_SIZE)) * config.idle_field_value
         )
 
     @property
@@ -51,7 +52,7 @@ class Floor:
     def history(self) -> np.ndarray:
         empty_history = self.config.history_maxlen - len(self.history_queue)
         zero_fill = (
-            np.ones((empty_history, self.config.x_size * self.PATCH_SIZE, self.config.y_size * self.PATCH_SIZE))
+            np.ones((empty_history, self.config.x_size * PATCH_SIZE, self.config.y_size * PATCH_SIZE))
             * self.config.idle_field_value
         )
         return np.stack([*zero_fill, *list(self.history_queue)])
@@ -60,9 +61,9 @@ class Floor:
         cleaned_signal = np.where(signals < self.config.active_field_min_value, self.config.idle_field_value, signals)
         for (x, y), signal in zip(positions, cleaned_signal, strict=True):
             interpolated_signal = interpolate_signal(signal)
-            x_patches = x * self.PATCH_SIZE
-            y_patches = y * self.PATCH_SIZE
-            self.patches[x_patches : x_patches + self.PATCH_SIZE, y_patches : y_patches + self.PATCH_SIZE] = (
+            x_patches = x * PATCH_SIZE
+            y_patches = y * PATCH_SIZE
+            self.patches[x_patches : x_patches + PATCH_SIZE, y_patches : y_patches + PATCH_SIZE] = (
                 interpolated_signal
             )
         self.history_queue.append(self.patches.copy())

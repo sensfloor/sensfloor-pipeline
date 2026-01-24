@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Literal
 
 import numpy as np
 import torch
@@ -9,8 +8,8 @@ from tqdm import tqdm
 
 from data_loading.pose_landmark import PoseLandmark
 from definitions import ROOT_PATH
-from training.trainer.base_trainer import BaseTrainer
 from training.link_loss import calculate_linkloss
+from training.trainer.base_trainer import BaseTrainer
 
 
 class SensfloorTrainer(BaseTrainer):
@@ -30,7 +29,6 @@ class SensfloorTrainer(BaseTrainer):
         results_path: Path = ROOT_PATH,
         best_model_name: str = "best_model.pth",
         amplify_link_loss: float = 10,
-        loss_reduction: Literal["mean", "sum"] = "mean",
     ):
         super().__init__(
             model=model,
@@ -40,11 +38,10 @@ class SensfloorTrainer(BaseTrainer):
             use_early_stopping=use_early_stopping,
             patience=patience,
             best_model_name=best_model_name,
-            results_path = results_path,
+            results_path=results_path,
         )
 
         self.amplify_link_loss = amplify_link_loss
-        self.loss_reduction = loss_reduction
         self.pose_to_model_dict = pose_to_model_dict
         self.k_min, self.k_max = link_min, link_max
         self.landmarks_out = landmarks_out
@@ -68,7 +65,7 @@ class SensfloorTrainer(BaseTrainer):
         return self.model(inputs)
 
     def calculate_loss(self, outputs, labels) -> torch.Tensor:
-        mse_loss = nn.MSELoss(reduction=self.loss_reduction)(outputs, labels)
+        mse_loss = nn.MSELoss(reduction="mean")(outputs, labels)
         link_loss = (
             calculate_linkloss(outputs, self.k_min, self.k_max, self.pose_to_model_dict, links=self.kept_links)
             * self.amplify_link_loss
