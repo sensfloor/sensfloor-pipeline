@@ -47,9 +47,9 @@ def compute_kmin_kmax(
             ya = df[f"y{a.value}"].to_numpy()
             za = df[f"z{a.value}"].to_numpy()
 
-            xb = df[f"x{a.value}"].to_numpy()
-            yb = df[f"y{a.value}"].to_numpy()
-            zb = df[f"z{a.value}"].to_numpy()
+            xb = df[f"x{b.value}"].to_numpy()
+            yb = df[f"y{b.value}"].to_numpy()
+            zb = df[f"z{b.value}"].to_numpy()
 
             # calculate all pair of distances between joint a and joint b for all frames
             dx = xa - xb
