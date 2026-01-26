@@ -1,3 +1,4 @@
+from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
@@ -48,44 +49,102 @@ class SensfloorTrainer(BaseTrainer):
         self.kept_links = kept_links
 
     @staticmethod
-    def calculate_mean_accuracy(outputs, labels, landmarks_out: int, threshold=0.1):
-        joint_accuracy = SensfloorTrainer.calculate_joint_accuracies(outputs, labels, landmarks_out, threshold)
+    def calculate_mean_accuracy(
+        outputs: torch.Tensor,
+        labels: torch.Tensor,
+        landmarks_out: int,
+        threshold: float = 0.1,
+    ) -> float:
+        joint_accuracy = SensfloorTrainer.calculate_percentage_correct_keypoints(
+            outputs,
+            labels,
+            landmarks_out,
+            threshold,
+        )
         accuracy = joint_accuracy.mean()  # average over all B × landmarks_out
         return accuracy.item() * 100
 
     @staticmethod
-    def calculate_joint_accuracies(outputs, labels, landmarks_out: int, threshold=0.1):
-        coords = outputs.view(-1, landmarks_out, 3)  # [B, landmarks_out, 3]
-        reshaped_labels = labels.view(-1, landmarks_out, 3)  # [B, landmarks_out, 3]
-        dist = torch.linalg.vector_norm(coords - reshaped_labels, dim=2)  # [B, landmarks_out]
-        correct = dist < threshold  # values: [True, False, ...]
+    def calculate_percentage_correct_keypoints(
+        outputs: torch.Tensor,
+        labels: torch.Tensor,
+        landmarks_out: int,
+        threshold: float,
+    ) -> torch.Tensor:
+        joint_coordinates = outputs.view(-1, landmarks_out, 3)  # [B, landmarks_out, 3]
+        ground_truth = labels.view(-1, landmarks_out, 3)  # [B, landmarks_out, 3]
+        distances = torch.linalg.vector_norm(joint_coordinates - ground_truth, dim=2)  # [B, landmarks_out]
+        correct = distances < threshold  # values: [True, False, ...]
         return correct.float()  # values: [1, 0, ...]
 
-    def forward_pass(self, inputs: torch.Tensor):
+    def forward_pass(self, inputs: torch.Tensor) -> torch.Tensor:
         return self.model(inputs)
 
-    def calculate_loss(self, outputs, labels) -> torch.Tensor:
+    def calculate_loss(self, outputs: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         mse_loss = nn.MSELoss(reduction="mean")(outputs, labels)
         link_loss = (
             calculate_linkloss(outputs, self.k_min, self.k_max, self.pose_to_model_dict, links=self.kept_links)
             * self.amplify_link_loss
         )  # Paper amplifies link loss by 10
-        loss = mse_loss + link_loss
-        return loss
+        return mse_loss + link_loss
 
-    def calculate_accuracy(self, outputs, labels, threshold=0.1):
-        return self.calculate_mean_accuracy(outputs, labels, self.landmarks_out, threshold)
+    def calculate_metrics(self, outputs: torch.Tensor, labels: torch.Tensor) -> dict[str, float]:
+        joint_coordinates = outputs.view(-1, self.landmarks_out, 3)
+        ground_truth = labels.view(-1, self.landmarks_out, 3)
+
+        distances = torch.linalg.vector_norm(joint_coordinates - ground_truth, dim=2)
+
+        # Mean joint position error
+        mjpe = distances.mean().item()
+
+        # Percentage correct keypoints
+        pck_10 = (
+            self.calculate_percentage_correct_keypoints(
+                outputs=outputs,
+                labels=labels,
+                landmarks_out=self.landmarks_out,
+                threshold=0.1,
+            )
+            .mean()
+            .item()
+        )
+
+        pck_5 = (
+            self.calculate_percentage_correct_keypoints(
+                outputs=outputs,
+                labels=labels,
+                landmarks_out=self.landmarks_out,
+                threshold=0.05,
+            )
+            .mean()
+            .item()
+        )
+        return {
+            "mjpe": mjpe,
+            "pck_10": pck_10,
+            "pck_5": pck_5,
+        }
 
 
-def get_test_accuracy(model: nn.Module, test_loader: torch.utils.data.DataLoader, device, landmarks_out: int):
+def get_test_accuracy(
+    model: nn.Module,
+    test_loader: torch.utils.data.DataLoader,
+    device: torch.device,
+    trainer_instance: SensfloorTrainer,
+) -> dict[str, float]:
     model.eval()
     model.to(device)
-    total_accuracy = 0.0
-    with torch.no_grad():
-        for inputs, labels in tqdm(test_loader):
-            inputs, labels = inputs.to(device), labels.to(device)
-            outputs = model(inputs)
-            accuracy = SensfloorTrainer.calculate_mean_accuracy(outputs, labels, landmarks_out)
-            total_accuracy += accuracy
+    total_metrics: dict[str, float] = defaultdict(float)
+    num_batches = len(test_loader)
 
-    return total_accuracy / len(test_loader)
+    with torch.no_grad():
+        for inputs, labels in tqdm(test_loader, desc="Testing"):
+            inputs_on_device, labels_on_device = inputs.to(device), labels.to(device)
+            outputs = model(inputs_on_device)
+
+            batch_metrics = trainer_instance.calculate_metrics(outputs, labels_on_device)
+
+            for key, value in batch_metrics.items():
+                total_metrics[key] += value
+
+    return {f"test_{key}": value / num_batches for key, value in total_metrics.items()}

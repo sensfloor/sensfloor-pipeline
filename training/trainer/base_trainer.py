@@ -1,13 +1,12 @@
+import csv
 from abc import ABCMeta, abstractmethod
-from collections.abc import Callable
-from dataclasses import dataclass
+from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
 import torch
 import trackio
-from torch import Tensor, nn, optim
-from torch.nn.modules.loss import _Loss
+from torch import nn, optim
 from torch.optim.lr_scheduler import LRScheduler
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -15,17 +14,8 @@ from tqdm import tqdm
 from definitions import ROOT_PATH
 
 
-@dataclass
-class TrainingMetrics:
-    train_loss: float
-    train_accuracy: float
-    val_loss: float
-    val_accuracy: float
-    epoch: int
-
-
 class BaseTrainer(metaclass=ABCMeta):
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         model: nn.Module,
         optimizer: optim.Optimizer,
@@ -35,7 +25,7 @@ class BaseTrainer(metaclass=ABCMeta):
         patience: int = 10,
         results_path: Path = ROOT_PATH,
         best_model_name: str = "best_model.pth",
-    ):
+    ) -> None:
         self.model: nn.Module = model.to(device)
         self.optimizer: optim.Optimizer = optimizer
         self.device: torch.device = device
@@ -45,19 +35,19 @@ class BaseTrainer(metaclass=ABCMeta):
         self.best_model_name: str = best_model_name
         self.best_val_loss: float = float("inf")
         self.patience_counter: float = 0
-        self.metrics_list: list[Any] = []
+        self.epochs_metrics_list: list[dict[str, float]] = []
         self.results_path: Path = results_path
 
     @abstractmethod
-    def forward_pass(self, inputs: torch.Tensor) -> Any:
+    def forward_pass(self, inputs: torch.Tensor) -> torch.Tensor:
         pass
 
     @abstractmethod
-    def calculate_loss(self, outputs: Any, labels: Any) -> torch.Tensor:
+    def calculate_loss(self, outputs: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         pass
 
     @abstractmethod
-    def calculate_accuracy(self, outputs: Any, labels: Any) -> float:
+    def calculate_metrics(self, outputs: torch.Tensor, labels: torch.Tensor) -> dict[str, float]:
         pass
 
     def early_stopping(self, val_loss: float) -> bool:
@@ -85,17 +75,18 @@ class BaseTrainer(metaclass=ABCMeta):
                 leave=True,
             )
             self.model.train()
-            total_loss: float = 0.0
-            total_accuracy: float = 0.0
+
+            total_train_loss: float = 0.0
+            epoch_metrics: dict[str, float] = defaultdict(float)
 
             for _, (inputs, labels) in progress:
-                inputs, labels = inputs.to(self.device), labels.to(self.device)
+                inputs_on_device, labels_on_device = inputs.to(self.device), labels.to(self.device)
 
                 # 1. Forward pass
-                outputs: Any = self.forward_pass(inputs)
+                outputs: Any = self.forward_pass(inputs_on_device)
 
                 # 2. Calculate loss
-                loss = self.calculate_loss(outputs, labels)
+                loss = self.calculate_loss(outputs, labels_on_device)
 
                 # 3. Optimizer zero grad
                 self.optimizer.zero_grad()
@@ -107,62 +98,74 @@ class BaseTrainer(metaclass=ABCMeta):
                 self.optimizer.step()
 
                 # Calculate training accuracy
-                total_loss += loss.item()
-                total_accuracy += self.calculate_accuracy(outputs, labels)
+                total_train_loss += loss.item()
+                batch_metrics = self.calculate_metrics(outputs, labels_on_device)
+                for key, value in batch_metrics.items():
+                    epoch_metrics[key] += value
 
                 progress.set_postfix({"Loss": f"{loss.item():.4f}"})
 
-            avg_loss: float = total_loss / len(train_loader)
-            avg_accuracy: float = total_accuracy / len(train_loader)
-            val_loss, val_accuracy = self.evaluate(validation_loader)
+            avg_train_loss = total_train_loss / len(train_loader)
+            train_metrics = {key: value / len(train_loader) for key, value in epoch_metrics.items()}
 
-            trackio.log({
-                "epoch": epoch,
-                "train_loss": avg_loss,
-                "train_accuracy": avg_accuracy,
-                "val_loss": val_loss,
-                "val_accuracy": val_accuracy
-            })
+            avg_val_loss, val_metrics = self.evaluate(validation_loader)
 
-            self.metrics_list.append(
-                TrainingMetrics(
-                    train_loss=avg_loss,
-                    train_accuracy=avg_accuracy,
-                    val_loss=val_loss,
-                    val_accuracy=val_accuracy,
-                    epoch=epoch + 1,
-                ),
-            )
+            log_data = {
+                "train_loss": avg_train_loss,
+                "val_loss": avg_val_loss,
+                **{f"train_{key}": value for key, value in train_metrics.items()},
+                **{f"val_{key}": value for key, value in val_metrics.items()},
+            }
 
-            print(
-                f"Epoch {epoch + 1}/{epochs} | Train Loss: {avg_loss:.4f} | Train Acc: {avg_accuracy:.4f}% | Val Loss: {val_loss:.4f} | Val Acc: {val_accuracy:.4f}%",
-            )
+            trackio.log(log_data)
 
-            self.save_best_model(val_loss)
+            self.epochs_metrics_list.append({"epoch": epoch, **log_data})
+
+            log_data_str = "\n".join([f"{key.upper()}: {value:.4f}" for key, value in log_data.items()])
+            print(log_data_str)
+
+            self.save_best_model(avg_val_loss)
+            self.save_metrics_to_csv()
 
             if self.scheduler:
                 if isinstance(self.scheduler, optim.lr_scheduler.ReduceLROnPlateau):
-                    self.scheduler.step(val_loss)
+                    self.scheduler.step(avg_val_loss)
                 elif isinstance(self.scheduler, optim.lr_scheduler.StepLR):
                     self.scheduler.step()
 
-            if self.use_early_stopping and self.early_stopping(val_loss):
+            if self.use_early_stopping and self.early_stopping(avg_val_loss):
                 break
 
-            if val_loss < self.best_val_loss:
-                self.best_val_loss = val_loss
+            self.best_val_loss = min(self.best_val_loss, avg_val_loss)
 
-    def evaluate(self, loader: DataLoader) -> tuple[float, float]:
+    def save_metrics_to_csv(self) -> None:
+        if not self.epochs_metrics_list:
+            return
+
+        csv_path = self.results_path / "metrics.csv"
+        keys = self.epochs_metrics_list[0].keys()
+
+        with csv_path.open(mode="w", newline="", encoding="utf-8") as file:
+            writer = csv.DictWriter(file, fieldnames=keys)
+            writer.writeheader()
+            writer.writerows(self.epochs_metrics_list)
+
+    def evaluate(self, loader: DataLoader) -> tuple[float, dict[str, float]]:
         self.model.eval()
-        total_loss: float = 0.0
-        total_accuracy: float = 0.0
+
+        total_loss = 0.0
+        total_metrics = defaultdict(float)
 
         with torch.no_grad():
             for inputs, labels in loader:
-                inputs, labels = inputs.to(self.device), labels.to(self.device)
-                outputs = self.forward_pass(inputs)
-                loss = self.calculate_loss(outputs, labels)
-                total_loss += loss.item()
-                total_accuracy += self.calculate_accuracy(outputs, labels)
+                inputs_on_device, labels_on_device = inputs.to(self.device), labels.to(self.device)
+                outputs = self.forward_pass(inputs_on_device)
+                loss = self.calculate_loss(outputs, labels_on_device)
 
-        return total_loss / len(loader), total_accuracy / len(loader)
+                total_loss += loss.item()
+                batch_metrics = self.calculate_metrics(outputs, labels_on_device)
+                for key, value in batch_metrics.items():
+                    total_metrics[key] += value
+
+        results = {key: value / len(loader) for key, value in total_metrics.items()}
+        return total_loss / len(loader), results

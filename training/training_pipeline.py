@@ -114,9 +114,11 @@ def train(configuration: TrainingConfiguration) -> None:
 
     trainer.train(train_loader=train_loader, validation_loader=val_loader, epochs=configuration.epochs)
 
-    test_accuracy = get_test_accuracy(model, test_loader, device, landmarks_out)
-    print(f"test_accuracy: {test_accuracy}")
-    trackio.log({"test_accuracy": test_accuracy})
+    test_metrics = get_test_accuracy(model, test_loader, device, trainer)
+    metrics_str = " | ".join([f"{key.upper()}: {value:.4f}" for key, value in test_metrics.items()])
+
+    print(metrics_str)
+    trackio.log(test_metrics)
     trackio.finish()
 
 
