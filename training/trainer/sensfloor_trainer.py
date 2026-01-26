@@ -65,15 +65,19 @@ class SensfloorTrainer(BaseTrainer):
         return accuracy.item() * 100
 
     @staticmethod
+    def get_distances(outputs: torch.Tensor,labels: torch.Tensor,landmarks_out: int):
+        joint_coordinates = outputs.view(-1, landmarks_out, 3)  # [B, landmarks_out, 3]
+        ground_truth = labels.view(-1, landmarks_out, 3)  # [B, landmarks_out, 3]
+        return torch.linalg.vector_norm(joint_coordinates - ground_truth, dim=2)  # [B, landmarks_out]
+
+    @staticmethod
     def calculate_percentage_correct_keypoints(
         outputs: torch.Tensor,
         labels: torch.Tensor,
         landmarks_out: int,
         threshold: float,
     ) -> torch.Tensor:
-        joint_coordinates = outputs.view(-1, landmarks_out, 3)  # [B, landmarks_out, 3]
-        ground_truth = labels.view(-1, landmarks_out, 3)  # [B, landmarks_out, 3]
-        distances = torch.linalg.vector_norm(joint_coordinates - ground_truth, dim=2)  # [B, landmarks_out]
+        distances = SensfloorTrainer.get_distances(outputs, labels, landmarks_out)
         correct = distances < threshold  # values: [True, False, ...]
         return correct.float()  # values: [1, 0, ...]
 
@@ -89,11 +93,7 @@ class SensfloorTrainer(BaseTrainer):
         return mse_loss + link_loss
 
     def calculate_metrics(self, outputs: torch.Tensor, labels: torch.Tensor) -> dict[str, float]:
-        joint_coordinates = outputs.view(-1, self.landmarks_out, 3)
-        ground_truth = labels.view(-1, self.landmarks_out, 3)
-
-        distances = torch.linalg.vector_norm(joint_coordinates - ground_truth, dim=2)
-
+        distances = SensfloorTrainer.get_distances(outputs, labels, self.landmarks_out)
         # Mean joint position error
         mjpe = distances.mean().item()
 
