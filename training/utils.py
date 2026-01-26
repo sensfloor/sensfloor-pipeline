@@ -5,7 +5,7 @@ import torch
 
 from data_loading.pose_landmark import LINKS
 from training.configs import ModelType
-from training.models.CNN.efficient_cnn import (
+from training.models.CNN.cnn_variants import (
     RegressionModelBatchnormFirst,
     RegressionModelMaxPool,
     RegressionModelNoBatchnorm,
@@ -13,7 +13,7 @@ from training.models.CNN.efficient_cnn import (
 )
 from training.models.LSTM.efficient_lstm import EfficientCNNLSTM
 from training.models.LSTM.lstm_model import CNNLSTM
-from training.models.CNN.pose_estimation_model import RegressionModel
+from training.models.CNN.cnn_default import RegressionModel
 
 def get_kept_links(drop_landmarks):
     kept_links = []
