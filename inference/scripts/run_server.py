@@ -40,7 +40,7 @@ def main(fps: int, model_folder: Path, mock_file: Path | None, serial_port: str 
     with Websocket() as websocket, messages_provider:
         frame_interval_length = 1.0 / fps
 
-        h_c = None # used to store history if model is LSTM
+        h_c = None  # used to store history if model is LSTM
         while True:
             frame_start_time = time.perf_counter()
 
@@ -60,7 +60,7 @@ def main(fps: int, model_folder: Path, mock_file: Path | None, serial_port: str 
                 x = torch.Tensor(roi.history).unsqueeze(0)
                 x = x.to(device)
                 x = transform_data(x)
-                
+
                 # TODO add logic to reset h_c if there were e.g. 15 frames without signal
                 if model_type in [ModelType.CNN_LSTM, ModelType.CNN_LSTM_EFFICIENT]:
                     outputs, (h_c) = model(x, h_c)
@@ -72,7 +72,7 @@ def main(fps: int, model_folder: Path, mock_file: Path | None, serial_port: str 
                 message = {
                     "x_roi": int(roi.x),
                     "y_roi": int(roi.y),
-                    "roi_size": int(floor_config.roi_size),
+                    "roi_size": int(-1 if floor_config.roi_size is None else floor_config.roi_size),
                     "joints": [
                         {"joint": pose_landmark_mapping[i].name, "x": joint[0], "y": joint[1], "z": joint[2]}
                         for i, joint in enumerate(joints)
