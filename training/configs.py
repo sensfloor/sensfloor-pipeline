@@ -61,6 +61,7 @@ class TrainingConfiguration(BaseModel):
 
     # Model/Data Params
     patch_width: int
+    active_field_min_value: int
     floor_x_size: int
     floor_y_size: int
     roi_history_maxlen: int
@@ -127,6 +128,7 @@ _BASE_CONFIG = TrainingConfiguration(
     seed=random.randint(0, 1_000_000),
     split_ratios=(0.8, 0.1, 0.1),
     patch_width=4,
+    active_field_min_value=140,
     floor_x_size=6,
     floor_y_size=4,
     roi_history_maxlen=25,
@@ -136,14 +138,14 @@ _BASE_CONFIG = TrainingConfiguration(
     rotate_data=False,
     training_data_folders=training_folders,
     landmarks=landmarks,
-    model_type=ModelType.CNN_LSTM,
+    model_type=ModelType.CNN,
     scheduler_patience=3,
     scheduler_min_lr=1e-6,
     scheduler_factor=0.1,
     trainer_patience=3,
     amplify_link_loss=0.1,
     hold_out_data_folder=hold_out_folders,
-    model_name="CNN_LSTM",
+    model_name="CNN",
 )
 
 _ALL_CONFIGS = [
