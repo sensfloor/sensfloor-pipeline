@@ -62,10 +62,11 @@ def create_predictions(
                 outputs = model(batch_tensors)
 
                 pred_coords = outputs.view(outputs.size(0), len(kept_landmarks), 3)
-                accuarcy = SensfloorTrainer.calculate_joint_accuracies(
+                accuarcy = SensfloorTrainer.calculate_percentage_correct_keypoints(
                     outputs,
                     batch_labels,
                     landmarks_out=len(kept_landmarks),
+                    threshold=0.1,
                 )
 
                 pred_cpu = pred_coords.cpu().numpy()

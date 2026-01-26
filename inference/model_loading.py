@@ -15,8 +15,11 @@ def load_model(model_folder: Path) -> tuple[torch.nn.Module, torch.device, Model
     model_file = model_folder / "best_model.pth"
     config = TrainingConfiguration.load(model_folder / CONFIG_FILE_NAME)
 
+    roi_size_x = (config.roi_size if config.roi_size is not None else config.floor_x_size) * PATCH_SIZE
+    roi_size_y = (config.roi_size if config.roi_size is not None else config.floor_y_size) * PATCH_SIZE
+
     model = get_model(
-        (config.roi_size * PATCH_SIZE, config.roi_size * PATCH_SIZE),
+        (roi_size_x, roi_size_y),
         len(config.landmarks),
         config.roi_history_maxlen,
         config.model_type,
