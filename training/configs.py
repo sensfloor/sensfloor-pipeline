@@ -11,7 +11,7 @@ from data_loading.pose_landmark import PoseLandmark
 from definitions import HOLD_OUT_DATA_PATH, MODELS_FOLDER_PATH, TRAIN_DATA_PATH
 
 CONFIG_FILE_NAME = "config.json"
-PROJECT_NAME = "sensfloor_cairo_10.1"
+PROJECT_NAME = "sensfloor_cairo_11_new_roi"
 
 
 training_folders = [directory.name for directory in TRAIN_DATA_PATH.iterdir() if directory.is_dir()]
@@ -140,13 +140,15 @@ _BASE_CONFIG = TrainingConfiguration(
     scheduler_patience=3,
     scheduler_min_lr=1e-6,
     scheduler_factor=0.1,
-    trainer_patience=7,
+    trainer_patience=3,
     amplify_link_loss=0.1,
     hold_out_data_folder=hold_out_folders,
     model_name="CNN_LSTM",
 )
 
 _ALL_CONFIGS = [
+    _BASE_CONFIG.model_copy(update={'model_name': "roi_size 4", 'roi_size': 4 }),
+    _BASE_CONFIG.model_copy(update={'model_name': "roi_size None", 'roi_size': None }),
     _BASE_CONFIG,
 ]
 
