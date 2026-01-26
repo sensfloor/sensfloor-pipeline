@@ -7,7 +7,7 @@ from data_loading.floor import PATCH_SIZE
 from data_loading.pose_landmark import PoseLandmark
 from data_loading.roi_floor import RoIFloor, RoIFloorConfig
 from training.configs import CONFIG_FILE_NAME, ModelType, TrainingConfiguration
-from training.models.dataset_utils import normalize_roi
+from training.dataset.dataset_utils import normalize_roi
 from training.utils import get_device, get_model
 
 

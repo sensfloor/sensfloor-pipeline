@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from data_loading.roi_floor import RoIFloorConfig
-from training.sensfloor_dataset import DatasetConfig, load_single_dataset
+from training.dataset.sensfloor_dataset import DatasetConfig, load_single_dataset
 from visualization.utils import draw_floor, draw_roi
 
 

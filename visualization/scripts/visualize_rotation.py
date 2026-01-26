@@ -4,7 +4,7 @@ import pandas as pd
 
 from data_loading.roi_floor import RoIFloorConfig
 from definitions import ROOT_PATH
-from training.sensfloor_dataset import DatasetConfig, load_single_dataset
+from training.dataset.sensfloor_dataset import DatasetConfig, load_single_dataset
 from visualization.utils import draw_floor
 
 DATA_PATH = ROOT_PATH / "data/2025-12-16_20-45-38-line-felix"

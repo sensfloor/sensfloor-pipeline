@@ -12,7 +12,7 @@ from training.configs import (
     PROJECT_NAME,
     TrainingConfiguration,
 )
-from training.sensfloor_dataset import DatasetConfig, train_val_test_split
+from training.dataset.sensfloor_dataset import DatasetConfig, train_val_test_split
 from training.trainer.sensfloor_trainer import SensfloorTrainer, get_test_accuracy
 from training.utils import get_device, get_kept_links, get_model, set_seed
 from visualization.create_landmark_predictions import create_predictions

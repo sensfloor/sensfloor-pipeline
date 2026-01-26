@@ -17,6 +17,15 @@ class DatasetConfig:
     normalize_signals: bool = False
     normalize_to_max: bool = False
 
+@dataclass
+class DetailedSensfloorPosesData:
+    frame_number: int
+    floor: RoIFloor
+    untransformed_roi_tensor: torch.Tensor
+    transformed_roi_tensor: torch.Tensor
+    untransformed_label_tensor: torch.Tensor
+    transformed_label_tensor: torch.Tensor
+
 
 def normalize_roi(roi: torch.Tensor, idle_floor_value: int, normalize_to_max: bool) -> torch.Tensor:
     normalizes_roi = roi - idle_floor_value
@@ -82,12 +91,3 @@ def get_sequences(sensfloor_readout: pd.DataFrame, poses: pd.DataFrame) -> np.nd
     unique_frames_with_poses = unique_readout_frames[frames_containing_messages_mask]
     return unique_frames_with_poses
 
-
-@dataclass
-class DetailedSensfloorPosesData:
-    frame_number: int
-    floor: RoIFloor
-    untransformed_roi_tensor: torch.Tensor
-    transformed_roi_tensor: torch.Tensor
-    untransformed_label_tensor: torch.Tensor
-    transformed_label_tensor: torch.Tensor
