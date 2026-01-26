@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from data_loading.pose_landmark import PoseLandmark
 from definitions import ROOT_PATH
-from training.link_loss import calculate_linkloss
+from training.link_loss.link_loss import calculate_linkloss
 from training.trainer.base_trainer import BaseTrainer
 
 

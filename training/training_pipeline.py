@@ -2,7 +2,7 @@ import torch
 import trackio
 
 from data_loading.floor import PATCH_SIZE
-from data_loading.links_min_max import get_link_min_max
+from training.link_loss.links_min_max import get_link_min_max
 from data_loading.pose_landmark import PoseLandmark
 from data_loading.roi_floor import RoIFloorConfig
 from definitions import HOLD_OUT_DATA_PATH, TRAIN_DATA_PATH
