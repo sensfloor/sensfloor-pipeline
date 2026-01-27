@@ -18,8 +18,7 @@ from training.trainer.base_trainer import BaseTrainer
 # Metrics Strings also used for Logging
 VAL_PREFIX = "val_"
 TRAIN_PREFIX = "train_"
-VAL_LOSS = "val_loss"
-TRAIN_LOSS = "train_loss"
+TOTAL_LOSS = "total_loss"
 EPOCH = "epoch"
 LOSS_LINK = "loss_link"
 LOSS_MSE = "loss_mse"
@@ -93,8 +92,10 @@ class SensfloorTrainer(BaseTrainer):
         separator = "-" * 200
         outputs.append("\n" + "=" * 120)
         outputs.append(f"EPOCH {log_data.get(EPOCH, '?')} SUMMARY")
-        outputs.append(f"Losses | Train: {log_data.get(TRAIN_LOSS, -1):.4f} | "
-                       f"Val: {log_data.get(VAL_LOSS, -1):.4f}, "
+        outputs.append(f"Losses | Train: {log_data.get(TRAIN_PREFIX + TOTAL_LOSS, -1):.4f} | "
+                       f"MSE: {log_data.get(TRAIN_PREFIX + LOSS_MSE, -1):.4f}, "
+                       f"Link: {log_data.get(TRAIN_PREFIX + LOSS_LINK, -1):.4f}")
+        outputs.append(f"Losses | Valid: {log_data.get(VAL_PREFIX + TOTAL_LOSS, -1):.4f} | "
                        f"MSE: {log_data.get(VAL_PREFIX + LOSS_MSE, -1):.4f}, "
                        f"Link: {log_data.get(VAL_PREFIX + LOSS_LINK, -1):.4f}")
         outputs.append(separator)
@@ -142,7 +143,6 @@ class SensfloorTrainer(BaseTrainer):
             )
             self.model.train()
 
-            total_train_loss: float = 0.0
             epoch_metrics: dict[str, float] = defaultdict(float)
 
             for _, (inputs, labels) in progress:
@@ -152,7 +152,7 @@ class SensfloorTrainer(BaseTrainer):
                 outputs: Any = self.forward_pass(inputs_on_device)
 
                 # 2. Calculate loss (Now unpacks tuple)
-                loss, _ = self.calculate_loss(outputs, labels_on_device)
+                loss, loss_dict = self.calculate_loss(outputs, labels_on_device)
 
                 # 3. Optimizer zero grad
                 self.optimizer.zero_grad()
@@ -163,7 +163,9 @@ class SensfloorTrainer(BaseTrainer):
                 # 5. Optimizer step
                 self.optimizer.step()
 
-                total_train_loss += loss.item()
+                epoch_metrics[TOTAL_LOSS] += loss.item()  # total loss
+                for k, v in loss_dict.items():  # MSE and Link
+                    epoch_metrics[k] += v
 
                 # Aggregate Performance Metrics
                 batch_metrics = self.calculate_metrics(outputs, labels_on_device)
@@ -173,15 +175,12 @@ class SensfloorTrainer(BaseTrainer):
                 progress.set_postfix({"Loss": f"{loss.item():.4f}"})
 
             # Average over batches
-            avg_train_loss = total_train_loss / len(train_loader)
             train_metrics = {key: value / len(train_loader) for key, value in epoch_metrics.items()}
-
-            avg_val_loss, val_metrics = self.evaluate(validation_loader)
+            val_metrics = self.evaluate(validation_loader)
+            avg_val_loss = val_metrics[TOTAL_LOSS]
 
             log_data = {
                 EPOCH: epoch + 1,
-                TRAIN_LOSS: avg_train_loss,
-                VAL_LOSS: avg_val_loss,
                 **{f"{TRAIN_PREFIX}{key}": value for key, value in train_metrics.items()},
                 **{f"{VAL_PREFIX}{key}": value for key, value in val_metrics.items()},
             }
@@ -246,6 +245,28 @@ class SensfloorTrainer(BaseTrainer):
                 metrics[f"{name}_{joint_name}"] = acc.item()
 
         return metrics
+
+    def evaluate(self, loader: DataLoader) -> dict[str, float]:
+        self.model.eval()
+        total_metrics = defaultdict(float)
+
+        with torch.no_grad():
+            for inputs, labels in loader:
+                inputs_on_device, labels_on_device = inputs.to(self.device), labels.to(self.device)
+                outputs = self.forward_pass(inputs_on_device)
+
+                loss, loss_dict = self.calculate_loss(outputs, labels_on_device)
+
+                total_metrics[TOTAL_LOSS] += loss.item()
+                for key, value in loss_dict.items():
+                    total_metrics[key] += value
+
+                batch_metrics = self.calculate_metrics(outputs, labels_on_device)
+                for key, value in batch_metrics.items():
+                    total_metrics[key] += value
+
+        results = {key: value / len(loader) for key, value in total_metrics.items()}
+        return results
 
 
 def get_test_accuracy(

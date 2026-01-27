@@ -1,12 +1,10 @@
 import csv
 from abc import ABCMeta, abstractmethod
-from collections import defaultdict
 from pathlib import Path
 
 import torch
 from torch import nn, optim
 from torch.optim.lr_scheduler import LRScheduler
-from torch.utils.data import DataLoader
 
 from definitions import ROOT_PATH
 
@@ -76,25 +74,3 @@ class BaseTrainer(metaclass=ABCMeta):
             writer = csv.DictWriter(file, fieldnames=keys)
             writer.writeheader()
             writer.writerows(self.epochs_metrics_list)
-
-    def evaluate(self, loader: DataLoader) -> tuple[float, dict[str, float]]:
-        self.model.eval()
-        total_metrics = defaultdict(float)
-
-        with torch.no_grad():
-            for inputs, labels in loader:
-                inputs_on_device, labels_on_device = inputs.to(self.device), labels.to(self.device)
-                outputs = self.forward_pass(inputs_on_device)
-
-                loss, loss_dict = self.calculate_loss(outputs, labels_on_device)
-
-                total_metrics["total_loss"] += loss.item()
-                for key, value in loss_dict.items():
-                    total_metrics[key] += value
-
-                batch_metrics = self.calculate_metrics(outputs, labels_on_device)
-                for key, value in batch_metrics.items():
-                    total_metrics[key] += value
-
-        results = {key: value / len(loader) for key, value in total_metrics.items()}
-        return results["total_loss"], results
