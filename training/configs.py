@@ -11,7 +11,7 @@ from data_loading.pose_landmark import PoseLandmark
 from definitions import HOLD_OUT_DATA_PATH, MODELS_FOLDER_PATH, TRAIN_DATA_PATH
 
 CONFIG_FILE_NAME = "config.json"
-PROJECT_NAME = "sensfloor_cairo_11_new_roi"
+PROJECT_NAME = "sensfloor_cairo_12_new_metrics"
 
 
 training_folders = [directory.name for directory in TRAIN_DATA_PATH.iterdir() if directory.is_dir()]
@@ -149,8 +149,11 @@ _BASE_CONFIG = TrainingConfiguration(
 )
 
 _ALL_CONFIGS = [
-    _BASE_CONFIG.model_copy(update={'model_name': "roi_size 4", 'roi_size': 4 }),
-    _BASE_CONFIG.model_copy(update={'model_name': "roi_size None", 'roi_size': None }),
+    _BASE_CONFIG.model_copy(update={'model_name': "CNN_EFFICIENT", 'model_type': ModelType.CNN_EFFICIENT }),
+    _BASE_CONFIG.model_copy(update={'model_name': "CNN_LSTM_EFFICIENT", 'model_type': ModelType.CNN_LSTM_EFFICIENT }),
+    _BASE_CONFIG.model_copy(update={'model_name': "min_value_145", 'active_field_min_value': 145 }),
+    _BASE_CONFIG.model_copy(update={'model_name': "min_value_135", 'active_field_min_value': 135 }),
+    _BASE_CONFIG.model_copy(update={'model_name': "roi_size_4", 'roi_size': 4 }),
     _BASE_CONFIG,
 ]
 
