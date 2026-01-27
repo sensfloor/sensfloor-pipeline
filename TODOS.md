@@ -6,3 +6,4 @@
   - active_field_min_value (e.g. 142, 145, 138)
   - Different models
   - Different configs for LSTM architecture
+  - training without socks
