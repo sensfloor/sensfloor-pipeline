@@ -11,7 +11,7 @@ from data_loading.pose_landmark import PoseLandmark
 from definitions import HOLD_OUT_DATA_PATH, MODELS_FOLDER_PATH, TRAIN_DATA_PATH
 
 CONFIG_FILE_NAME = "config.json"
-PROJECT_NAME = "sensfloor_cairo_12_new_metrics"
+PROJECT_NAME = "sensfloor_cairo_12.1_new_metrics"
 
 
 training_folders = [directory.name for directory in TRAIN_DATA_PATH.iterdir() if directory.is_dir()]
@@ -145,15 +145,14 @@ _BASE_CONFIG = TrainingConfiguration(
     trainer_patience=3,
     amplify_link_loss=0.1,
     hold_out_data_folder=hold_out_folders,
-    model_name="CNN",
+    model_name="CNN 2",
 )
 
 _ALL_CONFIGS = [
-    _BASE_CONFIG.model_copy(update={'model_name': "CNN_EFFICIENT", 'model_type': ModelType.CNN_EFFICIENT }),
-    _BASE_CONFIG.model_copy(update={'model_name': "CNN_LSTM_EFFICIENT", 'model_type': ModelType.CNN_LSTM_EFFICIENT }),
-    _BASE_CONFIG.model_copy(update={'model_name': "min_value_145", 'active_field_min_value': 145 }),
-    _BASE_CONFIG.model_copy(update={'model_name': "min_value_135", 'active_field_min_value': 135 }),
-    _BASE_CONFIG.model_copy(update={'model_name': "roi_size_4", 'roi_size': 4 }),
+    _BASE_CONFIG.model_copy(update={'model_name': "CNN_MAX_POOL", 'model_type': ModelType.CNN_MAX_POOL }),
+    _BASE_CONFIG.model_copy(update={'model_name': "CNN_NO_BATCHNORM", 'model_type': ModelType.CNN_NO_BATCHNORM }),
+    _BASE_CONFIG.model_copy(update={'model_name': "CNN_RELU_LAST", 'model_type': ModelType.CNN_RELU_LAST }),
+    _BASE_CONFIG.model_copy(update={'model_name': "CNN_LSTM", 'model_type': ModelType.CNN_LSTM }),
     _BASE_CONFIG,
 ]
 
