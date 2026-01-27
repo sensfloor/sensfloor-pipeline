@@ -15,21 +15,21 @@ from training.trainer.base_trainer import BaseTrainer
 
 class SensfloorTrainer(BaseTrainer):
     def __init__(
-        self,
-        model: nn.Module,
-        optimizer: optim.Optimizer,
-        device: torch.device,
-        link_min: np.ndarray,
-        link_max: np.ndarray,
-        pose_to_model_dict: dict[PoseLandmark, int],
-        landmarks_out: int,
-        kept_links: list[tuple[PoseLandmark, PoseLandmark]],
-        scheduler: LRScheduler | None = None,
-        use_early_stopping: bool = True,
-        patience: int = 10,
-        results_path: Path = ROOT_PATH,
-        best_model_name: str = "best_model.pth",
-        amplify_link_loss: float = 10,
+            self,
+            model: nn.Module,
+            optimizer: optim.Optimizer,
+            device: torch.device,
+            link_min: np.ndarray,
+            link_max: np.ndarray,
+            pose_to_model_dict: dict[PoseLandmark, int],
+            landmarks_out: int,
+            kept_links: list[tuple[PoseLandmark, PoseLandmark]],
+            scheduler: LRScheduler | None = None,
+            use_early_stopping: bool = True,
+            patience: int = 10,
+            results_path: Path = ROOT_PATH,
+            best_model_name: str = "best_model.pth",
+            amplify_link_loss: float = 10,
     ):
         super().__init__(
             model=model,
@@ -47,13 +47,15 @@ class SensfloorTrainer(BaseTrainer):
         self.k_min, self.k_max = link_min, link_max
         self.landmarks_out = landmarks_out
         self.kept_links = kept_links
+        # Create a reverse mapping (int -> Name) for easy logging
+        self.idx_to_name = {v: k.name for k, v in self.pose_to_model_dict.items()}
 
     @staticmethod
     def calculate_mean_accuracy(
-        outputs: torch.Tensor,
-        labels: torch.Tensor,
-        landmarks_out: int,
-        threshold: float = 0.1,
+            outputs: torch.Tensor,
+            labels: torch.Tensor,
+            landmarks_out: int,
+            threshold: float = 0.1,
     ) -> float:
         joint_accuracy = SensfloorTrainer.calculate_percentage_correct_keypoints(
             outputs,
@@ -65,72 +67,69 @@ class SensfloorTrainer(BaseTrainer):
         return accuracy.item() * 100
 
     @staticmethod
-    def get_distances(outputs: torch.Tensor,labels: torch.Tensor,landmarks_out: int):
+    def get_distances(outputs: torch.Tensor, labels: torch.Tensor, landmarks_out: int):
         joint_coordinates = outputs.view(-1, landmarks_out, 3)  # [B, landmarks_out, 3]
         ground_truth = labels.view(-1, landmarks_out, 3)  # [B, landmarks_out, 3]
         return torch.linalg.vector_norm(joint_coordinates - ground_truth, dim=2)  # [B, landmarks_out]
 
     @staticmethod
-    def calculate_percentage_correct_keypoints(
-        outputs: torch.Tensor,
-        labels: torch.Tensor,
-        landmarks_out: int,
-        threshold: float,
+    def calculate_percentage_correct_keypoints_batch(
+            distances: torch.Tensor,
+            threshold: float,
     ) -> torch.Tensor:
-        distances = SensfloorTrainer.get_distances(outputs, labels, landmarks_out)
-        correct = distances < threshold  # values: [True, False, ...]
-        return correct.float()  # values: [1, 0, ...]
+        """Returns tensor of shape [B, landmarks_out] with 1.0 for correct, 0.0 for incorrect."""
+        correct = distances < threshold
+        return correct.float()
 
     def forward_pass(self, inputs: torch.Tensor) -> torch.Tensor:
         return self.model(inputs)
 
-    def calculate_loss(self, outputs: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+    def calculate_loss(self, outputs: torch.Tensor, labels: torch.Tensor) -> tuple[torch.Tensor, dict[str, float]]:
         mse_loss = nn.MSELoss(reduction="mean")(outputs, labels)
         link_loss = (
             calculate_linkloss(outputs, self.k_min, self.k_max, self.pose_to_model_dict, links=self.kept_links)
             * self.amplify_link_loss
         )  # Paper amplifies link loss by 10
-        return mse_loss + link_loss
+
+        total_loss = mse_loss + link_loss
+
+        loss_components = {
+            "loss_mse": mse_loss.item(),
+            "loss_link": link_loss.item(),
+        }
+
+        return total_loss, loss_components
 
     def calculate_metrics(self, outputs: torch.Tensor, labels: torch.Tensor) -> dict[str, float]:
         distances = SensfloorTrainer.get_distances(outputs, labels, self.landmarks_out)
+        metrics = {"mjpe_mean": distances.mean().item()}
         # Mean joint position error
-        mjpe = distances.mean().item()
+        per_joint_mjpe = distances.mean(dim=0)  # [Num_Joints]
 
-        # Percentage correct keypoints
-        pck_10 = (
-            self.calculate_percentage_correct_keypoints(
-                outputs=outputs,
-                labels=labels,
-                landmarks_out=self.landmarks_out,
-                threshold=0.1,
-            )
-            .mean()
-            .item()
-        )
+        for idx, error in enumerate(per_joint_mjpe):
+            joint_name = self.idx_to_name.get(idx, f"joint_{idx}")
+            metrics[f"mjpe_{joint_name}"] = error.item()
 
-        pck_5 = (
-            self.calculate_percentage_correct_keypoints(
-                outputs=outputs,
-                labels=labels,
-                landmarks_out=self.landmarks_out,
-                threshold=0.05,
-            )
-            .mean()
-            .item()
-        )
-        return {
-            "mjpe": mjpe,
-            "pck_10": pck_10,
-            "pck_5": pck_5,
-        }
+        pck_thresholds = {"pck_10": 0.1, "pck_5": 0.05}
 
+        for name, thresh in pck_thresholds.items():
+            correct_matrix = self.calculate_percentage_correct_keypoints_batch(distances, thresh)
+            metrics[f"{name}_mean"] = correct_matrix.mean().item()
+
+            # Per Joint Accuracy
+            per_joint_acc = correct_matrix.mean(dim=0)  # [Num_Joints]
+
+            for idx, acc in enumerate(per_joint_acc):
+                joint_name = self.idx_to_name.get(idx, f"joint_{idx}")
+                metrics[f"{name}_{joint_name}"] = acc.item()
+
+        return metrics
 
 def get_test_accuracy(
-    model: nn.Module,
-    test_loader: torch.utils.data.DataLoader,
-    device: torch.device,
-    trainer_instance: SensfloorTrainer,
+        model: nn.Module,
+        test_loader: torch.utils.data.DataLoader,
+        device: torch.device,
+        trainer_instance: SensfloorTrainer,
 ) -> dict[str, float]:
     model.eval()
     model.to(device)
