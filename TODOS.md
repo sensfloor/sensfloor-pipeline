@@ -1,6 +1,5 @@
 - Move dataset transforms into their own module
 - Instead of get_kept_links, load links from the config (also adapt the dataset)
-- report link loss and MSE separately
 
 - Create actual walking sequences for (LSTM) dataset
 - Run different configs
