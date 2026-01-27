@@ -113,8 +113,8 @@ class SensfloorTrainer(BaseTrainer):
         outputs.append(separator)
 
         def print_metric_row(display_name, prefix):
-            mean_val = log_data.get(f"{prefix}{MEAN}", 0.0)
-            joint_vals = [log_data.get(f"{prefix}{name}", 0.0) for name in joint_names]
+            mean_val = log_data.get(f"{prefix}{MEAN}", -1)
+            joint_vals = [log_data.get(f"{prefix}{name}", -1) for name in joint_names]
             all_vals = [mean_val] + joint_vals
 
             formatted_vals = [f"{v:.4f}" for v in all_vals]
@@ -242,7 +242,7 @@ class SensfloorTrainer(BaseTrainer):
 
             for idx, acc in enumerate(per_joint_acc):
                 joint_name = self.idx_to_name.get(idx, f"joint_{idx}")
-                metrics[f"{name}_{joint_name}"] = acc.item()
+                metrics[f"{name}{joint_name}"] = acc.item()
 
         return metrics
 
