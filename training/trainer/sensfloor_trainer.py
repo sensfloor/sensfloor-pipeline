@@ -15,6 +15,18 @@ from definitions import ROOT_PATH
 from training.link_loss.link_loss import calculate_linkloss
 from training.trainer.base_trainer import BaseTrainer
 
+# Metrics Strings also used for Logging
+VAL_PREFIX = "val_"
+TRAIN_PREFIX = "train_"
+VAL_LOSS = "val_loss"
+TRAIN_LOSS = "train_loss"
+EPOCH = "epoch"
+LOSS_LINK = "loss_link"
+LOSS_MSE = "loss_mse"
+MJPE_PREFIX = "mjpe_"
+MEAN = "mean"
+PCK_THRESHOLDS = {"pck_10_": 0.1, "pck_5_": 0.05}
+
 
 class SensfloorTrainer(BaseTrainer):
     def __init__(
@@ -54,29 +66,13 @@ class SensfloorTrainer(BaseTrainer):
         self.idx_to_name = {v: k.name for k, v in self.pose_to_model_dict.items()}
 
     @staticmethod
-    def calculate_mean_accuracy(
-            outputs: torch.Tensor,
-            labels: torch.Tensor,
-            landmarks_out: int,
-            threshold: float = 0.1,
-    ) -> float:
-        joint_accuracy = SensfloorTrainer.calculate_percentage_correct_keypoints(
-            outputs,
-            labels,
-            landmarks_out,
-            threshold,
-        )
-        accuracy = joint_accuracy.mean()  # average over all B × landmarks_out
-        return accuracy.item() * 100
-
-    @staticmethod
     def get_distances(outputs: torch.Tensor, labels: torch.Tensor, landmarks_out: int):
         joint_coordinates = outputs.view(-1, landmarks_out, 3)  # [B, landmarks_out, 3]
         ground_truth = labels.view(-1, landmarks_out, 3)  # [B, landmarks_out, 3]
         return torch.linalg.vector_norm(joint_coordinates - ground_truth, dim=2)  # [B, landmarks_out]
 
     @staticmethod
-    def calculate_percentage_correct_keypoints_batch(
+    def calculate_percentage_correct_keypoints(
             distances: torch.Tensor,
             threshold: float,
     ) -> torch.Tensor:
@@ -132,17 +128,17 @@ class SensfloorTrainer(BaseTrainer):
             avg_val_loss, val_metrics = self.evaluate(validation_loader)
 
             log_data = {
-                "epoch": epoch + 1,
-                "train_loss": avg_train_loss,
-                "val_loss": avg_val_loss,
-                **{f"train_{key}": value for key, value in train_metrics.items()},
-                **{f"val_{key}": value for key, value in val_metrics.items()},
+                EPOCH: epoch + 1,
+                TRAIN_LOSS: avg_train_loss,
+                VAL_LOSS: avg_val_loss,
+                **{f"{TRAIN_PREFIX}{key}": value for key, value in train_metrics.items()},
+                **{f"{VAL_PREFIX}{key}": value for key, value in val_metrics.items()},
             }
 
             # Logging
             trackio.log(log_data)
             self.epochs_metrics_list.append(log_data)
-            self.log_formatted_table(log_data)
+            self.log_training_metrics(log_data)
 
             self.save_best_model(avg_val_loss)
             self.save_metrics_to_csv()
@@ -171,27 +167,25 @@ class SensfloorTrainer(BaseTrainer):
         total_loss = mse_loss + link_loss
 
         loss_components = {
-            "loss_mse": mse_loss.item(),
-            "loss_link": link_loss.item(),
+            LOSS_MSE: mse_loss.item(),
+            LOSS_LINK: link_loss.item(),
         }
 
         return total_loss, loss_components
 
     def calculate_metrics(self, outputs: torch.Tensor, labels: torch.Tensor) -> dict[str, float]:
         distances = SensfloorTrainer.get_distances(outputs, labels, self.landmarks_out)
-        metrics = {"mjpe_mean": distances.mean().item()}
+        metrics = {(MJPE_PREFIX + MEAN): distances.mean().item()}
         # Mean joint position error
         per_joint_mjpe = distances.mean(dim=0)  # [Num_Joints]
 
         for idx, error in enumerate(per_joint_mjpe):
             joint_name = self.idx_to_name.get(idx, f"joint_{idx}")
-            metrics[f"mjpe_{joint_name}"] = error.item()
+            metrics[f"{MJPE_PREFIX}{joint_name}"] = error.item()
 
-        pck_thresholds = {"pck_10": 0.1, "pck_5": 0.05}
-
-        for name, thresh in pck_thresholds.items():
-            correct_matrix = self.calculate_percentage_correct_keypoints_batch(distances, thresh)
-            metrics[f"{name}_mean"] = correct_matrix.mean().item()
+        for name, thresh in PCK_THRESHOLDS.items():
+            correct_matrix = self.calculate_percentage_correct_keypoints(distances, thresh)
+            metrics[f"{name}{MEAN}"] = correct_matrix.mean().item()
 
             # Per Joint Accuracy
             per_joint_acc = correct_matrix.mean(dim=0)  # [Num_Joints]
@@ -202,70 +196,55 @@ class SensfloorTrainer(BaseTrainer):
 
         return metrics
 
-    def log_formatted_table(self, log_data: dict[str, float]) -> None:
+    def log_training_metrics(self, log_data: dict[str, float]) -> None:
         """
         Prints metrics in a table format:
         Row 1: Metric Name (e.g. Train MJPE)
         Col 1: Mean
         Col 2-N: Individual Joints
         """
-        # 1. Header & Loss Section
+        # Header & Loss Section
+        outputs = []
         separator = "-" * 200
-        print("\n" + "=" * 120)
-        print(f"EPOCH {log_data.get('epoch', '?')} SUMMARY")
-        print(f"Losses | Train: {log_data.get('train_loss', 0):.4f} | "
-              f"Val: {log_data.get('val_loss', 0):.4f}, "
-              f"MSE: {log_data.get('val_loss_mse', 0):.4f}, "
-              f"Link: {log_data.get('val_loss_link', 0):.4f}")
-        print(separator)
+        outputs.append("\n" + "=" * 120)
+        outputs.append(f"EPOCH {log_data.get(EPOCH, '?')} SUMMARY")
+        outputs.append(f"Losses | Train: {log_data.get(TRAIN_LOSS, -1):.4f} | "
+                       f"Val: {log_data.get(VAL_LOSS, -1):.4f}, "
+                       f"MSE: {log_data.get(VAL_PREFIX + LOSS_MSE, -1):.4f}, "
+                       f"Link: {log_data.get(VAL_PREFIX + LOSS_LINK, -1):.4f}")
+        outputs.append(separator)
 
-        # 2. Identify Joints dynamically
-        # We look for keys starting with 'val_mjpe_' to find the joint names
-        joint_names = [
-            k.replace("val_mjpe_", "")
-            for k in log_data.keys()
-            if k.startswith("val_mjpe_") and "_mean" not in k
-        ]
-
-        if not joint_names:
-            return
-
-        # 3. Create Short Headers for Columns (e.g., LEFT_SHOULDER -> L_SHOU)
-        # 8 chars width per column usually fits standard terminals
+        # Metrics
+        joint_names = [k.name for k in self.pose_to_model_dict.keys()]
         headers = ["METRIC", "MEAN"] + [
             name.replace("LEFT", "L").replace("RIGHT", "R")[:6] for name in joint_names
         ]
 
-        # Define spacing format: First col 12 wide, others 8 wide
-        row_fmt = "{:<12} " + "{:>8} " * (len(headers) - 1)
+        # Spacing format: First col 13 wide, others 8 wide
+        row_fmt = "{:<13} " + "{:>8} " * (len(headers) - 1)
 
-        print(row_fmt.format(*headers))
-        print(separator)
+        outputs.append(row_fmt.format(*headers))
+        outputs.append(separator)
 
-        # 4. Helper to print a specific metric row
         def print_metric_row(display_name, prefix):
-            # Get Mean
-            mean_val = log_data.get(f"{prefix}_mean", 0.0)
-            # Get Joint Values
-            joint_vals = [log_data.get(f"{prefix}_{name}", 0.0) for name in joint_names]
-
-            # Combine
+            mean_val = log_data.get(f"{prefix}{MEAN}", 0.0)
+            joint_vals = [log_data.get(f"{prefix}{name}", 0.0) for name in joint_names]
             all_vals = [mean_val] + joint_vals
 
-            # Format numbers (remove 0. if it's 0.0000 to save space, optional)
             formatted_vals = [f"{v:.4f}" for v in all_vals]
-            print(row_fmt.format(display_name, *formatted_vals))
+            return row_fmt.format(display_name, *formatted_vals)
 
-        # 5. Print the rows
-        print_metric_row("Train MJPE", "train_mjpe")
-        print_metric_row("Val MJPE", "val_mjpe")
-        print(separator)
-        print_metric_row("Train PCK10", "train_pck_10")
-        print_metric_row("Val PCK10", "val_pck_10")
-        print(separator)
-        print_metric_row("Train PCK5", "train_pck_5")
-        print_metric_row("Val PCK5", "val_pck_5")
-        print(separator + "\n")
+        outputs.append(print_metric_row("Train MJPE", f"{TRAIN_PREFIX}{MJPE_PREFIX}"))
+        outputs.append(print_metric_row("Val MJPE", f"{VAL_PREFIX}{MJPE_PREFIX}"))
+
+        outputs.append(separator)
+
+        for prefix, value in PCK_THRESHOLDS.items():
+            outputs.append(print_metric_row(f"Train {prefix}", f"{TRAIN_PREFIX}{prefix}"))
+            outputs.append(print_metric_row(f"Val {prefix}", f"{VAL_PREFIX}{prefix}"))
+            outputs.append(separator)
+
+        print("\n".join(outputs))
 
 
 def get_test_accuracy(
