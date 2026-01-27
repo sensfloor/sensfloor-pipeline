@@ -80,6 +80,57 @@ class SensfloorTrainer(BaseTrainer):
         correct = distances < threshold
         return correct.float()
 
+    @staticmethod
+    def log_training_metrics(log_data: dict[str, float], landmarks: list[PoseLandmark]) -> None:
+        """
+        Prints metrics in a table format:
+        Row 1: Metric Name (e.g. Train MJPE)
+        Col 1: Mean
+        Col 2-N: Individual Joints
+        """
+        # Header & Loss Section
+        outputs = []
+        separator = "-" * 200
+        outputs.append("\n" + "=" * 120)
+        outputs.append(f"EPOCH {log_data.get(EPOCH, '?')} SUMMARY")
+        outputs.append(f"Losses | Train: {log_data.get(TRAIN_LOSS, -1):.4f} | "
+                       f"Val: {log_data.get(VAL_LOSS, -1):.4f}, "
+                       f"MSE: {log_data.get(VAL_PREFIX + LOSS_MSE, -1):.4f}, "
+                       f"Link: {log_data.get(VAL_PREFIX + LOSS_LINK, -1):.4f}")
+        outputs.append(separator)
+
+        # Metrics
+        joint_names = [k.name for k in landmarks]
+        headers = ["METRIC", "MEAN"] + [
+            name.replace("LEFT", "L").replace("RIGHT", "R")[:6] for name in joint_names
+        ]
+
+        # Spacing format: First col 13 wide, others 8 wide
+        row_fmt = "{:<13} " + "{:>8} " * (len(headers) - 1)
+
+        outputs.append(row_fmt.format(*headers))
+        outputs.append(separator)
+
+        def print_metric_row(display_name, prefix):
+            mean_val = log_data.get(f"{prefix}{MEAN}", 0.0)
+            joint_vals = [log_data.get(f"{prefix}{name}", 0.0) for name in joint_names]
+            all_vals = [mean_val] + joint_vals
+
+            formatted_vals = [f"{v:.4f}" for v in all_vals]
+            return row_fmt.format(display_name, *formatted_vals)
+
+        outputs.append(print_metric_row("Train MJPE", f"{TRAIN_PREFIX}{MJPE_PREFIX}"))
+        outputs.append(print_metric_row("Val MJPE", f"{VAL_PREFIX}{MJPE_PREFIX}"))
+
+        outputs.append(separator)
+
+        for prefix, value in PCK_THRESHOLDS.items():
+            outputs.append(print_metric_row(f"Train {prefix}", f"{TRAIN_PREFIX}{prefix}"))
+            outputs.append(print_metric_row(f"Val {prefix}", f"{VAL_PREFIX}{prefix}"))
+            outputs.append(separator)
+
+        print("\n".join(outputs))
+
     def train(self, train_loader: DataLoader, validation_loader: DataLoader, epochs: int) -> None:
         for epoch in range(epochs):
             num_batches = len(train_loader)
@@ -138,7 +189,7 @@ class SensfloorTrainer(BaseTrainer):
             # Logging
             trackio.log(log_data)
             self.epochs_metrics_list.append(log_data)
-            self.log_training_metrics(log_data)
+            SensfloorTrainer.log_training_metrics(log_data, list(self.pose_to_model_dict.keys()))
 
             self.save_best_model(avg_val_loss)
             self.save_metrics_to_csv()
@@ -195,56 +246,6 @@ class SensfloorTrainer(BaseTrainer):
                 metrics[f"{name}_{joint_name}"] = acc.item()
 
         return metrics
-
-    def log_training_metrics(self, log_data: dict[str, float]) -> None:
-        """
-        Prints metrics in a table format:
-        Row 1: Metric Name (e.g. Train MJPE)
-        Col 1: Mean
-        Col 2-N: Individual Joints
-        """
-        # Header & Loss Section
-        outputs = []
-        separator = "-" * 200
-        outputs.append("\n" + "=" * 120)
-        outputs.append(f"EPOCH {log_data.get(EPOCH, '?')} SUMMARY")
-        outputs.append(f"Losses | Train: {log_data.get(TRAIN_LOSS, -1):.4f} | "
-                       f"Val: {log_data.get(VAL_LOSS, -1):.4f}, "
-                       f"MSE: {log_data.get(VAL_PREFIX + LOSS_MSE, -1):.4f}, "
-                       f"Link: {log_data.get(VAL_PREFIX + LOSS_LINK, -1):.4f}")
-        outputs.append(separator)
-
-        # Metrics
-        joint_names = [k.name for k in self.pose_to_model_dict.keys()]
-        headers = ["METRIC", "MEAN"] + [
-            name.replace("LEFT", "L").replace("RIGHT", "R")[:6] for name in joint_names
-        ]
-
-        # Spacing format: First col 13 wide, others 8 wide
-        row_fmt = "{:<13} " + "{:>8} " * (len(headers) - 1)
-
-        outputs.append(row_fmt.format(*headers))
-        outputs.append(separator)
-
-        def print_metric_row(display_name, prefix):
-            mean_val = log_data.get(f"{prefix}{MEAN}", 0.0)
-            joint_vals = [log_data.get(f"{prefix}{name}", 0.0) for name in joint_names]
-            all_vals = [mean_val] + joint_vals
-
-            formatted_vals = [f"{v:.4f}" for v in all_vals]
-            return row_fmt.format(display_name, *formatted_vals)
-
-        outputs.append(print_metric_row("Train MJPE", f"{TRAIN_PREFIX}{MJPE_PREFIX}"))
-        outputs.append(print_metric_row("Val MJPE", f"{VAL_PREFIX}{MJPE_PREFIX}"))
-
-        outputs.append(separator)
-
-        for prefix, value in PCK_THRESHOLDS.items():
-            outputs.append(print_metric_row(f"Train {prefix}", f"{TRAIN_PREFIX}{prefix}"))
-            outputs.append(print_metric_row(f"Val {prefix}", f"{VAL_PREFIX}{prefix}"))
-            outputs.append(separator)
-
-        print("\n".join(outputs))
 
 
 def get_test_accuracy(

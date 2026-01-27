@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader
 
 from definitions import ROOT_PATH
 
+METRICS_FILE_NAME = "metrics.csv"
 
 class BaseTrainer(metaclass=ABCMeta):
     def __init__(  # noqa: PLR0913
@@ -68,7 +69,7 @@ class BaseTrainer(metaclass=ABCMeta):
         if not self.epochs_metrics_list:
             return
 
-        csv_path = self.results_path / "metrics.csv"
+        csv_path = self.results_path / METRICS_FILE_NAME
         keys = self.epochs_metrics_list[-1].keys()
 
         with csv_path.open(mode="w", newline="", encoding="utf-8") as file:
