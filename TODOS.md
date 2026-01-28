@@ -9,3 +9,4 @@
   - training without socks
   - Try "remove noise signals on the floor"
   - Rotate data again
+- Check load transformations for inference (does it load random rotation????)

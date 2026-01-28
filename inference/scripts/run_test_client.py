@@ -12,7 +12,7 @@ async def listen_forever() -> None:
             async with connect(URI) as websocket:
                 print("Connected.")
                 async for message in websocket:
-                    print(message)
+                    print(f"{message}\n")
         except (OSError, ConnectionClosed) as e:  # noqa: PERF203
             print(f"Disconnected ({e}). Reconnecting in 0.5s...")
             await asyncio.sleep(0.5)

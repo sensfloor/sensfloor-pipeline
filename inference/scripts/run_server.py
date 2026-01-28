@@ -7,9 +7,10 @@ import torch
 
 from data_collection.message_validator import PositionValidator
 from data_collection.messages_provider import CSVMessagesProvider, MessagesProvider, SerialMessagesProvider
-from inference.model_loading import load_data_transformations, load_floor, load_model, load_pose_landmark_mapping
+from inference.model_loading import load_floor
+from inference.pose_predictor import PosePredictor
 from inference.websocket import Websocket
-from training.configs import ModelType
+from tracking.person_tracker import PersonTracker
 
 
 def get_message_provider(mock_file: Path | None, serial_port: str | None) -> MessagesProvider:
@@ -28,22 +29,19 @@ def get_message_provider(mock_file: Path | None, serial_port: str | None) -> Mes
 
 @torch.no_grad()
 def main(fps: int, model_folder: Path, mock_file: Path | None, serial_port: str | None) -> None:
-    model, device, model_type = load_model(model_folder)
-    transform_data = load_data_transformations(model_folder)
     floor, floor_config = load_floor(model_folder)
-    pose_landmark_mapping = load_pose_landmark_mapping(model_folder)
 
-    print(f"Run model({model_type.name}) on {device}")
-    model.eval()
+    pose_predictor = PosePredictor(model_folder=model_folder, num_calls_cache=5)
+    person_tracker = PersonTracker(fps=fps, idle_field_value=floor_config.idle_field_value, filter_reset_threshold=10)
 
     messages_provider = get_message_provider(mock_file, serial_port)
     with Websocket() as websocket, messages_provider:
         frame_interval_length = 1.0 / fps
 
-        h_c = None  # used to store history if model is LSTM
         while True:
             frame_start_time = time.perf_counter()
 
+            # Update floor
             messages = messages_provider.get_messages()
             positions = []
             signals = []
@@ -54,32 +52,18 @@ def main(fps: int, model_folder: Path, mock_file: Path | None, serial_port: str 
             # IMPORTANT: Floor expects positions starting from 0, sensfloor starts from 1 -> Subtract 1
             floor.update(np.array(positions) - 1, np.array(signals))
 
+            # Predict pose and track person
             roi = floor.get_roi()
+            pose = pose_predictor.predict(roi)
+            position = person_tracker.track(floor.history[-1])
 
-            if roi is not None:
-                x = torch.Tensor(roi.history).unsqueeze(0)
-                x = x.to(device)
-                x = transform_data(x)
-
-                # TODO add logic to reset h_c if there were e.g. 15 frames without signal
-                if model_type in [ModelType.CNN_LSTM, ModelType.CNN_LSTM_EFFICIENT]:
-                    outputs, (h_c) = model(x, h_c)
-                else:
-                    outputs = model(x)
-
-                joints: list = outputs.reshape(-1, 3).cpu().tolist()
-
-                message = {
-                    "x_roi": int(roi.x),
-                    "y_roi": int(roi.y),
-                    "roi_size": int(-1 if floor_config.roi_size is None else floor_config.roi_size),
-                    "joints": [
-                        {"joint": pose_landmark_mapping[i].name, "x": joint[0], "y": joint[1], "z": joint[2]}
-                        for i, joint in enumerate(joints)
-                    ],
-                }
-
-                websocket.send_poses(message)
+            # Send message to client
+            message = {
+                "position_x": position[0],
+                "position_y": position[1],
+                "pose": pose,
+            }
+            websocket.send_poses(message)
 
             frame_duration = time.perf_counter() - frame_start_time
             sleep_time = frame_interval_length - frame_duration
