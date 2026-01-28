@@ -23,6 +23,7 @@ class FloorConfig:
     history_maxlen: int
     idle_field_value: int = 127
     active_field_min_value: int = 140
+    remove_noise: bool = False
 
 
 PATCH_SIZE = 4
@@ -40,9 +41,8 @@ class Floor:
     def __init__(self, config: FloorConfig) -> None:
         self.config = config
         self.history_queue = deque(maxlen=config.history_maxlen)
-        self.patches = (
-            np.ones((config.x_size * PATCH_SIZE, config.y_size * PATCH_SIZE)) * config.idle_field_value
-        )
+        self.updated_positions_history = deque(maxlen=5)
+        self.patches = np.ones((config.x_size * PATCH_SIZE, config.y_size * PATCH_SIZE)) * config.idle_field_value
 
     @property
     def shape(self) -> tuple[int, int]:
@@ -58,12 +58,27 @@ class Floor:
         return np.stack([*zero_fill, *list(self.history_queue)])
 
     def update(self, positions: np.ndarray, signals: np.ndarray) -> None:
+        if self.config.remove_noise:
+            self.remove_noise()
+
         cleaned_signal = np.where(signals < self.config.active_field_min_value, self.config.idle_field_value, signals)
         for (x, y), signal in zip(positions, cleaned_signal, strict=True):
             interpolated_signal = interpolate_signal(signal)
             x_patches = x * PATCH_SIZE
             y_patches = y * PATCH_SIZE
-            self.patches[x_patches : x_patches + PATCH_SIZE, y_patches : y_patches + PATCH_SIZE] = (
-                interpolated_signal
-            )
+            self.patches[x_patches : x_patches + PATCH_SIZE, y_patches : y_patches + PATCH_SIZE] = interpolated_signal
+
         self.history_queue.append(self.patches.copy())
+        self.updated_positions_history.append(positions.tolist())
+
+    def remove_noise(self) -> None:
+        updated_positions = list(self.updated_positions_history)
+        unique_positions = {tuple(item) for timestep in updated_positions if timestep for item in timestep}
+
+        keep_mask = np.ones(self.patches.shape, dtype=bool)  # 1 => True
+
+        for x, y in unique_positions:
+            x_start, y_start = x * PATCH_SIZE, y * PATCH_SIZE
+            keep_mask[x_start : x_start + PATCH_SIZE, y_start : y_start + PATCH_SIZE] = False
+
+        self.patches[keep_mask] = self.config.idle_field_value
