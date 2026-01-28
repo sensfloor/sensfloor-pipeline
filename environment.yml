@@ -12,6 +12,7 @@ dependencies:
   - opencv
   - pytest
   - pydantic
+  - scipy
   - pip
   - pip:
     - torch
