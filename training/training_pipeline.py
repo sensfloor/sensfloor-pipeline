@@ -47,6 +47,7 @@ def train(configuration: TrainingConfiguration) -> None:
             history_maxlen=configuration.roi_history_maxlen,
             roi_size=configuration.roi_size,
             active_field_min_value=configuration.active_field_min_value,
+            remove_noise=configuration.remove_noise
         ),
         drop_landmarks=drop_landmarks,
         normalize_signals=configuration.do_normalize,

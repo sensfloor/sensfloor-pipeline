@@ -69,6 +69,8 @@ class TrainingConfiguration(BaseModel):
     do_normalize: bool
     normalize_to_max: bool
     rotate_data: bool
+    remove_noise: bool
+
 
     training_data_folders: list[str]
     landmarks: list[PoseLandmark]
@@ -136,6 +138,7 @@ _BASE_CONFIG = TrainingConfiguration(
     do_normalize=True,
     normalize_to_max=False,
     rotate_data=False,
+    remove_noise=False,
     training_data_folders=training_folders,
     landmarks=landmarks,
     model_type=ModelType.CNN,
