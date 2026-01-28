@@ -1,5 +1,6 @@
 import numpy as np
 
+from data_loading.floor import PATCH_SIZE
 from tracking.clustering import calculate_activation_cluster_means
 from tracking.kalman_filter import SensfloorKalmanFilter
 
@@ -17,7 +18,7 @@ class PersonTracker:
 
         if len(detected_position) == 0:
             self.frames_without_position += 1
-            return self.kalman_filter.x
+            return self.kalman_filter.x / PATCH_SIZE
 
         if self.frames_without_position > self.filter_reset_threshold:
             self.kalman_filter.reset()
@@ -25,4 +26,4 @@ class PersonTracker:
         self.kalman_filter.update(detected_position)
         self.frames_without_position = 0
 
-        return self.kalman_filter.x
+        return self.kalman_filter.x / PATCH_SIZE

@@ -30,6 +30,7 @@ def get_message_provider(mock_file: Path | None, serial_port: str | None) -> Mes
 @torch.no_grad()
 def main(fps: int, model_folder: Path, mock_file: Path | None, serial_port: str | None) -> None:
     floor, floor_config = load_floor(model_folder)
+    # floor.config = replace(floor.config, remove_noise=True, active_field_min_value=145)
 
     pose_predictor = PosePredictor(model_folder=model_folder, num_calls_cache=5)
     person_tracker = PersonTracker(fps=fps, idle_field_value=floor_config.idle_field_value, filter_reset_threshold=10)
