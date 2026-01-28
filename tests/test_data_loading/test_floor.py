@@ -180,3 +180,76 @@ def test_signal_clipping():
     )
     floor.update(positions, signals)
     np.testing.assert_array_equal(floor.patches, expected_patches)
+
+    
+def test_remove_noise():
+    config = FloorConfig(x_size=2, y_size=1, history_maxlen=1, remove_noise=True)
+    floor = Floor(config)
+
+    positions_first_patch = np.array([[0, 0]])
+    positions_both_patches = np.array([[0, 0], [1, 0]])
+    signals_first_patch = np.array([[137, 100, 200, 180, 147, 120, 167, 0]])
+    signals_both_patches = np.array([[137, 100, 200, 180, 147, 120, 167, 0], [137, 100, 200, 180, 147, 120, 167, 0]])
+    expected_patches = np.array(
+        [
+            [137, 127, 167, 147],
+            [147, 137, 147, 127],
+            [180, 190, 127, 127],
+            [190, 200, 127, 127],
+            # second patch
+            [127, 127, 127, 127],
+            [127, 127, 127, 127],
+            [127, 127, 127, 127],
+            [127, 127, 127, 127],
+        ],
+    )
+    # Update both patches
+    floor.update(positions_both_patches, signals_both_patches)
+
+    # Update only first patch
+    floor.update(positions_first_patch, signals_first_patch)
+    floor.update(positions_first_patch, signals_first_patch)
+    floor.update(positions_first_patch, signals_first_patch)
+    floor.update(positions_first_patch, signals_first_patch)
+    floor.update(positions_first_patch, signals_first_patch)
+    floor.update(positions_first_patch, signals_first_patch)
+
+    # Expect resetted patch
+    np.testing.assert_array_equal(floor.patches, expected_patches)
+
+    
+def test_no_remove_noise():
+    config = FloorConfig(x_size=2, y_size=1, history_maxlen=1, remove_noise=True)
+    floor = Floor(config)
+
+    positions_first_patch = np.array([[0, 0]])
+    positions_both_patches = np.array([[0, 0], [1, 0]])
+    signals_first_patch = np.array([[137, 100, 200, 180, 147, 120, 167, 0]])
+    signals_both_patches = np.array([[137, 100, 200, 180, 147, 120, 167, 0], [137, 100, 200, 180, 147, 120, 167, 0]])
+    expected_patches = np.array(
+        [
+            [137, 127, 167, 147],
+            [147, 137, 147, 127],
+            [180, 190, 127, 127],
+            [190, 200, 127, 127],
+            # second patch
+            [137, 127, 167, 147],
+            [147, 137, 147, 127],
+            [180, 190, 127, 127],
+            [190, 200, 127, 127],
+        ],
+    )
+    # Update both patches
+    floor.update(positions_both_patches, signals_both_patches)
+
+    # Update only first patch
+    floor.update(positions_first_patch, signals_first_patch)
+    floor.update(positions_first_patch, signals_first_patch)
+    floor.update(positions_first_patch, signals_first_patch)
+    floor.update(positions_first_patch, signals_first_patch)
+    floor.update(positions_first_patch, signals_first_patch)
+
+    # No reset
+    np.testing.assert_array_equal(floor.patches, expected_patches)
+
+
