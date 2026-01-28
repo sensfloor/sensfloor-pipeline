@@ -101,6 +101,18 @@
             ]
         },
         {
+            "name": "VISUALIZATIONS – Visualize position tracking",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "visualization.scripts.visualize_position_tracking",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "args": [
+                "--data",
+                "data/train/2025-12-16_18-43-45-line-rik",
+            ]
+        },
+        {
             "name": "VISUALIZATIONS – RoI floor",
             "type": "debugpy",
             "request": "launch",
@@ -109,7 +121,7 @@
             "console": "integratedTerminal",
             "args": [
                 "--data",
-                "data/2025-12-16_18-43-45-line-rik"
+                "data/train/2025-12-16_18-43-45-line-rik",
             ]
         },
         {
