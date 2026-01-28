@@ -7,3 +7,5 @@
   - Different models
   - Different configs for LSTM architecture
   - training without socks
+  - Try "remove noise signals on the floor"
+  - Rotate data again
