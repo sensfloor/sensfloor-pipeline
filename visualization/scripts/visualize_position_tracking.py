@@ -4,70 +4,11 @@ from pathlib import Path
 import cv2
 import numpy as np
 import pandas as pd
-from filterpy.kalman import KalmanFilter
-from scipy.ndimage import center_of_mass, label, sum_labels
 
 from data_loading.roi_floor import RoIFloor, RoIFloorConfig
 from data_loading.roi_offset_strategy import get_exhaustive_offsets
-
-
-class SensfloorKalmanFilter:
-    def __init__(self, fps: float) -> None:
-        self.dt = 1 / fps
-        self.kf = KalmanFilter(dim_x=4, dim_z=2)
-        self.last_x = None
-        self.reset()
-
-    def reset(self) -> None:
-        # TODO: Test usage of last position as initial belief if reset due to floor exit
-        self.kf.P = np.eye(4) * 10
-        self.kf.x = np.array([0, 0, 0, 0], dtype=np.float64)  # (Initial) State estimate
-        self.kf.F = np.array(  # State transition matrix
-            [
-                [1, 0, self.dt, 0],
-                [0, 1, 0, self.dt],
-                [0, 0, 1, 0],
-                [0, 0, 0, 1],
-            ],
-            dtype=np.float64,
-        )
-        self.kf.Q = np.eye(4) * 0.0003  # Transition noise
-        self.kf.H = np.array([[1, 0, 0, 0], [0, 1, 0, 0]], dtype=np.float64)  # State -> Measurement mapping
-        self.kf.R = np.eye(2) * 0.01  # Measurement noise
-
-    def predict(self) -> None:
-        self.kf.predict()
-
-    def update(self, position: np.ndarray) -> None:
-        self.last_x = self.x
-        self.kf.update(position)
-
-    @property
-    def x(self) -> np.ndarray:
-        return self.kf.x[:2]
-
-
-def calculate_activation_cluster_means(floor_activations: np.ndarray, idle_field_value: int) -> np.ndarray:
-    mask = floor_activations > idle_field_value
-
-    labeled_array, num_features = label(mask)  # type: ignore
-
-    if num_features == 0:
-        return np.array([])
-
-    clusters = [np.argwhere(labeled_array == i) for i in range(1, num_features + 1)]
-    means = np.array([cluster.mean(axis=0) for cluster in clusters])
-
-    labels = np.arange(1, num_features + 1)
-    means = np.array(center_of_mass(mask, labeled_array, labels))
-
-    field_values = sum_labels(floor_activations, labeled_array, labels)
-    highest_means = means[np.argsort(field_values)[::-1]][:2]
-
-    if len(highest_means) > 1:
-        return highest_means.mean(axis=0).flatten()
-    return highest_means.flatten()
-
+from tracking.clustering import calculate_activation_cluster_means
+from tracking.person_tracker import PersonTracker
 
 RESET_FILTER_THRESHOLD = 10
 VIDEO_WINNAME = "Video"
@@ -104,9 +45,8 @@ def main(data_dir: Path, signal_threshold: int) -> None:  # noqa: PLR0915
     )
     floor = RoIFloor(floor_config)
 
-    kf = SensfloorKalmanFilter(fps)
+    person_tracker = PersonTracker(fps, floor_config.idle_field_value, filter_reset_threshold=10)
     frame_number = 0
-    frames_without_signal = 0
     while True:
         ret, frame = cap.read()
         messages = readout_lookup.get(frame_number, pd.DataFrame())
@@ -124,25 +64,14 @@ def main(data_dir: Path, signal_threshold: int) -> None:  # noqa: PLR0915
         img_raw = np.zeros((display_h, display_w, 3), dtype=np.uint8)
         img_kf = np.zeros((display_h, display_w, 3), dtype=np.uint8)
 
-        kf.predict()
-
+        # Calculate and draw raw signal position
         position = calculate_activation_cluster_means(current_floor, floor_config.idle_field_value)
-
         if len(position) > 0:
-            # Draw raw signal position
-            r, c = position
-            cv2.drawMarker(img_raw, (int(c * scale_w), int(r * scale_h)), (0, 0, 255), cv2.MARKER_CROSS, 20, 2)
+            row, column = position
+            cv2.drawMarker(img_raw, (int(column * scale_w), int(row * scale_h)), (0, 0, 255), cv2.MARKER_CROSS, 20, 2)
 
-            # KF processing
-            if frames_without_signal > RESET_FILTER_THRESHOLD:
-                kf.reset()
-            frames_without_signal = 0
-            kf.update(position)
-        else:
-            frames_without_signal += 1
-
-        # Draw KF position
-        kf_r, kf_c = kf.x
+        # Calculate and draw KF position
+        kf_r, kf_c = person_tracker.track(current_floor)
         cv2.drawMarker(img_kf, (int(kf_c * scale_w), int(kf_r * scale_h)), (0, 255, 0), cv2.MARKER_CROSS, 20, 2)
 
         # Arrange comparison window
