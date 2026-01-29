@@ -8,6 +8,7 @@ from typing import Any, Self
 from pydantic import BaseModel, ConfigDict, field_serializer, field_validator
 
 from data_loading.pose_landmark import PoseLandmark
+from data_loading.roi_offset_strategy import OffsetStrategy
 from definitions import HOLD_OUT_DATA_PATH, MODELS_FOLDER_PATH, TRAIN_DATA_PATH
 
 CONFIG_FILE_NAME = "config.json"
@@ -66,6 +67,7 @@ class TrainingConfiguration(BaseModel):
     floor_y_size: int
     roi_history_maxlen: int
     roi_size: int | None
+    roi_offset_strategy: OffsetStrategy
     do_normalize: bool
     normalize_to_max: bool
     rotate_data: bool
@@ -135,29 +137,29 @@ _BASE_CONFIG = TrainingConfiguration(
     floor_y_size=4,
     roi_history_maxlen=25,
     roi_size=3,
+    roi_offset_strategy=OffsetStrategy.CENTER,
     do_normalize=True,
     normalize_to_max=False,
     rotate_data=False,
     remove_noise=False,
     training_data_folders=training_folders,
     landmarks=landmarks,
-    model_type=ModelType.CNN,
+    model_type=ModelType.CNN_LSTM_EFFICIENT,
     scheduler_patience=3,
     scheduler_min_lr=1e-6,
     scheduler_factor=0.1,
-    trainer_patience=3,
+    trainer_patience=5,
     amplify_link_loss=0.1,
     hold_out_data_folder=hold_out_folders,
-    model_name="CNN",
+    model_name="base_CNN_LSTM_EFFICIENT",
 )
 
 _ALL_CONFIGS = [
-    _BASE_CONFIG.model_copy(update={'model_name': "CNN_LSTM_EFFICIENT", 'model_type': ModelType.CNN_LSTM_EFFICIENT }),
-    _BASE_CONFIG.model_copy(update={'model_name': "min_value_145", 'active_field_min_value': 145 }),
-    _BASE_CONFIG.model_copy(update={'model_name': "min_value_135", 'active_field_min_value': 135 }),
-    _BASE_CONFIG.model_copy(update={'model_name': "roi_size_4", 'roi_size': 4 }),
+    _BASE_CONFIG.model_copy(update={"model_name": "OffsetStrategy.EXHAUSTIVE", "roi_offset_strategy": OffsetStrategy.EXHAUSTIVE }),
+    _BASE_CONFIG.model_copy(update={"model_name": "remove_noise_true_len_1", "remove_noise": True }),
+    _BASE_CONFIG.model_copy(update={"model_name": "roi_size_4_second_run", "roi_size": 4, "model_type": ModelType.CNN}),
+    _BASE_CONFIG.model_copy(update={"model_name": "roi_size_4_lstm", "roi_size": 4 }),
     _BASE_CONFIG,
-    _BASE_CONFIG.model_copy(update={'model_name': "CNN_EFFICIENT_2", 'model_type': ModelType.CNN_EFFICIENT }),
 ]
 
 
