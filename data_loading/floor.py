@@ -41,7 +41,7 @@ class Floor:
     def __init__(self, config: FloorConfig) -> None:
         self.config = config
         self.history_queue = deque(maxlen=config.history_maxlen)
-        self.updated_positions_history = deque(maxlen=5)
+        self.updated_positions_history = deque(maxlen=1)
         self.patches = np.ones((config.x_size * PATCH_SIZE, config.y_size * PATCH_SIZE)) * config.idle_field_value
 
     @property
