@@ -1,15 +1,18 @@
 from collections.abc import Callable
+from enum import Enum
 
-OffsetStrategy = Callable[[int], list[tuple[int, int]]]
-"""Callable type to generate ROI offsets centered around the activated sensor position.
 
-Args:
-    roi_size: The size of the squared region of interest.
+class OffsetStrategy(Enum):
+    CENTER = "center"
+    EXHAUSTIVE = "exhaustive"
 
-Returns:
-    A list of (x_offset, y_offset) tuples representing possible positions
-    of the ROI's top-left corner relative to an activated sensor.
-"""
+
+def get_offset_strategy(strategy: OffsetStrategy) -> Callable[[int], list[tuple[int, int]]]:
+    if strategy == OffsetStrategy.CENTER:
+        return get_center_offsets
+
+    return get_exhaustive_offsets
+
 
 def get_center_offsets(roi_size: int) -> list[tuple[int, int]]:
     half = roi_size // 2

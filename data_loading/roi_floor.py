@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from data_loading.floor import PATCH_SIZE, Floor, FloorConfig
-from data_loading.roi_offset_strategy import OffsetStrategy, get_center_offsets
+from data_loading.roi_offset_strategy import OffsetStrategy, get_offset_strategy
 
 
 @dataclass(frozen=True)
@@ -17,7 +17,7 @@ class RoI:
 @dataclass(kw_only=True, frozen=True)
 class RoIFloorConfig(FloorConfig):
     roi_size: int | None
-    offset_strategy: OffsetStrategy = get_center_offsets
+    offset_strategy: OffsetStrategy = OffsetStrategy.CENTER
 
 
 def get_relevant_messages_mask(signals: np.ndarray, active_field_min_value: int) -> np.ndarray:
@@ -36,7 +36,7 @@ class RoIFloor(Floor):
 
         self.x_y_corner_offsets: list[tuple[int, int]] = []
         if self.roi_size is not None:
-            self.x_y_corner_offsets = config.offset_strategy(self.roi_size)
+            self.x_y_corner_offsets = get_offset_strategy(config.offset_strategy)(self.roi_size)
 
     def update(self, positions: np.ndarray, signals: np.ndarray) -> None:
         relevant_messages_mask = get_relevant_messages_mask(signals, self.config.active_field_min_value)
