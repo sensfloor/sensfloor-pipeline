@@ -7,7 +7,7 @@ import torch
 
 from data_loading.pose_landmark import PoseLandmark
 from data_loading.roi_floor import RoIFloorConfig, RoIFloor
-
+import matplotlib.pyplot as plt
 
 @dataclass(frozen=True)
 class DatasetConfig:
@@ -16,15 +16,6 @@ class DatasetConfig:
     rotate_data: bool = False
     normalize_signals: bool = False
     normalize_to_max: bool = False
-
-@dataclass
-class DetailedSensfloorPosesData:
-    frame_number: int
-    floor: RoIFloor
-    untransformed_roi_tensor: torch.Tensor
-    transformed_roi_tensor: torch.Tensor
-    untransformed_label_tensor: torch.Tensor
-    transformed_label_tensor: torch.Tensor
 
 
 def normalize_roi(roi: torch.Tensor, idle_floor_value: int, normalize_to_max: bool) -> torch.Tensor:
@@ -89,5 +80,30 @@ def get_sequences(sensfloor_readout: pd.DataFrame, poses: pd.DataFrame) -> np.nd
     frames_containing_messages_mask = np.isin(unique_readout_frames, poses["frame"].unique())
     # Return all frame unique numbers for which poses exist
     unique_frames_with_poses = unique_readout_frames[frames_containing_messages_mask]
-    return unique_frames_with_poses
+
+    sequence_counts = []
+    last_frame = unique_frames_with_poses[0]
+    frames_in_sequence_count = 0
+    for frame in unique_frames_with_poses:
+        frame_diff = frame - last_frame
+        if frame_diff < 15:
+            frames_in_sequence_count += 1
+        else:
+            sequence_counts.append(frames_in_sequence_count)
+            frames_in_sequence_count = 0
+
+        last_frame = frame
+
+    return sequence_counts
+
+
+@dataclass
+class DetailedSensfloorPosesData:
+    frame_number: int
+    floor: RoIFloor
+    untransformed_roi_tensor: torch.Tensor
+    transformed_roi_tensor: torch.Tensor
+    untransformed_label_tensor: torch.Tensor
+    transformed_label_tensor: torch.Tensor
+
 
