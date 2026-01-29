@@ -2,11 +2,17 @@
 - Instead of get_kept_links, load links from the config (also adapt the dataset)
 
 - Create actual walking sequences for (LSTM) dataset
+- increase patience to 5
+
 - Run different configs
-  - active_field_min_value (e.g. 142, 145, 138)
   - Different models
   - Different configs for LSTM architecture
-  - training without socks
-  - Try "remove noise signals on the floor"
+  - training without socks in data
+  - Try "remove noise signals on the floor" with lstm
   - Rotate data again
+  - Try roi_size 4 again
+  - exhaustive offset strategy with lstm
+  - only legs and hip with lstm
+
+- Analyse field activity for each run
 - Check load transformations for inference (does it load random rotation????)
