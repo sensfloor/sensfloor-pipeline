@@ -7,9 +7,10 @@ import torch
 
 from data_collection.message_validator import PositionValidator
 from data_collection.messages_provider import CSVMessagesProvider, MessagesProvider, SerialMessagesProvider
-from inference.model_loading import load_floor
+from data_loading.floor import FloorConfig
 from inference.pose_predictor import PosePredictor
 from inference.websocket import Websocket
+from tracking.kalman_filter import FILTER_OPTIMIZED_ACTIVE_FIELD_MIN_VALUE
 from tracking.person_tracker import PersonTracker
 
 
@@ -29,11 +30,16 @@ def get_message_provider(mock_file: Path | None, serial_port: str | None) -> Mes
 
 @torch.no_grad()
 def main(fps: int, model_folder: Path, mock_file: Path | None, serial_port: str | None) -> None:
-    floor, floor_config = load_floor(model_folder)
-    # floor.config = replace(floor.config, remove_noise=True, active_field_min_value=145)
-
     pose_predictor = PosePredictor(model_folder=model_folder, num_calls_cache=5)
-    person_tracker = PersonTracker(fps=fps, idle_field_value=floor_config.idle_field_value, filter_reset_threshold=10)
+
+    person_tracker_floor_config = FloorConfig(
+        x_size=pose_predictor.floor_config.x_size,
+        y_size=pose_predictor.floor_config.y_size,
+        history_maxlen=1,
+        active_field_min_value=FILTER_OPTIMIZED_ACTIVE_FIELD_MIN_VALUE,
+        remove_noise=True,
+    )
+    person_tracker = PersonTracker(fps=fps, filter_reset_threshold=10, floor_config=person_tracker_floor_config)
 
     messages_provider = get_message_provider(mock_file, serial_port)
     with Websocket() as websocket, messages_provider:
@@ -50,13 +56,12 @@ def main(fps: int, model_folder: Path, mock_file: Path | None, serial_port: str 
                 positions.append([message_dict["x"], message_dict["y"]])
                 signals.append([message_dict[f"{i}"] for i in range(8)])
 
-            # IMPORTANT: Floor expects positions starting from 0, sensfloor starts from 1 -> Subtract 1
-            floor.update(np.array(positions) - 1, np.array(signals))
+            positions = np.array(positions) - 1
+            signals = np.array(signals)
 
             # Predict pose and track person
-            roi = floor.get_roi()
-            pose = pose_predictor.predict(roi)
-            position = person_tracker.track(floor.history[-1])
+            pose = pose_predictor.predict(positions, signals)
+            position = person_tracker.track(positions, signals)
 
             # Send message to client
             message = {

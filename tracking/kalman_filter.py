@@ -1,6 +1,8 @@
 import numpy as np
 from filterpy.kalman import KalmanFilter
 
+FILTER_OPTIMIZED_ACTIVE_FIELD_MIN_VALUE = 145
+
 
 class SensfloorKalmanFilter:
     def __init__(self, fps: float) -> None:

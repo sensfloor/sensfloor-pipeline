@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from data_loading.roi_floor import RoIFloor, RoIFloorConfig
-from data_loading.roi_offset_strategy import get_exhaustive_offsets
+from data_loading.roi_offset_strategy import OffsetStrategy
 from tracking.clustering import calculate_activation_cluster_means
 from tracking.person_tracker import PersonTracker
 
@@ -40,17 +40,19 @@ def main(data_dir: Path, signal_threshold: int) -> None:  # noqa: PLR0915
         history_maxlen=10,
         roi_size=3,
         active_field_min_value=signal_threshold,
-        offset_strategy=get_exhaustive_offsets,
+        offset_strategy=OffsetStrategy.EXHAUSTIVE,
         remove_noise=True,
     )
     floor = RoIFloor(floor_config)
 
-    person_tracker = PersonTracker(fps, floor_config.idle_field_value, filter_reset_threshold=10)
+    person_tracker = PersonTracker(fps, filter_reset_threshold=10, floor_config=floor_config)
     frame_number = 0
     while True:
         ret, frame = cap.read()
         messages = readout_lookup.get(frame_number, pd.DataFrame())
 
+        positions = np.array([])
+        signals = np.array([])
         if not messages.empty:
             positions = messages[["x", "y"]].to_numpy() - 1
             signals = messages[["0", "1", "2", "3", "4", "5", "6", "7"]].to_numpy()
@@ -71,7 +73,7 @@ def main(data_dir: Path, signal_threshold: int) -> None:  # noqa: PLR0915
             cv2.drawMarker(img_raw, (int(column * scale_w), int(row * scale_h)), (0, 0, 255), cv2.MARKER_CROSS, 20, 2)
 
         # Calculate and draw KF position
-        kf_r, kf_c = person_tracker.track(current_floor)
+        kf_r, kf_c = person_tracker.track(positions, signals) * 4
         cv2.drawMarker(img_kf, (int(kf_c * scale_w), int(kf_r * scale_h)), (0, 255, 0), cv2.MARKER_CROSS, 20, 2)
 
         # Arrange comparison window

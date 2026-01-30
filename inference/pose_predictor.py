@@ -1,10 +1,10 @@
 from pathlib import Path
 from typing import TypedDict
 
+import numpy as np
 import torch
 
-from data_loading.roi_floor import RoI
-from inference.model_loading import load_data_transformations, load_model, load_pose_landmark_mapping
+from inference.model_loading import load_data_transformations, load_floor, load_model, load_pose_landmark_mapping
 from training.configs import ModelType
 
 
@@ -20,6 +20,7 @@ class PosePredictor:
         self.model, self.device, self.model_type = load_model(model_folder)
         self.transform_data = load_data_transformations(model_folder)
         self.pose_landmark_mapping = load_pose_landmark_mapping(model_folder)
+        self.floor, self.floor_config = load_floor(model_folder)
 
         print(f"Use model model({self.model_type.name}) on {self.device} to predict poses")
 
@@ -28,9 +29,12 @@ class PosePredictor:
         self.calls_without_prediction = 0
         self.h_c = None
 
-    def predict(self, roi: RoI | None) -> list[JointPrediction]:
+    def predict(self, positions: np.ndarray, signals: np.ndarray) -> list[JointPrediction]:
         if self.calls_without_prediction > self.num_calls_cache:
             self.last_prediction = []
+
+        self.floor.update(positions, signals)
+        roi = self.floor.get_roi()
 
         if roi is None:
             self.calls_without_prediction += 1
