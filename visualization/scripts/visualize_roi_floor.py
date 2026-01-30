@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from data_loading.roi_floor import RoIFloorConfig
-from training.dataset.sensfloor_dataset import DatasetConfig, load_single_dataset
+from training.dataset.load_data import DatasetType, load_single_dataset
+from training.dataset.sensfloor_dataset import DatasetConfig
 from visualization.utils import draw_floor, draw_roi
 
 
@@ -28,7 +29,7 @@ def main(data_dir: Path) -> None:
     )
 
     # Load dataset
-    dataset = load_single_dataset(data_path=data_dir, config=dataset_config)
+    dataset = load_single_dataset(data_path=data_dir, config=dataset_config, dataset_type=DatasetType.HISTORY) #TODO dataset_type
     data = dataset.get_detailed_data(45)
     roi = data.floor.get_roi()
 

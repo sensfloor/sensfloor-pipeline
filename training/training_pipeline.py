@@ -2,6 +2,7 @@ import torch
 import trackio
 
 from data_loading.floor import PATCH_SIZE
+from training.dataset.load_data import DatasetType, train_val_test_split
 from training.link_loss.links_min_max import get_link_min_max
 from data_loading.pose_landmark import PoseLandmark
 from data_loading.roi_floor import RoIFloorConfig
@@ -12,7 +13,7 @@ from training.configs import (
     PROJECT_NAME,
     TrainingConfiguration,
 )
-from training.dataset.sensfloor_dataset import DatasetConfig, train_val_test_split
+from training.dataset.sensfloor_dataset import DatasetConfig
 from training.trainer.sensfloor_trainer import SensfloorTrainer, get_test_accuracy
 from training.utils import get_device, get_kept_links, get_model, set_seed
 from visualization.create_landmark_predictions import create_predictions
@@ -73,6 +74,7 @@ def train(configuration: TrainingConfiguration) -> None:
         ratios=configuration.split_ratios,
         config=dataset_config,
         batch_size=configuration.batch_size,
+        dataset_type = DatasetType.HISTORY
     )
 
     model = get_model(

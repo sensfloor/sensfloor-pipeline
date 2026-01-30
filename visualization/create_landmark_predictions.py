@@ -8,7 +8,8 @@ from torch.utils.data import DataLoader
 
 from data_collection.mediapipe_utils import HEADER
 from data_loading.pose_landmark import PoseLandmark
-from training.dataset.sensfloor_dataset import DatasetConfig, DetailedSensfloorPosesData, load_single_dataset
+from training.dataset.load_data import DatasetType, load_single_dataset
+from training.dataset.sensfloor_dataset import DatasetConfig, DetailedSensfloorPosesData
 from training.trainer.sensfloor_trainer import SensfloorTrainer
 
 ACC_HEADER = ["frame_number"] + [lm.name for lm in PoseLandmark]
@@ -39,7 +40,7 @@ def create_predictions(
     total_mediapipe_landmarks: int = 33,
     stop_after_x_batches: int | None = None,
 ):
-    detailed_dataset = load_single_dataset(data_path, config=dataset_config, return_detailed=True)
+    detailed_dataset = load_single_dataset(data_path, config=dataset_config, return_detailed=True, dataset_type=DatasetType.HISTORY)
     detailed_dataloader = DataLoader(detailed_dataset, batch_size=256, shuffle=False, collate_fn=detailed_collate_fn)
     model.to(device)
     model.eval()

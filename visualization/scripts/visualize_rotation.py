@@ -4,7 +4,8 @@ import pandas as pd
 
 from data_loading.roi_floor import RoIFloorConfig
 from definitions import ROOT_PATH
-from training.dataset.sensfloor_dataset import DatasetConfig, load_single_dataset
+from training.dataset.load_data import DatasetType, load_single_dataset
+from training.dataset.sensfloor_dataset import DatasetConfig
 from visualization.utils import draw_floor
 
 DATA_PATH = ROOT_PATH / "data/2025-12-16_20-45-38-line-felix"
@@ -19,8 +20,8 @@ dataset_config = DatasetConfig(
     rotate_data=True,
 )
 
-dataset = load_single_dataset(data_path=DATA_PATH, config=dataset_config)
-
+dataset = load_single_dataset(data_path=DATA_PATH, config=dataset_config,
+                              dataset_type=DatasetType.HISTORY)  # TODO dataset_type
 
 FRAME_TO_SHOW = 906
 CONNECTIONS = [
