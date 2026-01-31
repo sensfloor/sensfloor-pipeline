@@ -8,11 +8,11 @@
   - Different models
   - Different configs for LSTM architecture
   - training without socks in data
+    
+  - History length 100
+  - amplify link loss 0.0
  
-  - only legs and hip with lstm
-  - LSTM roi_size 4 + exhaustive + remove noise
-  - Rotate data again
-  - Increase History len to 50
+- compare models with running in circles data 2025-12-02_12-24-03-all-felix
 
 - Analyse field activity for each run
 - Check load transformations for inference (does it load random rotation????)
@@ -38,3 +38,7 @@ Configs
   - training without socks
   - Try "remove noise signals on the floor"
   - increase patience to 5
+  - only legs and hip with lstm
+  - LSTM roi_size 4 + exhaustive + remove noise
+  - Rotate data again
+  - Increase History len to 50

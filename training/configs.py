@@ -152,16 +152,8 @@ _BASE_CONFIG = TrainingConfiguration(
 )
 
 _ALL_CONFIGS = [
-    _BASE_CONFIG.model_copy(update={"model_name": "lstm_roi_history_maxlen_50", "roi_history_maxlen": 50}),
-    _BASE_CONFIG.model_copy(update={"model_name": "lstm_only_legs", "landmarks": [
-        PoseLandmark.LEFT_HIP,
-        PoseLandmark.RIGHT_HIP,
-        PoseLandmark.LEFT_KNEE,
-        PoseLandmark.RIGHT_KNEE,
-        PoseLandmark.LEFT_ANKLE,
-        PoseLandmark.RIGHT_ANKLE,
-    ]}),
-    _BASE_CONFIG.model_copy(update={"model_name": "lstm_rotate_data", "rotate_data": True}),
+    _BASE_CONFIG.model_copy(update={"model_name": "lstm_roi_history_maxlen_100", "roi_history_maxlen": 100}),
+    _BASE_CONFIG.model_copy(update={"model_name": "lstm_no_link_loss", "amplify_link_loss": 0.0}),
     _BASE_CONFIG,
 ]
 
