@@ -2,8 +2,12 @@ from enum import Enum
 from pathlib import Path
 
 import pandas as pd
+import torch
+from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import ConcatDataset, DataLoader, Subset
 
+from data_loading.roi_floor import RoIFloorConfig
+from definitions import TRAIN_DATA_PATH
 from training.dataset.dataset_utils import (
     DatasetConfig,
 )
@@ -86,8 +90,20 @@ def train_val_test_split(
     print(f"Validation dataset length: {len(val_dataset)}")
     print(f"Test dataset length: {len(test_dataset)}")
 
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
-    test_dataloader = DataLoader(test_dataset, batch_size=8, shuffle=False)
+    def collate_fn(batch: list[tuple[torch.Tensor, torch.Tensor]]):
+        # Sequences (batch, different_seq_len, features)
+        sequences, labels = zip(*batch)
+
+        # (batch, max_sequence_len, features)
+        padded_seqs = pad_sequence(sequences, batch_first=True, padding_value=0)
+        labels = torch.stack(labels)
+
+        lengths = torch.tensor([len(seq) for seq in sequences]) # TODO remove this debugging value
+        print(f"padded all sequences in batch to shape {padded_seqs.shape} before sequences in batch had lengths: {lengths}")
+        return padded_seqs, labels
+
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
+    test_dataloader = DataLoader(test_dataset, batch_size=8, shuffle=False, collate_fn=collate_fn)
 
     return train_dataloader, val_dataloader, test_dataloader

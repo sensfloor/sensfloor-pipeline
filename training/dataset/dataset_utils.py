@@ -90,7 +90,7 @@ def get_sequences(sensfloor_readout: pd.DataFrame, poses: pd.DataFrame) -> list[
         if frame_diff < 15:
             frames_in_sequence_count += 1
         else:
-            sequence_counts_with_frame.append((frame - first_frame_in_sequence, int(last_frame)))
+            sequence_counts_with_frame.append((int(frame - first_frame_in_sequence), int(last_frame)))
             first_frame_in_sequence = frame
 
         last_frame = frame

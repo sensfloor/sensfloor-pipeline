@@ -1,8 +1,10 @@
 import pandas as pd
 from matplotlib import pyplot as plt
 
-from data_loading.roi_floor import create_roi_floor, RoIFloorConfig
-from training.dataset.dataset_utils import DatasetConfig, get_sequences, DetailedSensfloorPosesData
+from data_loading.roi_floor import RoIFloorConfig
+from data_loading.roi_floor import create_roi_floor
+from training.dataset.dataset_utils import DatasetConfig, remove_noise_messages
+from training.dataset.dataset_utils import get_sequences, DetailedSensfloorPosesData
 from training.dataset.sensfloor_dataset import SensfloorPosesDataset
 
 
@@ -15,20 +17,30 @@ class LSTMDataset(SensfloorPosesDataset):
             return_detailed: bool = False,
     ) -> None:
         super().__init__(poses_df, sensfloor_readout_df, config, return_detailed)
+
+        filter_threshold = 145
+        filtered_readout = remove_noise_messages(sensfloor_readout_df,
+                                                 filter_threshold)  # TODO: BaseClass also has filtered readout, refactor that one
+
         self.sequences = get_sequences(
-            sensfloor_readout=self.filtered_readout,
+            sensfloor_readout=filtered_readout,
             poses=poses_df,
         )
+        # self._analyse_sequences()
+
+    def _analyse_sequences(self) -> None:
+        print("frames", [sequence[1] for sequence in self.sequences])
+        print("lengths", [sequence[0] for sequence in self.sequences])
         fig, ax = plt.subplots()
-        ax.boxplot([self.sequences])
-        ax.set_xticklabels([f"{len(self.sequences)}"]) #TODO: Remove boxplotting
+        ax.boxplot([sequence[0] for sequence in self.sequences])
+        ax.set_xticklabels([f"{len(self.sequences)}"])
         plt.show()
 
     def __len__(self) -> int:
         return len(self.sequences)
 
     def get_detailed_data(self, index: int) -> DetailedSensfloorPosesData:
-        frame_number, history_len = self.sequences[index]  #TODO: Return and load sequences with correct length
+        history_len, frame_number = self.sequences[index]
         old = self.config.floor_config
         floor = create_roi_floor(
             RoIFloorConfig(history_maxlen=history_len, x_size=old.x_size, y_size=old.y_size, roi_size=old.roi_size),
