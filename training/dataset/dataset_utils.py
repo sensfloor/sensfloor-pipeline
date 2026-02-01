@@ -73,7 +73,7 @@ def get_unique_frames_with_poses(sensfloor_readout: pd.DataFrame, poses: pd.Data
 
 
 # TODO: go through all unique frames with pose and save signals in dataframe and filter in dataset for the id -> get all values for that sequence
-def get_sequences(sensfloor_readout: pd.DataFrame, poses: pd.DataFrame) -> np.ndarray:
+def get_sequences(sensfloor_readout: pd.DataFrame, poses: pd.DataFrame) -> list[tuple[int,int]]:
     # Get all the frames with messages
     unique_readout_frames = sensfloor_readout["frame_number"].unique()
     # Check if for these frames also poses exist
@@ -81,20 +81,21 @@ def get_sequences(sensfloor_readout: pd.DataFrame, poses: pd.DataFrame) -> np.nd
     # Return all frame unique numbers for which poses exist
     unique_frames_with_poses = unique_readout_frames[frames_containing_messages_mask]
 
-    sequence_counts = []
+    sequence_counts_with_frame = []
     last_frame = unique_frames_with_poses[0]
     frames_in_sequence_count = 0
+    first_frame_in_sequence = last_frame
     for frame in unique_frames_with_poses:
         frame_diff = frame - last_frame
         if frame_diff < 15:
             frames_in_sequence_count += 1
         else:
-            sequence_counts.append(frames_in_sequence_count)
-            frames_in_sequence_count = 0
+            sequence_counts_with_frame.append((frame - first_frame_in_sequence, int(last_frame)))
+            first_frame_in_sequence = frame
 
         last_frame = frame
 
-    return sequence_counts
+    return sequence_counts_with_frame
 
 
 @dataclass

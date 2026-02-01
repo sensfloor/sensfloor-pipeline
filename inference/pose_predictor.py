@@ -22,7 +22,7 @@ class PosePredictor:
         self.pose_landmark_mapping = load_pose_landmark_mapping(model_folder)
         self.floor, self.floor_config = load_floor(model_folder)
 
-        print(f"Use model model({self.model_type.name}) on {self.device} to predict poses")
+        print(f"Use model (architecture: {self.model_type.name}) on {self.device} to predict poses")
 
         self.num_calls_cache = num_calls_cache
         self.last_prediction: list[JointPrediction] = []
