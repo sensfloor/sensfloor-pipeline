@@ -43,6 +43,10 @@ class ModelType(Enum):
     CNN_LSTM = 5
     CNN_LSTM_EFFICIENT = 6
 
+class DatasetType(Enum):
+    HISTORY = "history"
+    SEQUENCE = "sequence"
+
 
 class TrainingConfiguration(BaseModel):
     # Pydantic configuration
@@ -74,6 +78,7 @@ class TrainingConfiguration(BaseModel):
     training_data_folders: list[str]
     landmarks: list[PoseLandmark]
     model_type: ModelType
+    dataset_type: DatasetType = DatasetType.HISTORY
 
     # Optimizer/Trainer Params
     scheduler_patience: int
@@ -142,6 +147,7 @@ _BASE_CONFIG = TrainingConfiguration(
     training_data_folders=training_folders,
     landmarks=landmarks,
     model_type=ModelType.CNN_LSTM_EFFICIENT,
+    dataset_type=DatasetType.HISTORY,
     scheduler_patience=3,
     scheduler_min_lr=1e-6,
     scheduler_factor=0.1,
@@ -152,7 +158,7 @@ _BASE_CONFIG = TrainingConfiguration(
 )
 
 _ALL_CONFIGS = [
-    _BASE_CONFIG.model_copy(update={"model_name": "lstm_roi_history_maxlen_100", "roi_history_maxlen": 100}),
+    _BASE_CONFIG.model_copy(update={"model_name": "DatasetType.SEQUENCE", "dataset_type": DatasetType.SEQUENCE}),
     _BASE_CONFIG.model_copy(update={"model_name": "lstm_no_link_loss", "amplify_link_loss": 0.0}),
     _BASE_CONFIG,
 ]

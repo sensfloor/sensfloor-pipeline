@@ -74,7 +74,7 @@ def train(configuration: TrainingConfiguration) -> None:
         ratios=configuration.split_ratios,
         config=dataset_config,
         batch_size=configuration.batch_size,
-        dataset_type = DatasetType.SEQUENCE # TODO Make configurable
+        dataset_type = configuration.dataset_type
     )
 
     model = get_model(

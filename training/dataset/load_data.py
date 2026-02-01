@@ -1,25 +1,20 @@
-from enum import Enum
 from pathlib import Path
 
 import pandas as pd
-import torch
-from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import ConcatDataset, DataLoader, Subset
 
 from data_loading.roi_floor import RoIFloorConfig
 from definitions import TRAIN_DATA_PATH
+from training.configs import DatasetType
 from training.dataset.dataset_utils import (
     DatasetConfig,
 )
-from training.dataset.lstm_dataset import LSTMDataset
+from training.dataset.lstm_dataset import LSTMDataset, add_0_padding
 from training.dataset.sensfloor_dataset import SensfloorPosesDataset
 
 
-class DatasetType(Enum):
-    HISTORY = "history"
-    SEQUENCE = "sequence"
-
-def load_single_dataset(data_path: Path, config: DatasetConfig, dataset_type: DatasetType, return_detailed=False) -> SensfloorPosesDataset:
+def load_single_dataset(data_path: Path, config: DatasetConfig, dataset_type: DatasetType,
+                        return_detailed=False) -> SensfloorPosesDataset:
     poses_df = pd.read_csv(data_path / "video_poses.csv")
     readout_df = pd.read_csv(data_path / "sensfloor_readout.csv")
 
@@ -31,11 +26,11 @@ def load_single_dataset(data_path: Path, config: DatasetConfig, dataset_type: Da
             return_detailed=return_detailed,
         )
     return LSTMDataset(
-            poses_df=poses_df,
-            sensfloor_readout_df=readout_df,
-            config=config,
-            return_detailed=return_detailed,
-        )
+        poses_df=poses_df,
+        sensfloor_readout_df=readout_df,
+        config=config,
+        return_detailed=return_detailed,
+    )
 
 
 def load_all_datasets(
@@ -90,20 +85,12 @@ def train_val_test_split(
     print(f"Validation dataset length: {len(val_dataset)}")
     print(f"Test dataset length: {len(test_dataset)}")
 
-    def collate_fn(batch: list[tuple[torch.Tensor, torch.Tensor]]):
-        # Sequences (batch, different_seq_len, features)
-        sequences, labels = zip(*batch)
+    loader_args = {}
+    if dataset_type == DatasetType.SEQUENCE:
+        loader_args["collate_fn"] = add_0_padding
 
-        # (batch, max_sequence_len, features)
-        padded_seqs = pad_sequence(sequences, batch_first=True, padding_value=0)
-        labels = torch.stack(labels)
-
-        lengths = torch.tensor([len(seq) for seq in sequences]) # TODO remove this debugging value
-        print(f"padded all sequences in batch to shape {padded_seqs.shape} before sequences in batch had lengths: {lengths}")
-        return padded_seqs, labels
-
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
-    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
-    test_dataloader = DataLoader(test_dataset, batch_size=8, shuffle=False, collate_fn=collate_fn)
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, **loader_args)
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, **loader_args)
+    test_dataloader = DataLoader(test_dataset, batch_size=8, shuffle=False, **loader_args)
 
     return train_dataloader, val_dataloader, test_dataloader

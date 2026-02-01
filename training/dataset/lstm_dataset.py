@@ -1,5 +1,7 @@
 import pandas as pd
+import torch
 from matplotlib import pyplot as plt
+from torch.nn.utils.rnn import pad_sequence
 
 from data_loading.roi_floor import RoIFloorConfig
 from data_loading.roi_floor import create_roi_floor
@@ -47,3 +49,13 @@ class LSTMDataset(SensfloorPosesDataset):
             self.sensfloor_readout_df, frame_number)
 
         return self._get_transformed_data(floor, frame_number)
+
+
+def add_0_padding(batch: list[tuple[torch.Tensor, torch.Tensor]]):
+    # Sequences (batch, different_seq_len, features)
+    sequences, labels = zip(*batch)
+
+    # (batch, max_sequence_len, features)
+    padded_seqs = pad_sequence(sequences, batch_first=True, padding_value=0)
+    labels = torch.stack(labels)
+    return padded_seqs, labels
