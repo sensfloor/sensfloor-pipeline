@@ -42,6 +42,7 @@ class LSTMDataset(SensfloorPosesDataset):
         return len(self.sequences)
 
     def get_detailed_data(self, index: int) -> DetailedSensfloorPosesData:
+        # TODO: Add transform -> go back 1-10 frames to get more variety of poses
         history_len, frame_number = self.sequences[index]
         old = self.config.floor_config
         floor = create_roi_floor(
