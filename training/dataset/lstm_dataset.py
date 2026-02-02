@@ -1,3 +1,6 @@
+import random
+from dataclasses import replace
+
 import pandas as pd
 import torch
 from matplotlib import pyplot as plt
@@ -44,10 +47,8 @@ class LSTMDataset(SensfloorPosesDataset):
     def get_detailed_data(self, index: int) -> DetailedSensfloorPosesData:
         # TODO: Add transform -> go back 1-10 frames to get more variety of poses
         history_len, frame_number = self.sequences[index]
-        old = self.config.floor_config
-        floor = create_roi_floor(
-            RoIFloorConfig(history_maxlen=history_len, x_size=old.x_size, y_size=old.y_size, roi_size=old.roi_size),
-            self.sensfloor_readout_df, frame_number)
+        updated_floor_config = replace(self.config.floor_config, history_maxlen=history_len)
+        floor = create_roi_floor(updated_floor_config, self.sensfloor_readout_df, frame_number)
 
         return self._get_transformed_data(floor, frame_number)
 
