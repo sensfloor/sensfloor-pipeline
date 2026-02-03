@@ -7,7 +7,6 @@ from zoneinfo import ZoneInfo
 
 import cv2
 
-from data_collection.message_validator import PositionValidator
 from data_collection.messages_provider.serial_messages_provider import SerialMessagesProvider
 
 
@@ -55,8 +54,7 @@ def main(readout_dir: Path, serial_port: str, fps: int) -> None:
     writer.writeheader()
 
     # Start messages thread that writes messages in queue
-    message_validator = PositionValidator(min_x=1, max_x=6, min_y=1, max_y=4)
-    messages_provider = SerialMessagesProvider(serial_port, message_validator=message_validator)
+    messages_provider = SerialMessagesProvider(serial_port)
     messages_provider.start()
     recording_start_time = time.perf_counter()
     try:
