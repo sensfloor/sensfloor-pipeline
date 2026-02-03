@@ -8,13 +8,14 @@ from zoneinfo import ZoneInfo
 import cv2
 
 from data_collection.messages_provider.serial_messages_provider import SerialMessagesProvider
+from definitions import VIDEO_FILENAME, READOUT_FILENAME
 
 
 def main(readout_dir: Path, serial_port: str, fps: int) -> None:
     recording_datetime = datetime.now(ZoneInfo("Europe/Berlin")).strftime("%Y-%m-%d_%H-%M-%S")
     base_path = Path(readout_dir) / recording_datetime
-    recording_csv_path = base_path / "sensfloor_readout.csv"
-    recording_video_path = base_path / "video.mp4"
+    recording_csv_path = base_path / READOUT_FILENAME
+    recording_video_path = base_path / VIDEO_FILENAME
 
     # Create readout directory
     base_path.mkdir(parents=True, exist_ok=True)

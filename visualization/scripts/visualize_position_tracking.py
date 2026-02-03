@@ -7,6 +7,7 @@ import pandas as pd
 
 from data_loading.roi_floor import RoIFloor, RoIFloorConfig
 from data_loading.roi_offset_strategy import OffsetStrategy
+from definitions import READOUT_FILENAME, VIDEO_FILENAME
 from tracking.clustering import calculate_activation_cluster_means
 from tracking.person_tracker import PersonTracker
 
@@ -16,8 +17,8 @@ COMBINED_WINNAME = "Raw position signal vs Kalman filtered"
 
 
 def main(data_dir: Path, signal_threshold: int) -> None:  # noqa: PLR0915
-    readout_path = data_dir / "sensfloor_readout.csv"
-    video_path = data_dir / "video.mp4"
+    readout_path = data_dir / READOUT_FILENAME
+    video_path = data_dir / VIDEO_FILENAME
 
     readout_df = pd.read_csv(readout_path)
     readout_lookup = dict(list(readout_df.groupby("frame_number")))

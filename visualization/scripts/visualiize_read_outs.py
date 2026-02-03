@@ -3,11 +3,11 @@ from pathlib import Path
 import pandas as pd
 from matplotlib import pyplot as plt
 
-from definitions import TRAIN_DATA_PATH, HOLD_OUT_DATA_PATH
+from definitions import TRAIN_DATA_PATH, HOLD_OUT_DATA_PATH, READOUT_FILENAME
 
 
 def visualize_read_outs(data_path: Path, name: str):
-    floor_readout = pd.read_csv(data_path / "sensfloor_readout.csv")
+    floor_readout = pd.read_csv(data_path / READOUT_FILENAME)
     floor_readout = floor_readout.drop(columns=["timestamp", "frame_number", "group_id", "magic_number"])
 
     # 2. Calculate the mean of the 8 sub-sensors for each row

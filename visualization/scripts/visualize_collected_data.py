@@ -7,11 +7,12 @@ import pandas as pd
 from data_loading.floor import PATCH_SIZE
 from data_loading.roi_floor import RoIFloor, RoIFloorConfig
 from data_loading.roi_offset_strategy import get_exhaustive_offsets
+from definitions import VIDEO_FILENAME, READOUT_FILENAME
 
 
 def main(data_dir: Path, signal_threshold: int) -> None:
-    readout_path = data_dir / "sensfloor_readout.csv"
-    video_path = data_dir / "video.mp4"
+    readout_path = data_dir / READOUT_FILENAME
+    video_path = data_dir / VIDEO_FILENAME
 
     readout_df = pd.read_csv(readout_path)
 

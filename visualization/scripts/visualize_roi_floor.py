@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from data_loading.roi_floor import RoIFloorConfig
+from definitions import VIDEO_FILENAME
 from training.dataset.load_data import DatasetType, load_single_dataset
 from training.dataset.sensfloor_dataset import DatasetConfig
 from visualization.utils import draw_floor, draw_roi
@@ -14,7 +15,7 @@ from visualization.utils import draw_floor, draw_roi
 
 def main(data_dir: Path) -> None:
     print(f"Visualize data from directory: {data_dir}")
-    video_path = data_dir / "video.mp4"
+    video_path = data_dir / VIDEO_FILENAME
     floor_config = RoIFloorConfig(
         x_size=6,
         y_size=4,

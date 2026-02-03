@@ -3,8 +3,7 @@ from pathlib import Path
 import pandas as pd
 from torch.utils.data import ConcatDataset, DataLoader, Subset
 
-from data_loading.roi_floor import RoIFloorConfig
-from definitions import TRAIN_DATA_PATH
+from definitions import VIDEO_FILENAME, READOUT_FILENAME
 from training.configs import DatasetType
 from training.dataset.dataset_utils import (
     DatasetConfig,
@@ -15,8 +14,8 @@ from training.dataset.sensfloor_dataset import SensfloorPosesDataset
 
 def load_single_dataset(data_path: Path, config: DatasetConfig, dataset_type: DatasetType,
                         return_detailed=False) -> SensfloorPosesDataset:
-    poses_df = pd.read_csv(data_path / "video_poses.csv")
-    readout_df = pd.read_csv(data_path / "sensfloor_readout.csv")
+    poses_df = pd.read_csv(data_path / VIDEO_FILENAME)
+    readout_df = pd.read_csv(data_path / READOUT_FILENAME)
 
     if dataset_type == DatasetType.HISTORY:
         return SensfloorPosesDataset(
