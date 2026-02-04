@@ -5,7 +5,6 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from data_collection.message_validator import PositionValidator
 from data_collection.messages_provider import CSVMessagesProvider, MessagesProvider, SerialMessagesProvider
 from data_loading.floor import FloorConfig
 from inference.pose_predictor import PosePredictor
@@ -17,8 +16,7 @@ from tracking.person_tracker import PersonTracker
 def get_message_provider(mock_file: Path | None, serial_port: str | None) -> MessagesProvider:
     if mock_file is None and serial_port is not None:
         print(f"Use serial messages provider with port {serial_port}")
-        message_validator = PositionValidator(min_x=1, max_x=6, min_y=1, max_y=4)
-        return SerialMessagesProvider(serial_port, message_validator=message_validator)
+        return SerialMessagesProvider(serial_port)
 
     if mock_file is not None:
         print(f"Use csv messages provider with file {mock_file}")
