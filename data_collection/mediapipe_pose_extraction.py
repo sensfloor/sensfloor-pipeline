@@ -12,6 +12,7 @@ from mediapipe.tasks.python.vision.pose_landmarker import PoseLandmarker, PoseLa
 from tqdm import tqdm
 
 from data_collection.mediapipe_utils import HEADER, get_landmarks_header
+from definitions import VIDEO_FILENAME
 
 
 def draw_landmarks_on_image(rgb_image: np.ndarray, detection_result: PoseLandmarkerResult) -> np.ndarray:
@@ -62,10 +63,10 @@ def landmarks_to_row(pose_landmarker_result: PoseLandmarkerResult, frame: int) -
 
 
 def read_video(
-    video_path: Path,
-    options: Any,  # noqa: ANN401
-    draw_image: bool,  # noqa: FBT001
-    generate_new_header: bool,  # noqa: FBT001
+        video_directory: Path,
+        options: Any,  # noqa: ANN401
+        draw_image: bool,  # noqa: FBT001
+        generate_new_header: bool,  # noqa: FBT001
 ) -> None:
     """
     read all frames of a video and write the mediapipe 3D poses into a csv file
@@ -74,7 +75,8 @@ def read_video(
     draw_image: Show each frame with the landmark predictions
     generate_new_header: use the first frame to generate a csv header, if set to False, uses HEADER constant instead
     """
-    csv_path = video_path.parent / f"{video_path.stem}_poses.csv"
+    video_path = video_directory / VIDEO_FILENAME
+    csv_path = video_directory / f"{video_path.stem}_poses.csv"
 
     if csv_path.exists():
         print(f"File {csv_path} already exists, skipping")
@@ -104,7 +106,7 @@ def read_video(
             ret, numpy_frame_from_opencv = cap.read()
 
             if not ret:
-                print("Failed to capture frame. Exiting")
+                print("Failed to capture frame, video probably ended, exiting pose extraction loop")
                 break
 
             rgb_image = cv2.cvtColor(numpy_frame_from_opencv, cv2.COLOR_BGR2RGB)
