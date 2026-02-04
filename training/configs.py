@@ -154,13 +154,13 @@ _BASE_CONFIG = TrainingConfiguration(
     trainer_patience=5,
     amplify_link_loss=0.1,
     hold_out_data_folder=hold_out_folders,
-    model_name="base_LSTM_roi_4",
+    model_name="base_LSTM_roi_4_more_data",
 )
 
 _ALL_CONFIGS = [
-    _BASE_CONFIG.model_copy(update={"model_name": "DatasetType.SEQUENCE", "dataset_type": DatasetType.SEQUENCE}),
-    _BASE_CONFIG.model_copy(update={"model_name": "lstm_no_link_loss", "amplify_link_loss": 0.0}),
     _BASE_CONFIG,
+    _BASE_CONFIG.model_copy(update={"model_name": "rotate_data_all", "rotate_data": True}),
+    _BASE_CONFIG.model_copy(update={"model_name": "roi_history_maxlen_75", "roi_history_maxlen": 75}),
 ]
 
 

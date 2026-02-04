@@ -30,7 +30,7 @@ def main(data_dir: Path) -> None:
     )
 
     # Load dataset
-    dataset = load_single_dataset(data_path=data_dir, config=dataset_config, dataset_type=DatasetType.HISTORY) #TODO dataset_type
+    dataset = load_single_dataset(data_path=data_dir, config=dataset_config, dataset_type=DatasetType.HISTORY)
     data = dataset.get_detailed_data(45)
     roi = data.floor.get_roi()
 

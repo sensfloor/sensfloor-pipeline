@@ -33,6 +33,7 @@ def train(configuration: TrainingConfiguration) -> None:
         project=PROJECT_NAME,
         config=dict(configuration),
         name=configuration.model_name,  # trackio checks for duplicate runs and changes the name in that case
+        group="second_training_data"
         # space_id="JuliSharow/sensfloor", # Push to huggingface
     )
 
