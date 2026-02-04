@@ -4,6 +4,7 @@ ROOT_PATH = Path(__file__).resolve().parent
 
 NEW_DATA_PATH = ROOT_PATH / "data/new"
 VIDEO_FILENAME = "video.mp4"
+VIDEO_POSES_FILENAME = "video_poses.csv"
 READOUT_FILENAME = "sensfloor_readout.csv"
 
 TRAIN_DATA_PATH = ROOT_PATH / "data/train"
