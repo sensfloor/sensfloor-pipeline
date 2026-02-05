@@ -7,6 +7,8 @@
 - Run different configs
   - Different models
   - Different configs for LSTM architecture
+    - More layers after LSTM part
+    - Bigger hidden layers for LSTM part
   - training without socks in data
   
   - train old data with amplifying feet
@@ -20,7 +22,9 @@
 
 - compare models with running in circles data 2025-12-02_12-24-03-all-felix
 - Check load transformations for inference (does it load random rotation????)
-- Check and compare exhaustive metrics -> possibly amplify feet in loss
+- Check and compare metrics exhaustive -> possibly amplify feet in loss
+  - The arms and feet find out what 80% accuracy means
+  
 
 # Done
 
