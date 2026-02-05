@@ -1,20 +1,19 @@
 # TODO 
-- Move dataset transforms into their own module
-- Instead of get_kept_links, load links from the config (also adapt the dataset)
-
-- Create actual walking sequences for (LSTM) dataset
+- Chores
+  - Move dataset transforms into their own module
+  - Instead of get_kept_links, load links from the config (also adapt the dataset)
 
 - Run different configs
   - Different models
   - Different configs for LSTM architecture
   - training without socks in data
-    
-  - History length 100
-  - amplify link loss 0.0
- 
-- compare models with running in circles data 2025-12-02_12-24-03-all-felix
 
-- Analyse field activity for each run
+  - Split using folders
+
+ - ideas
+   - amplify feet in loss
+
+- compare models with running in circles data 2025-12-02_12-24-03-all-felix
 - Check load transformations for inference (does it load random rotation????)
 - Check and compare exhaustive metrics -> possibly amplify feet in loss
 
