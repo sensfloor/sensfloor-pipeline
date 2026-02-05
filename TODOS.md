@@ -8,6 +8,9 @@
   - Different models
   - Different configs for LSTM architecture
   - training without socks in data
+  
+  - train old data with amplifying feet
+    - train with very high feet and knee loss 
 
   - Split using folders
     - upload training / validation / test zip
