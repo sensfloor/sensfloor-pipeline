@@ -110,6 +110,7 @@ def train(configuration: TrainingConfiguration) -> None:
         patience=configuration.trainer_patience,
         use_early_stopping=True,
         landmarks_out=landmarks_out,
+        landmark_weights=configuration.landmark_weights,
         kept_links=kept_links,
         link_min=link_min,
         link_max=link_max,

@@ -27,6 +27,36 @@ MEAN = "mean"
 PCK_THRESHOLDS = {"pck_10_": 0.1, "pck_5_": 0.05}
 
 
+def create_landmark_weights(landmarks_loss: dict[PoseLandmark, float], device: torch.device):
+    """
+    Create a weight tensor for weighted MSE loss.
+    Assumes landmarks are ordered sequentially in the output tensor.
+    """
+    # Create weight list for each landmark (x, y, z get the same weight)
+    weights = []
+    for landmark, weight in landmarks_loss.items():
+        weights.extend([weight, weight, weight])  # x, y, z for each landmark
+
+    # Convert to tensor
+    weight_tensor = torch.tensor(weights, dtype=torch.float32, device=device)
+    return weight_tensor
+
+
+# In your training loop:
+def weighted_mse_loss(outputs, labels, weights):
+    """
+    Compute weighted MSE loss.
+
+    Args:
+        outputs: Model predictions [batch_size, num_coords]
+        labels: Ground truth [batch_size, num_coords]
+        weights: Weight for each coordinate [num_coords]
+    """
+    squared_diff = (outputs - labels) ** 2
+    weighted_squared_diff = squared_diff * weights.unsqueeze(0)  # Broadcast weights across batch
+    return weighted_squared_diff.mean()
+
+
 class SensfloorTrainer(BaseTrainer):
     def __init__(
             self,
@@ -36,6 +66,7 @@ class SensfloorTrainer(BaseTrainer):
             link_min: np.ndarray,
             link_max: np.ndarray,
             pose_to_model_dict: dict[PoseLandmark, int],
+            landmark_weights: dict[PoseLandmark, float],
             landmarks_out: int,
             kept_links: list[tuple[PoseLandmark, PoseLandmark]],
             scheduler: LRScheduler | None = None,
@@ -63,6 +94,7 @@ class SensfloorTrainer(BaseTrainer):
         self.kept_links = kept_links
         # Create a reverse mapping (int -> Name) for easy logging
         self.idx_to_name = {v: k.name for k, v in self.pose_to_model_dict.items()}
+        self.landmark_weights = create_landmark_weights(landmark_weights, device=device)
 
     @staticmethod
     def get_distances(outputs: torch.Tensor, labels: torch.Tensor, landmarks_out: int):
@@ -208,7 +240,7 @@ class SensfloorTrainer(BaseTrainer):
         return self.model(inputs)
 
     def calculate_loss(self, outputs: torch.Tensor, labels: torch.Tensor) -> tuple[torch.Tensor, dict[str, float]]:
-        mse_loss = nn.MSELoss(reduction="mean")(outputs, labels)
+        mse_loss = weighted_mse_loss(outputs, labels, self.landmark_weights)
         link_loss = (
                 calculate_linkloss(outputs, self.k_min, self.k_max, self.pose_to_model_dict, links=self.kept_links)
                 * self.amplify_link_loss

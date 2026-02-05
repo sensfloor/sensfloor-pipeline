@@ -18,21 +18,37 @@ PROJECT_GROUP = "line_data"
 training_folders = [directory.name for directory in TRAIN_DATA_PATH.iterdir() if directory.is_dir()]
 hold_out_folders = [directory.name for directory in HOLD_OUT_DATA_PATH.iterdir() if directory.is_dir()]
 
-landmarks = [
-    PoseLandmark.NOSE,
-    PoseLandmark.LEFT_SHOULDER,
-    PoseLandmark.RIGHT_SHOULDER,
-    PoseLandmark.LEFT_ELBOW,
-    PoseLandmark.RIGHT_ELBOW,
-    PoseLandmark.LEFT_WRIST,
-    PoseLandmark.RIGHT_WRIST,
-    PoseLandmark.LEFT_HIP,
-    PoseLandmark.RIGHT_HIP,
-    PoseLandmark.LEFT_KNEE,
-    PoseLandmark.RIGHT_KNEE,
-    PoseLandmark.LEFT_ANKLE,
-    PoseLandmark.RIGHT_ANKLE,
-]
+landmark_weights: dict[PoseLandmark, float] = {
+    PoseLandmark.NOSE : 1.0,
+    PoseLandmark.LEFT_SHOULDER : 1.0,
+    PoseLandmark.RIGHT_SHOULDER : 1.0,
+    PoseLandmark.LEFT_ELBOW : 1.0,
+    PoseLandmark.RIGHT_ELBOW : 1.0,
+    PoseLandmark.LEFT_WRIST : 1.0,
+    PoseLandmark.RIGHT_WRIST : 1.0,
+    PoseLandmark.LEFT_HIP : 1.0,
+    PoseLandmark.RIGHT_HIP : 1.0,
+    PoseLandmark.LEFT_KNEE : 1.0,
+    PoseLandmark.RIGHT_KNEE : 1.0,
+    PoseLandmark.LEFT_ANKLE : 1.0,
+    PoseLandmark.RIGHT_ANKLE : 1.0,
+}
+
+landmark_weighted_feet: dict[PoseLandmark, float] = {
+    PoseLandmark.NOSE : 1.0,
+    PoseLandmark.LEFT_SHOULDER : 1.0,
+    PoseLandmark.RIGHT_SHOULDER : 1.0,
+    PoseLandmark.LEFT_ELBOW : 1.0,
+    PoseLandmark.RIGHT_ELBOW : 1.0,
+    PoseLandmark.LEFT_WRIST : 1.0,
+    PoseLandmark.RIGHT_WRIST : 1.0,
+    PoseLandmark.LEFT_HIP : 1.0,
+    PoseLandmark.RIGHT_HIP : 1.0,
+    PoseLandmark.LEFT_KNEE : 1.0,
+    PoseLandmark.RIGHT_KNEE : 1.0,
+    PoseLandmark.LEFT_ANKLE : 5.0,
+    PoseLandmark.RIGHT_ANKLE : 5.0,
+}
 
 
 class ModelType(Enum):
@@ -79,6 +95,7 @@ class TrainingConfiguration(BaseModel):
 
     training_data_folders: list[str]
     landmarks: list[PoseLandmark]
+    landmark_weights: dict[PoseLandmark, float] = landmark_weights
     model_type: ModelType
     dataset_type: DatasetType = DatasetType.HISTORY
 
@@ -147,7 +164,8 @@ _BASE_CONFIG = TrainingConfiguration(
     rotate_data=False,
     remove_noise=True,
     training_data_folders=training_folders,
-    landmarks=landmarks,
+    landmarks=list(landmark_weights.keys()),
+    landmark_weights=landmark_weights,
     model_type=ModelType.CNN_LSTM_EFFICIENT,
     dataset_type=DatasetType.HISTORY,
     scheduler_patience=3,
@@ -162,6 +180,7 @@ _BASE_CONFIG = TrainingConfiguration(
 _ALL_CONFIGS = [
     _BASE_CONFIG,
     _BASE_CONFIG.model_copy(update={"model_name": "roi_history_maxlen_75", "roi_history_maxlen": 75}),
+    _BASE_CONFIG.model_copy(update={"model_name": "landmark_weighted_feet", "landmark_weights": landmark_weighted_feet}),
 ]
 
 
