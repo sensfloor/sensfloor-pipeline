@@ -1,4 +1,3 @@
-import random
 from dataclasses import replace
 
 import pandas as pd
@@ -6,7 +5,6 @@ import torch
 from matplotlib import pyplot as plt
 from torch.nn.utils.rnn import pad_sequence
 
-from data_loading.roi_floor import RoIFloorConfig
 from data_loading.roi_floor import create_roi_floor
 from training.dataset.dataset_utils import DatasetConfig, remove_noise_messages
 from training.dataset.dataset_utils import get_sequences, DetailedSensfloorPosesData

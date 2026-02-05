@@ -7,7 +7,7 @@ import torch
 
 from data_loading.pose_landmark import PoseLandmark
 from data_loading.roi_floor import RoIFloorConfig, RoIFloor
-import matplotlib.pyplot as plt
+
 
 @dataclass(frozen=True)
 class DatasetConfig:
