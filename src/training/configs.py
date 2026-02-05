@@ -44,10 +44,10 @@ landmark_weighted_feet: dict[PoseLandmark, float] = {
     PoseLandmark.RIGHT_WRIST : 1.0,
     PoseLandmark.LEFT_HIP : 1.0,
     PoseLandmark.RIGHT_HIP : 1.0,
-    PoseLandmark.LEFT_KNEE : 1.0,
-    PoseLandmark.RIGHT_KNEE : 1.0,
-    PoseLandmark.LEFT_ANKLE : 5.0,
-    PoseLandmark.RIGHT_ANKLE : 5.0,
+    PoseLandmark.LEFT_KNEE : 10.0,
+    PoseLandmark.RIGHT_KNEE : 10.0,
+    PoseLandmark.LEFT_ANKLE : 10.0,
+    PoseLandmark.RIGHT_ANKLE : 10.0,
 }
 
 
