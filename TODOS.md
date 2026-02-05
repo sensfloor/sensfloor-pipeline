@@ -2,6 +2,7 @@
 - Chores
   - Move dataset transforms into their own module
   - Instead of get_kept_links, load links from the config (also adapt the dataset)
+  - create src folder
 
 - Run different configs
   - Different models
@@ -9,6 +10,7 @@
   - training without socks in data
 
   - Split using folders
+    - upload training / validation / test zip
 
  - ideas
    - amplify feet in loss
