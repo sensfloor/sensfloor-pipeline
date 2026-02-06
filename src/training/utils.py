@@ -28,7 +28,7 @@ def get_kept_links(drop_landmarks):
 def get_device() -> torch.device:
     if torch.cuda.is_available():
         device = "cuda"
-    elif torch.mps.is_available():
+    elif hasattr(torch, "mps") and torch.mps.is_available():
         device = "mps"
     else:
         device = "cpu"
