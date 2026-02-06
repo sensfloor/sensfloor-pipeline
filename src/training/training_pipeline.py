@@ -9,6 +9,7 @@ from src.training.configs import (
     CONFIG_FILE_NAME,
     MODELS_FOLDER_PATH,
     PROJECT_NAME,
+    PROJECT_GROUP,
     TrainingConfiguration,
 )
 from src.training.dataset.load_data import train_val_test_split
@@ -33,7 +34,7 @@ def train(configuration: TrainingConfiguration) -> None:
         project=PROJECT_NAME,
         config=dict(configuration),
         name=configuration.model_name,  # trackio checks for duplicate runs and changes the name in that case
-        group="second_training_data",
+        group=PROJECT_GROUP,
         # space_id="JuliSharow/sensfloor", # Push to huggingface
     )
 

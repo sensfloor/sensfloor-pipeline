@@ -13,6 +13,7 @@ from src.definitions import HOLD_OUT_DATA_PATH, MODELS_FOLDER_PATH, TRAIN_DATA_P
 
 CONFIG_FILE_NAME = "config.json"
 PROJECT_NAME = "sensfloor_cairo_12_new_metrics"
+PROJECT_GROUP = "line_data"
 
 training_folders = [directory.name for directory in TRAIN_DATA_PATH.iterdir() if directory.is_dir()]
 hold_out_folders = [directory.name for directory in HOLD_OUT_DATA_PATH.iterdir() if directory.is_dir()]
@@ -155,12 +156,11 @@ _BASE_CONFIG = TrainingConfiguration(
     trainer_patience=5,
     amplify_link_loss=0.1,
     hold_out_data_folder=hold_out_folders,
-    model_name="base_LSTM_roi_4_more_data",
+    model_name="base_config",
 )
 
 _ALL_CONFIGS = [
     _BASE_CONFIG,
-    _BASE_CONFIG.model_copy(update={"model_name": "rotate_data_all", "rotate_data": True}),
     _BASE_CONFIG.model_copy(update={"model_name": "roi_history_maxlen_75", "roi_history_maxlen": 75}),
 ]
 
