@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from data_loading.roi_floor import RoIFloor, RoIFloorConfig
+from src.data_loading import RoIFloor, RoIFloorConfig
 
 
 def test_returns_no_roi_when_no_update():

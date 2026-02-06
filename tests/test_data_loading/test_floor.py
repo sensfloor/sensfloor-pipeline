@@ -1,6 +1,6 @@
 import numpy as np
 
-from data_loading.floor import Floor, FloorConfig, interpolate_signal
+from src.data_loading import Floor, FloorConfig, interpolate_signal
 
 
 def test_has_correct_shape():

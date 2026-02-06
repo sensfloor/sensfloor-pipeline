@@ -8,7 +8,7 @@
             "name": "DATA_COLLECTION – Collect sensfloor and video data",
             "type": "debugpy",
             "request": "launch",
-            "module": "data_collection.scripts.collect_sensfloor_data_and_video",
+            "module": "scripts.data_collection.collect_sensfloor_data_and_video",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "args": [
@@ -20,7 +20,7 @@
             "name": "DATA_COLLECTION – Extract poses from video",
             "type": "debugpy",
             "request": "launch",
-            "module": "data_collection.scripts.extract_mediapipe_poses",
+            "module": "scripts.data_collection.extract_mediapipe_poses",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal"
         },
@@ -28,21 +28,21 @@
             "name": "INFERENCE – Mock server",
             "type": "debugpy",
             "request": "launch",
-            "module": "inference.scripts.run_server",
+            "module": "scripts.inference.run_server",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "args": [
                 "--model",
-                "outputs/models/CNN_LSTM",
+                "outputs/models/lstm_rotate_data",
                 "--mock-file",
-                "data/test/sensfloor_readout-2.csv"
+                "data/2025-12-16_20-24-32-line-juli/sensfloor_readout.csv"
             ]
         },
         {
             "name": "INFERENCE – Server",
             "type": "debugpy",
             "request": "launch",
-            "module": "inference.scripts.run_server",
+            "module": "scripts.inference.run_server",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "args": [
@@ -56,7 +56,7 @@
             "name": "INFERENCE – Test client",
             "type": "debugpy",
             "request": "launch",
-            "module": "inference.scripts.run_test_client",
+            "module": "scripts.inference.run_test_client",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal"
         },
@@ -64,7 +64,7 @@
             "name": "TRAINING – Train model",
             "type": "debugpy",
             "request": "launch",
-            "module": "training.scripts.train",
+            "module": "scripts.training.train",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal"
         },
@@ -72,16 +72,16 @@
           "name": "TRAINING – Print Metrics",
           "type": "debugpy",
           "request": "launch",
-          "module": "training.scripts.print_metrics",
+          "module": "scripts.training.print_metrics",
           "cwd": "${workspaceFolder}",
           "console": "integratedTerminal",
-          "args": ["--model", "outputs/models/TEST logging"]
+          "args": ["--model", "outputs/models/rotate_data_all"]
         },
         {
             "name": "TRAINING – Create hold out predictions",
             "type": "debugpy",
             "request": "launch",
-            "module": "training.scripts.create_hold_out_predictions",
+            "module": "scripts.training.create_hold_out_predictions",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "args": ["--model", "outputs/models/CNN_LSTM"]
@@ -90,12 +90,12 @@
             "name": "VISUALIZATIONS – Collected video and readout",
             "type": "debugpy",
             "request": "launch",
-            "module": "visualization.scripts.visualize_collected_data",
+            "module": "scripts.visualization.visualize_collected_data",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "args": [
                 "--data",
-                "data/train/2025-12-16_12-44-28-line-felix",
+                "data/2025-12-16_20-24-32-line-juli",
                 "--signal-threshold",
                 "140"
             ]
@@ -104,31 +104,31 @@
             "name": "VISUALIZATIONS – Visualize position tracking",
             "type": "debugpy",
             "request": "launch",
-            "module": "visualization.scripts.visualize_position_tracking",
+            "module": "scripts.visualization.visualize_position_tracking",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "args": [
                 "--data",
-                "data/train/2025-12-16_18-43-45-line-rik",
+                "data/2025-12-16_20-24-32-line-juli",
             ]
         },
         {
             "name": "VISUALIZATIONS – RoI floor",
             "type": "debugpy",
             "request": "launch",
-            "module": "visualization.scripts.visualize_roi_floor",
+            "module": "scripts.visualization.visualize_roi_floor",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "args": [
                 "--data",
-                "data/train/2025-12-16_18-43-45-line-rik",
+                "data/2025-12-16_20-24-32-line-juli",
             ]
         },
         {
             "name": "VISUALIZATIONS – Rotation",
             "type": "debugpy",
             "request": "launch",
-            "module": "visualization.scripts.visualize_rotation",
+            "module": "scripts.visualization.visualize_rotation",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal"
         },
@@ -136,12 +136,12 @@
             "name": "VISUALIZATIONS – Bone lengths",
             "type": "debugpy",
             "request": "launch",
-            "module": "visualization.scripts.visualize_bone_lengths",
+            "module": "scripts.visualization.visualize_bone_lengths",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "args": [
                 "--csv",
-                "data/hold_out/2025-12-16_12-07-42-rikuto-shorts/sensfloor_readout.csv"
+                "data/hold_out/2025-12-16_12-07-42-rikuto-shorts/predicted_poses.csv"
             ]
         }
     ],

@@ -1,0 +1,104 @@
+import csv
+from pathlib import Path
+
+import torch
+import tqdm
+from torch import nn
+from torch.utils.data import DataLoader
+
+from src.data_collection.mediapipe_utils import HEADER
+from src.data_loading.pose_landmark import PoseLandmark
+from src.training.configs import DatasetType
+from src.training.dataset.dataset_utils import DatasetConfig, DetailedSensfloorPosesData
+from src.training.dataset.load_data import load_single_dataset
+from src.training.trainer.sensfloor_trainer import SensfloorTrainer
+
+ACC_HEADER = ["frame_number"] + [lm.name for lm in PoseLandmark]
+
+
+def detailed_collate_fn(batch: list[DetailedSensfloorPosesData]):
+    # 'batch' is a list of DetailedSensfloorPosesData objects
+
+    # 1. Extract and stack tensors for the model (Creates B x C x H x W)
+    #    (Assumes your object has 'transformed_roi_tensor')
+    tensors = torch.stack([item.transformed_roi_tensor for item in batch])
+    labels = torch.stack([item.transformed_label_tensor for item in batch])
+
+    # 2. Keep the original objects for metadata access
+    detailed_objects = batch
+
+    return tensors, labels, detailed_objects
+
+
+def create_predictions(
+    data_path: Path,
+    dataset_config: DatasetConfig,
+    kept_landmarks: list[PoseLandmark],
+    model: nn.Module,
+    pred_out_path: Path,
+    acc_out_path: Path,
+    device,
+    total_mediapipe_landmarks: int = 33,
+    stop_after_x_batches: int | None = None,
+):
+    detailed_dataset = load_single_dataset(
+        data_path,
+        config=dataset_config,
+        return_detailed=True,
+        dataset_type=DatasetType.HISTORY,
+    )
+    detailed_dataloader = DataLoader(detailed_dataset, batch_size=256, shuffle=False, collate_fn=detailed_collate_fn)
+    model.to(device)
+    model.eval()
+
+    with open(pred_out_path, "w", newline="") as f_pred, open(acc_out_path, "w", newline="") as f_acc:
+        pred_writer = csv.writer(f_pred)
+        acc_writer = csv.writer(f_acc)
+
+        pred_writer.writerow(HEADER)
+        acc_writer.writerow(ACC_HEADER)
+
+        # for each batch of epoch
+        for batch, (batch_tensors, batch_labels, batch_details) in enumerate(
+            tqdm.tqdm(detailed_dataloader, total=stop_after_x_batches, ncols=100),
+        ):
+            batch_tensors = batch_tensors.to(device)
+            batch_labels = batch_labels.to(device)
+
+            with torch.no_grad():
+                outputs = model(batch_tensors)
+
+                pred_coords = outputs.view(outputs.size(0), len(kept_landmarks), 3)
+                distances = SensfloorTrainer.get_distances(outputs, pred_coords, landmarks_out=len(kept_landmarks))
+                accuarcy = SensfloorTrainer.calculate_percentage_correct_keypoints(
+                    distances=distances,
+                    threshold=0.1,
+                )
+
+                pred_cpu = pred_coords.cpu().numpy()
+                accuarcy_cpu = accuarcy.cpu().numpy()
+
+            # for each output of batch
+            for coords, accuracy, detailed_data in zip(pred_cpu, accuarcy_cpu, batch_details):
+                # The csv should have all 33 joints even though the model doesnt predict all of them
+                full_pred_row = [None] * (total_mediapipe_landmarks * 3)
+                full_acc_row = [None] * total_mediapipe_landmarks
+
+                # insert kept landmarks into the full rows
+                # for each joint of output
+                for model_prediction_index, kept_landmark in enumerate(kept_landmarks):
+                    media_pipe_joint_index = kept_landmark.value  # index of the mediapipe landmark
+                    x, y, z = coords[model_prediction_index].tolist()  # corresponding model predictions for landmark
+
+                    base_idx = media_pipe_joint_index * 3
+                    full_pred_row[base_idx] = x
+                    full_pred_row[base_idx + 1] = y
+                    full_pred_row[base_idx + 2] = z
+
+                    full_acc_row[media_pipe_joint_index] = accuracy[model_prediction_index]
+
+                pred_writer.writerow([detailed_data.frame_number] + full_pred_row)
+                acc_writer.writerow([detailed_data.frame_number] + full_acc_row)
+
+            if stop_after_x_batches is not None and batch >= stop_after_x_batches:
+                break

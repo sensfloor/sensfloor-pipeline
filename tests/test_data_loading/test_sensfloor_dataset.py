@@ -3,8 +3,8 @@ from pathlib import Path
 import pandas as pd
 import torch
 
-from data_loading.roi_floor import RoIFloorConfig
-from data_loading.sensfloor_dataset import DatasetConfig, SensfloorPosesDataset, normalize_roi
+from src.data_loading import RoIFloorConfig
+from src.data_loading import DatasetConfig, SensfloorPosesDataset, normalize_roi
 
 current_file_path = Path(__file__).resolve()
 current_dir = current_file_path.parent
