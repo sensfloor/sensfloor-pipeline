@@ -34,7 +34,8 @@ landmark_weights: dict[PoseLandmark, float] = {
     PoseLandmark.RIGHT_ANKLE : 1.0,
 }
 
-landmark_weighted_feet: dict[PoseLandmark, float] = {
+def get_weighted_feet(weight: float) -> dict[PoseLandmark, float]:
+    return {
     PoseLandmark.NOSE : 1.0,
     PoseLandmark.LEFT_SHOULDER : 1.0,
     PoseLandmark.RIGHT_SHOULDER : 1.0,
@@ -44,10 +45,10 @@ landmark_weighted_feet: dict[PoseLandmark, float] = {
     PoseLandmark.RIGHT_WRIST : 1.0,
     PoseLandmark.LEFT_HIP : 1.0,
     PoseLandmark.RIGHT_HIP : 1.0,
-    PoseLandmark.LEFT_KNEE : 10.0,
-    PoseLandmark.RIGHT_KNEE : 10.0,
-    PoseLandmark.LEFT_ANKLE : 10.0,
-    PoseLandmark.RIGHT_ANKLE : 10.0,
+    PoseLandmark.LEFT_KNEE : weight,
+    PoseLandmark.RIGHT_KNEE : weight,
+    PoseLandmark.LEFT_ANKLE : weight,
+    PoseLandmark.RIGHT_ANKLE : weight,
 }
 
 
@@ -178,9 +179,10 @@ _BASE_CONFIG = TrainingConfiguration(
 )
 
 _ALL_CONFIGS = [
+    _BASE_CONFIG.model_copy(update={"model_name": "landmark_weighted_feet_10", "landmark_weights": get_weighted_feet(10)}),
+    _BASE_CONFIG.model_copy(update={"model_name": "landmark_weighted_feet_5", "landmark_weights": get_weighted_feet(5)}),
+    _BASE_CONFIG.model_copy(update={"model_name": "rotate_and_weight_5", "rotate_data": True, "landmark_weights": get_weighted_feet(5)}),
     _BASE_CONFIG,
-    _BASE_CONFIG.model_copy(update={"model_name": "roi_history_maxlen_75", "roi_history_maxlen": 75}),
-    _BASE_CONFIG.model_copy(update={"model_name": "landmark_weighted_feet", "landmark_weights": landmark_weighted_feet}),
 ]
 
 
