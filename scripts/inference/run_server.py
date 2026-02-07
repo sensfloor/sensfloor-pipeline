@@ -61,13 +61,20 @@ def main(fps: int, model_folder: Path, mock_file: Path | None, serial_port: str 
             pose = pose_predictor.predict(positions, signals)
             position = person_tracker.track(positions, signals)
 
-            # Send message to client
-            message = {
-                "position_x": position[0],
-                "position_y": position[1],
-                "pose": pose,
-            }
-            websocket.send_poses(message)
+            # Send message to client if pose detected
+            if len(pose) > 0:
+                message = {
+                    "pose_estimate": {
+                        "position_x": position[0],
+                        "position_y": position[1],
+                        "pose": pose,
+                    },
+                    "activations": {
+                        "positions": positions.tolist(),
+                        "signals": signals.tolist(),
+                    },
+                }
+                websocket.send_poses(message)
 
             frame_duration = time.perf_counter() - frame_start_time
             sleep_time = frame_interval_length - frame_duration
