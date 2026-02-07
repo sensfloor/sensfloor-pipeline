@@ -143,6 +143,22 @@
                 "--csv",
                 "data/hold_out/2025-12-16_12-07-42-rikuto-shorts/predicted_poses.csv"
             ]
+        },
+        {
+            "name": "VISUALIZATIONS – Kalman Filter",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "scripts.visualization.visualize_kalman_filter",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "args": [
+                "--csv",
+                "data/2026-02-02_16-01-05-all-felix/sensfloor_readout.csv",
+                "--start",
+                "421",
+                "--end",
+                "432"
+            ]
         }
     ],
     "compounds": [
