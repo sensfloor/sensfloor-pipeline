@@ -21,6 +21,7 @@ class PosePredictor:
         self.transform_data = load_data_transformations(model_folder)
         self.pose_landmark_mapping = load_pose_landmark_mapping(model_folder)
         self.floor, self.floor_config = load_floor(model_folder)
+        self.model.eval()
 
         print(f"Use model (architecture: {self.model_type.name}) on {self.device} to predict poses")
 
@@ -29,6 +30,7 @@ class PosePredictor:
         self.calls_without_prediction = 0
         self.h_c = None
 
+    @torch.no_grad()
     def predict(self, positions: np.ndarray, signals: np.ndarray) -> list[JointPrediction]:
         if self.calls_without_prediction > self.num_calls_cache:
             self.last_prediction = []
