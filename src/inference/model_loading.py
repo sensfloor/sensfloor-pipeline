@@ -46,10 +46,13 @@ def load_floor(model_folder: Path) -> tuple[RoIFloor, RoIFloorConfig]:
     config = TrainingConfiguration.load(model_folder / CONFIG_FILE_NAME)
 
     floor_config = RoIFloorConfig(
-        x_size=6,
-        y_size=4,
+        x_size=config.floor_x_size,
+        y_size=config.floor_y_size,
         history_maxlen=config.roi_history_maxlen,
         roi_size=config.roi_size,
+        active_field_min_value=config.active_field_min_value,
+        remove_noise=config.remove_noise,
+        offset_strategy=config.roi_offset_strategy,
     )
     return RoIFloor(floor_config), floor_config
 
