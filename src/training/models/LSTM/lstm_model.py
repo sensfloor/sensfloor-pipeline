@@ -2,145 +2,85 @@ import torch
 import torch.nn as nn
 
 
-class RegressionReducedDim(nn.Module):
-    """
-    idea from Yiyue Luo et. all - Intelligent Carpet: Inferring 3D Human Pose from Tactile Signals
-    """
-
-    def __init__(self, history_len: int):
-        super().__init__()
-
-        self.encoder_1 = nn.Sequential(
-            nn.Conv2d(in_channels=history_len, out_channels=16, kernel_size=3, stride=1, padding=1),
-            nn.LeakyReLU(),
-            nn.BatchNorm2d(16),
-        )
-        self.encoder_2 = nn.Sequential(
-            nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, stride=1, padding=1),
-            nn.LeakyReLU(),
-            nn.BatchNorm2d(32),
-        )
-        self.encoder_3 = nn.Sequential(
-            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1),
-            nn.LeakyReLU(),
-            nn.BatchNorm2d(64),
-        )
-        self.encoder_4 = nn.Sequential(
-            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1),
-            nn.LeakyReLU(),
-            nn.BatchNorm2d(128),
-            nn.MaxPool2d(2)
-        )
-        self.encoder_5 = nn.Sequential(
-            nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1),
-            nn.LeakyReLU(),
-            nn.BatchNorm2d(256),
-            nn.MaxPool2d(2)
-        )
-        self.encoder_6 = nn.Sequential(
-            nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1),
-            nn.LeakyReLU(),
-            nn.BatchNorm2d(256),
-        )
-
-        self.encoder = nn.Sequential(self.encoder_1, self.encoder_2, self.encoder_3, self.encoder_4, self.encoder_5,
-                                     self.encoder_6)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.encoder(x)
-        return x
-
-
-class LSTMStackModel(nn.Module):
-    def __init__(self, feature_size: int, landmarks_out: int, lstm_hidden: int = 128,
-                 dense_units: int = 64, dense_layers: int = 4):
-        """
-        feature_size: number of features per time-step (sensor vector length)
-        lstm_hidden: hidden size of LSTM (20)
-        dense_units: number of neurons in each dense layer (20)
-        dense_layers: number of dense layers after LSTM (4)
-        """
-        super().__init__()
-        # LSTM: batch_first=True so input is [batch, seq_len, feature_size]
-        self.lstm = nn.LSTM(input_size=feature_size, hidden_size=lstm_hidden,
-                            num_layers=1, batch_first=True)
-
-        # build dense stack
-        dense_seq = []
-        in_features = lstm_hidden
-        for _ in range(dense_layers):
-            dense_seq.append(nn.Linear(in_features, dense_units))
-            dense_seq.append(nn.ReLU(inplace=True))
-            in_features = dense_units
-
-        self.denses = nn.Sequential(*dense_seq)
-        self.head = nn.Linear(in_features, landmarks_out)  # single neuron for regression
-
-    def forward(self, x, h_c: tuple | None = None):
-        """
-        x: [batch, seq_len=window_size, feature_size]
-        """
-        out, (h_n, c_n) = self.lstm(x, h_c)  # out: [batch, seq_len, lstm_hidden]
-
-        # take last timestep output as representation
-        last = out[:, -1, :]  # [batch, lstm_hidden]
-
-        feats = self.denses(last)  # [batch, dense_units]
-        logits = self.head(feats)  # [batch, out_dim]
-        return logits, (h_n, c_n)
-
-
 class CNNLSTM(nn.Module):
-    def __init__(self, num_classes: int, roi_shape: tuple[int, int], lstm_hidden: int = 128,
-                 dense_units: int = 64, dense_layers: int = 4, return_hidden_states: bool = False): # TODO try different parameter inputs
-        super(CNNLSTM, self).__init__()
+    def __init__(self, num_classes: int, roi_shape: tuple[int, int], hidden_size=256, num_layers=2, return_hidden_states: bool = False):
+        super().__init__()
 
         self.return_hidden_states = return_hidden_states
 
-        self.cnn = RegressionReducedDim(history_len=1)
+        self.cnn = nn.Sequential(
+            # Layer 1: 12x12 -> 12x12
+            nn.Conv2d(1, 32, kernel_size=3, padding=1),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+
+            # Layer 2: 12x12 -> 6x6 (Pooling reduces spatial dim, keeps features robust)
+            nn.Conv2d(32, 64, kernel_size=3, padding=1),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+
+            # Layer 3: 6x6 -> 3x3
+            nn.Conv2d(64, 128, kernel_size=3, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.MaxPool2d(2)
+        )
+
+        # Flatten size: 128 channels * 3 * 3 = 1152 features
 
         with torch.no_grad():
-            dummy_input = torch.rand((1, 1, *roi_shape))
-            cnn_features_out = self._forward_cnn(dummy_input).numel()
+            dummy_input = torch.rand((1,1, *roi_shape))
+            cnn_out_size = self.cnn(dummy_input).numel()
 
-        self.lstm = LSTMStackModel(cnn_features_out, num_classes, lstm_hidden=lstm_hidden,
-                                   dense_units=dense_units,
-                                   dense_layers=dense_layers)
+        # smooth transition from CNN to LSTM
+        self.projection = nn.Linear(cnn_out_size, hidden_size)
 
-    def _forward_cnn(self, x) -> torch.Tensor:
-        # x shape: (Batch, Channels, Height, Width)
-        batch_size, history, h, w = x.size()
+        # big hidden size for capturing motion
+        self.lstm = nn.LSTM(input_size=hidden_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True, dropout=0.2)
 
-        # Reshape to (Batch * Time_Steps, C, H, W) to apply same transformation for each input in sequence
-        c_in = x.view(batch_size * history, 1, h, w)
-
-        c_out = self.cnn(c_in)  # Shape: (Batch * Time, c_out, 1, 1)
-
-        # Flatten the CNN output
-        c_out = c_out.view(c_out.size(0), -1)  # Shape: (Batch * Time, c_out)
-
-        # Reshape back to (Batch, Time_Steps, Features) for the LSTM
-        r_in = c_out.view(batch_size, history, -1)
-
-        return r_in
+        self.regressor = nn.Sequential(
+            nn.Linear(hidden_size, 128),
+            nn.ReLU(),
+            nn.Linear(128, num_classes)
+        )
 
     def forward(self, x, h_c: tuple | None = None):
-        r_in = self._forward_cnn(x)
+        # x: (Batch, C, H, W)
+        if x.dim() == 4:
+            x = x.unsqueeze(2)  # (B, T, 1, H, W)
+
+        b, t, c, h, w = x.size()
+
+        # CNN Pass
+        c_in = x.view(b * t, c, h, w)
+        c_out = self.cnn(c_in)
+        c_out = c_out.view(c_out.size(0), -1)  # Flatten -> (B*T, 1152)
+
+        # Projection
+        features = self.projection(c_out)  # (B*T, 256)
+
+        # LSTM Pass
+        r_in = features.view(b, t, -1)
+
         r_out, (h_n, c_n) = self.lstm(r_in, h_c)  # Input None for first state and training
 
-        if self.return_hidden_states:
-            return r_out, (h_n, c_n)
-        else:
-            return r_out
+        # Regression on the LAST frame
+        last_frame_feat = r_out[:, -1, :]
+        pred = self.regressor(last_frame_feat)
 
+        if self.return_hidden_states:
+            return pred, (h_n, c_n)
+        else:
+            return pred
 
 # Example Usage
 if __name__ == "__main__":
     # Example: Batch of 32, 25 history, 12x12 res
-    dummy_input = torch.rand(32, 25, 12, 12)
+    dummy_input = torch.rand(32, 30, 24, 24)
 
-    # model = RegressionModel(landmarks_out=99, history_len=25, roi_shape=(12,12))
-    model = CNNLSTM(num_classes=13, roi_shape=(12, 12), dense_units=20, dense_layers=4, lstm_hidden=20)
+    #model = RegressionModel(landmarks_out=99, history_len=25, roi_shape=(12,12))
+    model = EfficientCNNLSTM(num_classes=99, roi_shape=(24,24))
 
     output = model(dummy_input)
     print(f"Input Shape: {dummy_input.shape}")
