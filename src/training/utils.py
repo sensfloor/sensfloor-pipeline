@@ -91,7 +91,6 @@ def get_model(
                 history_len=history_maxlen,
             )
         case ModelType.CNN_LSTM:  # TODO try different parameter inputs
-            # TODO add return_hidden_states logic
             return CNNLSTM(
                 num_classes=landmarks_out * 3, roi_shape=roi_shape, return_hidden_states=return_hidden_states
             )

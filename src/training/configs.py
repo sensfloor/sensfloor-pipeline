@@ -13,7 +13,7 @@ from src.definitions import HOLD_OUT_DATA_PATH, MODELS_FOLDER_PATH, TRAIN_DATA_P
 
 CONFIG_FILE_NAME = "config.json"
 PROJECT_NAME = "sensfloor_cairo_12_new_metrics"
-PROJECT_GROUP = "line_data"
+PROJECT_GROUP = "bigger_model"
 
 training_folders = [directory.name for directory in TRAIN_DATA_PATH.iterdir() if directory.is_dir()]
 hold_out_folders = [directory.name for directory in HOLD_OUT_DATA_PATH.iterdir() if directory.is_dir()]
@@ -60,6 +60,17 @@ class ModelType(Enum):
     CNN_NO_BATCHNORM = 4
     CNN_LSTM = 5
     CNN_LSTM_EFFICIENT = 6
+
+def is_lstm(model: ModelType) -> bool:
+    match model:
+        case ModelType.CNN_LSTM | ModelType.CNN_LSTM_EFFICIENT:
+            return True
+        case (ModelType.CNN | ModelType.CNN_EFFICIENT | 
+              ModelType.CNN_MAX_POOL | ModelType.CNN_RELU_LAST | ModelType.CNN_NO_BATCHNORM):
+            return False
+    
+    message = "model_type not defined"
+    raise ValueError(message)
 
 
 class DatasetType(Enum):
@@ -132,6 +143,12 @@ class TrainingConfiguration(BaseModel):
         if isinstance(v, list):
             return [PoseLandmark[name] if isinstance(name, str) else name for name in v]
         return v
+    
+    
+    @field_serializer("landmark_weights")
+    def serialize_landmark_weights(self, landmark_weights: dict[PoseLandmark, float]) -> dict[str, float]:
+        return {landmark.name: weight for (landmark, weight) in landmark_weights.items()}
+    
 
     def save(self, path: Path) -> None:
         path.parent.mkdir(exist_ok=True, parents=True)
@@ -166,7 +183,7 @@ _BASE_CONFIG = TrainingConfiguration(
     remove_noise=True,
     training_data_folders=training_folders,
     landmarks=list(landmark_weights.keys()),
-    landmark_weights=landmark_weights,
+    landmark_weights=get_weighted_feet(5),
     model_type=ModelType.CNN_LSTM_EFFICIENT,
     dataset_type=DatasetType.HISTORY,
     scheduler_patience=3,
@@ -175,13 +192,11 @@ _BASE_CONFIG = TrainingConfiguration(
     trainer_patience=5,
     amplify_link_loss=0.1,
     hold_out_data_folder=hold_out_folders,
-    model_name="base_config",
+    model_name="base_config_weighted",
 )
 
 _ALL_CONFIGS = [
-    _BASE_CONFIG.model_copy(update={"model_name": "landmark_weighted_feet_10", "landmark_weights": get_weighted_feet(10)}),
-    _BASE_CONFIG.model_copy(update={"model_name": "landmark_weighted_feet_5", "landmark_weights": get_weighted_feet(5)}),
-    _BASE_CONFIG.model_copy(update={"model_name": "rotate_and_weight_5", "rotate_data": True, "landmark_weights": get_weighted_feet(5)}),
+    _BASE_CONFIG.model_copy(update={"model_name": "model_type_CNNLSTM", "model_type": ModelType.CNN_LSTM}),
     _BASE_CONFIG,
 ]
 
