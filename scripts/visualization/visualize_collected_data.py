@@ -46,13 +46,16 @@ def main(data_dir: Path, signal_threshold: int) -> None:
         messages = readout_df[readout_df["frame_number"] == frame_number]
         positions = messages[["x", "y"]].to_numpy() - 1
         signals = messages[["0", "1", "2", "3", "4", "5", "6", "7"]].to_numpy()
-        signals[signals < signal_threshold] = 0
         floor.update(positions=positions, signals=signals)
         current_floor = floor.history[-1].astype("uint8")
         roi = floor.get_roi()
-        current_floor[current_floor < floor_config.active_field_min_value] = 0
+        current_floor = floor.history[-1].astype("float32")
 
-        display_img = cv2.cvtColor(current_floor, cv2.COLOR_GRAY2BGR)
+        current_floor = (current_floor - 127.0) / (255.0 - 127.0)
+        current_floor = current_floor.clip(0.0, 1.0)
+        current_floor_u8 = (current_floor * 255.0).astype("uint8")
+
+        display_img = cv2.cvtColor(current_floor_u8, cv2.COLOR_GRAY2BGR)
         if roi is not None:
             x = roi.x * PATCH_SIZE
             y = roi.y * PATCH_SIZE
