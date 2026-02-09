@@ -3,7 +3,7 @@ import torch.nn as nn
 
 
 class CNNLSTM(nn.Module):
-    def __init__(self, num_classes: int, roi_shape: tuple[int, int], hidden_size=256, num_layers=2, return_hidden_states: bool = False):
+    def __init__(self, num_classes: int, roi_shape: tuple[int, int], hidden_size=256, num_layers=3, return_hidden_states: bool = False):
         super().__init__()
 
         self.return_hidden_states = return_hidden_states
@@ -40,8 +40,9 @@ class CNNLSTM(nn.Module):
         self.lstm = nn.LSTM(input_size=hidden_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True, dropout=0.2)
 
         self.regressor = nn.Sequential(
-            nn.Linear(hidden_size, 128),
-            nn.ReLU(),
+            nn.Linear(hidden_size, 256),nn.ReLU(),
+            nn.Linear(256, 256),nn.ReLU(),
+            nn.Linear(256, 128),nn.ReLU(),
             nn.Linear(128, num_classes)
         )
 
