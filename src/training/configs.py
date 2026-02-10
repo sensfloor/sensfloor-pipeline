@@ -148,6 +148,13 @@ class TrainingConfiguration(BaseModel):
     @field_serializer("landmark_weights")
     def serialize_landmark_weights(self, landmark_weights: dict[PoseLandmark, float]) -> dict[str, float]:
         return {landmark.name: weight for (landmark, weight) in landmark_weights.items()}
+
+    @field_validator("landmark_weights", mode="before")
+    @classmethod
+    def parse_landmark_weights(cls, v: Any) -> Any:  # noqa: ANN401
+        if isinstance(v, dict) and len(v.keys()) > 0 and isinstance(list(v.keys())[0], str):
+            return  {PoseLandmark[name]: value for (name, value) in v.items()}
+        return v
     
 
     def save(self, path: Path) -> None:
@@ -183,7 +190,7 @@ _BASE_CONFIG = TrainingConfiguration(
     remove_noise=True,
     training_data_folders=training_folders,
     landmarks=list(landmark_weights.keys()),
-    landmark_weights=get_weighted_feet(5),
+    landmark_weights=get_weighted_feet(10),
     model_type=ModelType.CNN_LSTM_EFFICIENT,
     dataset_type=DatasetType.HISTORY,
     scheduler_patience=3,

@@ -17,9 +17,6 @@
   - Split using folders
     - upload training / validation / test zip
 
- - ideas
-   - amplify feet in loss
-
 - compare models with running in circles data 2025-12-02_12-24-03-all-felix
 - Check load transformations for inference (does it load random rotation????)
 - Check and compare metrics exhaustive -> possibly amplify feet in loss

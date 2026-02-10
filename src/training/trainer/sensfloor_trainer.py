@@ -42,7 +42,6 @@ def create_landmark_weights(landmarks_loss: dict[PoseLandmark, float], device: t
     return weight_tensor
 
 
-# In your training loop:
 def weighted_mse_loss(outputs, labels, weights):
     """
     Compute weighted MSE loss.
