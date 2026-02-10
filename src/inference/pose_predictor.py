@@ -5,7 +5,7 @@ import numpy as np
 import torch
 
 from src.inference.model_loading import load_data_transformations, load_floor, load_model, load_pose_landmark_mapping
-from src.training.configs import ModelType
+from src.training.configs import is_lstm
 
 
 class JointPrediction(TypedDict):
@@ -46,8 +46,7 @@ class PosePredictor:
         x = x.to(self.device)
         x = self.transform_data(x)
 
-        # TODO: add logic to reset h_c if there were e.g. 15 frames without signal
-        if self.model_type in [ModelType.CNN_LSTM, ModelType.CNN_LSTM_EFFICIENT]:
+        if is_lstm(self.model_type):
             outputs, (self.h_c) = self.model(x, self.h_c)
         else:
             outputs = self.model(x)
