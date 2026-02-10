@@ -8,6 +8,6 @@ VIDEO_POSES_FILENAME = "video_poses.csv"
 READOUT_FILENAME = "sensfloor_readout.csv"
 
 TRAIN_DATA_PATH = ROOT_PATH / "data/train"
-HOLD_OUT_DATA_PATH = ROOT_PATH / "data/hold_out"
+HOLD_OUT_DATA_PATH = ROOT_PATH / "data/hold-out"
 
 MODELS_FOLDER_PATH = ROOT_PATH / "outputs/models"
