@@ -11,7 +11,10 @@
       "module": "scripts.data_collection.collect_sensfloor_data_and_video",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
-      "args": ["--serial-port", "/dev/tty.usbserial-A571V1ZF"]
+      "args": [
+        "--serial-port",
+        "/dev/tty.usbserial-A571V1ZF"
+      ]
     },
     {
       "name": "DATA_COLLECTION – Extract poses from video",
@@ -20,7 +23,10 @@
       "module": "scripts.data_collection.extract_mediapipe_poses",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
-      "args": ["--data", "data/train"]
+      "args": [
+        "--data",
+        "data/train"
+      ]
     },
     {
       "name": "INFERENCE – Mock server",
@@ -73,7 +79,10 @@
       "module": "scripts.training.print_metrics",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
-      "args": ["--model", "outputs/models/model_type_CNNLSTM"]
+      "args": [
+        "--model",
+        "outputs/models/model_type_CNNLSTM"
+      ]
     },
     {
       "name": "TRAINING – Create hold out predictions",
@@ -82,7 +91,10 @@
       "module": "scripts.training.create_hold_out_predictions",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
-      "args": ["--model", "outputs/models/model_type_CNNLSTM"]
+      "args": [
+        "--model",
+        "outputs/models/model_type_CNNLSTM"
+      ]
     },
     {
       "name": "VISUALIZATIONS – Collected video and readout",
@@ -105,7 +117,10 @@
       "module": "scripts.visualization.visualize_position_tracking",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
-      "args": ["--data", "data/train/2025-12-16_12-20-54-line-subject1"]
+      "args": [
+        "--data",
+        "data/train/2025-12-16_12-20-54-line-subject1"
+      ]
     },
     {
       "name": "VISUALIZATIONS – RoI floor",
@@ -114,7 +129,10 @@
       "module": "scripts.visualization.visualize_roi_floor",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
-      "args": ["--data", "data/train/2025-12-16_12-20-54-line-subject1"]
+      "args": [
+        "--data",
+        "data/train/2025-12-16_12-20-54-line-subject1"
+      ]
     },
     {
       "name": "VISUALIZATIONS – Rotation",
@@ -151,17 +169,39 @@
         "--end",
         "432"
       ]
+    },
+    {
+      "name": "VISUALIZATIONS – Pose Difference",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "scripts.visualization.visualize_pose_comparison",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "args": [
+        "--model",
+        "outputs/models/model_type_CNNLSTM",
+        "--data",
+        "data/train/2025-12-16_12-20-54-line-subject1",
+        "--data-index",
+        "-4",
+      ]
     }
   ],
   "compounds": [
     {
       "name": "INFERENCE – Mock server and test client",
-      "configurations": ["INFERENCE – Mock server", "INFERENCE – Test client"],
+      "configurations": [
+        "INFERENCE – Mock server",
+        "INFERENCE – Test client"
+      ],
       "stopAll": true
     },
     {
       "name": "INFERENCE – Server and test client",
-      "configurations": ["INFERENCE – Server", "INFERENCE – Test client"],
+      "configurations": [
+        "INFERENCE – Server",
+        "INFERENCE – Test client"
+      ],
       "stopAll": true
     }
   ]

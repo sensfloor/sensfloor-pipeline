@@ -29,6 +29,7 @@ def load_model(model_folder: Path) -> tuple[torch.nn.Module, torch.device, Model
     device = get_device()
     model.load_state_dict(torch.load(model_file, map_location=device))
     model.to(device)
+    model.eval()
 
     return model, device, config.model_type
 
