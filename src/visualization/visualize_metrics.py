@@ -1,13 +1,15 @@
 import argparse
 from pathlib import Path
 
+from matplotlib.patches import Patch
 
+
+from src.definitions import TEST_METRICS_FILENAME
 from src.training.trainer.sensfloor_trainer import MJPE_PREFIX, get_test_metrics
 from src.training.training_pipeline import get_training_setup
 
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 from pathlib import Path
 
 def load_and_plot_mjpe(file_path: Path):
@@ -28,9 +30,9 @@ def load_and_plot_mjpe(file_path: Path):
     plt.tight_layout()
     
     # Save the plot
-    output_image = "mjpe_metrics_boxplot.png"
-    plt.savefig(output_image)
-    print(f"Boxplot saved to {output_image}")
+    output_image_path = "mjpe_metrics_boxplot.png"
+    plt.savefig(output_image_path)
+    print(f"Boxplot saved to {output_image_path}")
     plt.close()
     
     # Return the dataframe content as a dictionary
@@ -77,83 +79,96 @@ def get_landmark_category(column_name):
                 return category
     return 'Body' # Default fallback
 
-def load_and_plot_mjpe_professional(file_path: Path):
-    sns.set_theme(style="whitegrid", context="paper", font_scale=1.2)
-    plt.rcParams.update(
-    {
+def load_and_plot_mjpe_professional(model_path: Path):
+    # Set font globally for Matplotlib
+    plt.rcParams.update({
         "font.family": "Courier New",
-        "font.size": 15,
-    },
-)
+        "font.size": 12, # Slightly smaller base size usually looks better on plots
+        "axes.grid": True,
+        "grid.color": "black",
+        "grid.alpha": 0.25,
+        "grid.linestyle": "--"
+    })
     
-    df = pd.read_csv(file_path)
+    csv_file_path = model_path / TEST_METRICS_FILENAME 
+
+    df = pd.read_csv(csv_file_path)
     
-    mjpe_columns = [col for col in df.columns if 'mjpe' in col.lower()]
+    mjpe_columns = [col for col in df.columns if MJPE_PREFIX in col.lower()]
     
     if not mjpe_columns:
         print(f"No columns found.")
         return df.to_dict(orient='list')
 
-    plot_df = df[mjpe_columns].copy()
-    
-    # 1. Clean labels and determine colors
-    clean_labels = {}
-    column_colors = [] # This will hold the color for each specific column
+    plot_data = []
+    labels = []
+    box_colors = []
     
     for col in mjpe_columns:
-        # Determine category for coloring
+        # Determine color
         category = get_landmark_category(col)
-        column_colors.append(CATEGORY_COLORS[category])
+        box_colors.append(CATEGORY_COLORS[category])
         
-        # Clean the name
-        # Assuming TEST_PREFIX and MJPE_PREFIX might vary, we just clean common patterns
-        new_name = col.lower().replace('test_', '').replace('mjpe_', '').replace('_', ' ').title()
+        # Clean label
+        new_name = col.lower().replace(TEST_METRICS_FILENAME, '').replace(MJPE_PREFIX, '').replace('_', ' ').title()
         if new_name.strip() == "Mean": new_name = "Overall Mean"
-        clean_labels[col] = new_name
+        labels.append(new_name)
         
-    plot_df = plot_df.rename(columns=clean_labels)
+        # Get data (drop NaNs to avoid plotting errors)
+        plot_data.append(df[col].dropna().values)
     
-    plt.figure(figsize=(14, 7), dpi=300)
+    # Create Figure
+    fig, ax = plt.subplots(figsize=(14, 7), dpi=300)
 
-    # 2. Create the Boxplot with Custom Palette
-    # Note: When plotting "wide" data (whole dataframe), we can pass a list of colors 
-    # to 'palette' that matches the number of columns.
-    ax = sns.boxplot(
-        data=plot_df, 
-        linewidth=1.2,
-        fliersize=2,
-        palette=column_colors,  # Pass our specific list of colors here
-        width=0.6,
-        saturation=0.9
-    )
+    # Create the Boxplot
+    # patch_artist=True is required to fill the boxes with color
+    bplot = ax.boxplot(plot_data,
+                       patch_artist=True,
+                       labels=labels,
+                       flierprops=dict(marker='o', markersize=3, alpha=0.5))
 
-    # 3. Formatting
-    #plt.title("Distribution of MJPE", fontsize=16, weight='bold', pad=20)
-    plt.ylabel(r"Mean Joint Position Error ($10^{-5}$)", fontsize=12)
-    plt.xlabel("") 
+    # Color the boxes individually
+    for patch, color in zip(bplot['boxes'], box_colors):
+        patch.set_facecolor(color)
+        patch.set_linewidth(1.2)
+        patch.set_alpha(0.9) # Matches your saturation setting
+
+    # Style other elements to be professional (black lines instead of default blue)
+    for element in ['whiskers', 'caps', 'medians']:
+        plt.setp(bplot[element], color='black', linewidth=1.2)
     
-    plt.xticks(rotation=45, ha='right')
+    # Specific styling for median line if you want it distinct
+    plt.setp(bplot['medians'], color='black', linewidth=1.5)
+
+    # Formatting
+    ax.set_ylabel(r"Mean Joint Position Error ($10^{-5}$)", fontsize=12)
+    ax.set_xlabel("")
     
-    ax.yaxis.grid(True, linestyle='--', which='major', color='black', alpha=0.25)
+    # Rotate x-labels
+    plt.xticks(rotation=90, ha='right')
+    
+    # Remove vertical grid lines (keep horizontal)
     ax.xaxis.grid(False)
-    sns.despine(trim=True, left=True)
-
-    # 4. Add a Custom Legend
-    # Since boxplot doesn't generate a legend for 'palette' lists automatically, we make one
-    from matplotlib.lines import Line2D
+    
+    # Remove top and right spines
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False) # Optional: cleaner look
+    
+    # Create Custom Legend using Patches (Squares) instead of Lines
     legend_elements = [
-        Line2D([0], [0], color=CATEGORY_COLORS['Body'], lw=4, label='Body (Head/Face)'),
-        Line2D([0], [0], color=CATEGORY_COLORS['Arms'], lw=4, label='Arms'),
-        Line2D([0], [0], color=CATEGORY_COLORS['Legs'], lw=4, label='Legs')
+        Patch(facecolor=CATEGORY_COLORS['Body'], edgecolor='black', label='Body'),
+        Patch(facecolor=CATEGORY_COLORS['Arms'], edgecolor='black', label='Arms'),
+        Patch(facecolor=CATEGORY_COLORS['Legs'], edgecolor='black', label='Legs')
     ]
-    plt.legend(handles=legend_elements, loc='upper right', title="Region")
+    ax.legend(handles=legend_elements, loc='upper right', title="Region", frameon=True)
 
     plt.tight_layout()
     
-    output_image = "mjpe_metrics_publication_colored.svg"
-    plt.savefig(output_image, dpi=300, bbox_inches='tight')
+    # Save output
+    output_image = model_path / "test_metrics_boxplot.svg"
     plt.savefig(output_image, format="svg", bbox_inches="tight")
     print(f"Colored boxplot saved to {output_image}")
     plt.close()
     
-    return df.to_dict(orient='list')    
+    return df.to_dict(orient='list')

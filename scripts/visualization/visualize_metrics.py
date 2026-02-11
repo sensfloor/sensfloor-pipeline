@@ -8,7 +8,7 @@ from src.visualization.visualize_metrics import load_and_plot_mjpe_professional
 
 
 def main(model_path: Path):
-    load_and_plot_mjpe_professional(model_path / TEST_METRICS_FILENAME)
+    load_and_plot_mjpe_professional(model_path)
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run live prediction of poses")

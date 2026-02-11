@@ -20,24 +20,7 @@ from src.training.utils import get_device, get_kept_links, get_model, set_seed
 from src.visualization.create_landmark_predictions import create_predictions
 
 
-def get_training_setup(configuration: TrainingConfiguration, test_batch_size = 8):
-    print(f"hyper params: {configuration}")
-
-    model_folder = MODELS_FOLDER_PATH / configuration.model_name
-    model_file_name = "best_model.pth"
-
-    configuration.save(model_folder / CONFIG_FILE_NAME)
-    set_seed(seed=configuration.seed)
-    device = get_device()
-
-    trackio.init(
-        project=PROJECT_NAME,
-        config=dict(configuration),
-        name=configuration.model_name,  # trackio checks for duplicate runs and changes the name in that case
-        group=PROJECT_GROUP,
-        # space_id="JuliSharow/sensfloor", # Push to huggingface
-    )
-
+def get_dataset_config(configuration: TrainingConfiguration):
     kept_landmarks = configuration.landmarks
     drop_landmarks = [lm for lm in PoseLandmark if lm not in kept_landmarks]
 
@@ -70,6 +53,20 @@ def get_training_setup(configuration: TrainingConfiguration, test_batch_size = 8
         )
 
     landmarks_out = len(kept_landmarks)
+
+    return kept_landmarks, drop_landmarks, pose_to_model_index_dict, dataset_config, roi_shape, landmarks_out
+
+
+def get_training_setup(configuration: TrainingConfiguration, test_batch_size = 8):
+    print(f"hyper params: {configuration}")
+
+    model_folder = MODELS_FOLDER_PATH / configuration.model_name
+    model_file_name = "best_model.pth"
+
+    configuration.save(model_folder / CONFIG_FILE_NAME)
+    device = get_device()
+
+    kept_landmarks, drop_landmarks, pose_to_model_index_dict, dataset_config, roi_shape, landmarks_out = get_dataset_config(configuration)
 
     train_loader, val_loader, test_loader = train_val_test_split(
         data_root_path=TRAIN_DATA_PATH,
@@ -123,6 +120,14 @@ def get_training_setup(configuration: TrainingConfiguration, test_batch_size = 8
     return model, device, trainer, train_loader, val_loader, test_loader
 
 def train(configuration: TrainingConfiguration) -> None:
+    set_seed(seed=configuration.seed)
+    trackio.init(
+        project=PROJECT_NAME,
+        config=dict(configuration),
+        name=configuration.model_name,  # trackio checks for duplicate runs and changes the name
+        group=PROJECT_GROUP,
+    )
+
     model, device, trainer, train_loader, val_loader, test_loader = get_training_setup(configuration, test_batch_size=64)
 
     trainer.train(train_loader=train_loader, validation_loader=val_loader, epochs=configuration.epochs)
@@ -145,40 +150,7 @@ def create_hold_out_predictions(configuration: TrainingConfiguration) -> None:
 
     device = get_device()
 
-    kept_landmarks = configuration.landmarks
-    drop_landmarks = [lm for lm in PoseLandmark if lm not in kept_landmarks]
-
-    floor_config = RoIFloorConfig(
-        x_size=configuration.floor_x_size,
-        y_size=configuration.floor_y_size,
-        history_maxlen=configuration.roi_history_maxlen,
-        roi_size=configuration.roi_size,
-        active_field_min_value=configuration.active_field_min_value,
-        remove_noise=configuration.remove_noise,
-        offset_strategy=configuration.roi_offset_strategy,
-    )
-
-    dataset_config = DatasetConfig(
-        floor_config=floor_config,
-        drop_landmarks=drop_landmarks,
-        normalize_signals=configuration.do_normalize,
-        normalize_to_max=configuration.normalize_to_max,
-        rotate_data=configuration.rotate_data,
-    )
-
-    if floor_config.roi_size is None:
-        roi_shape = (
-            floor_config.x_size * PATCH_SIZE,
-            floor_config.y_size * PATCH_SIZE,
-        )
-    else:
-        roi_shape = (
-            floor_config.roi_size * PATCH_SIZE,
-            floor_config.roi_size * PATCH_SIZE,
-        )
-
-    landmarks_out = len(kept_landmarks)
-
+    kept_landmarks, drop_landmarks, pose_to_model_index_dict, dataset_config, roi_shape, landmarks_out = get_dataset_config(configuration)
     hold_out_dirs = [HOLD_OUT_DATA_PATH / folder for folder in configuration.hold_out_data_folder]
 
     model = get_model(
