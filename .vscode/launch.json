@@ -97,6 +97,27 @@
       ]
     },
     {
+      "name": "TRAINING – Create Test Metrics",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "scripts.training.create_test_metrics",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "args": [
+        "--model",
+        "outputs/models/model_type_CNNLSTM"
+      ]
+    },
+    {
+      "name": "TRAINING – Create Test Metrics",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "scripts.training.create_test_metrics",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "args": ["--model", "outputs/models/model_type_CNNLSTM"]
+    },
+    {
       "name": "VISUALIZATIONS – Collected video and readout",
       "type": "debugpy",
       "request": "launch",
@@ -185,6 +206,15 @@
         "--data-index",
         "-4",
       ]
+    },
+    {
+      "name": "VISUALIZATIONS – Boxplot Test Metrics",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "scripts.visualization.visualize_metrics",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "args": ["--model", "outputs/models/model_type_CNNLSTM"]
     }
   ],
   "compounds": [
