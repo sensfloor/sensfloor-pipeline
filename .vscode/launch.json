@@ -1,182 +1,168 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "DATA_COLLECTION – Collect sensfloor and video data",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "scripts.data_collection.collect_sensfloor_data_and_video",
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal",
-            "args": [
-                "--serial-port",
-                "/dev/tty.usbserial-A571V1ZF"
-            ]
-        },
-        {
-            "name": "DATA_COLLECTION – Extract poses from video",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "scripts.data_collection.extract_mediapipe_poses",
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "INFERENCE – Mock server",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "scripts.inference.run_server",
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal",
-            "args": [
-                "--model",
-                "outputs/models/lstm_rotate_data",
-                "--mock-file",
-                "data/2025-12-16_20-24-32-line-juli/sensfloor_readout.csv"
-            ]
-        },
-        {
-            "name": "INFERENCE – Server",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "scripts.inference.run_server",
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal",
-            "args": [
-                "--model",
-                "outputs/models/CNN_LSTM",
-                "--serial-port",
-                "/dev/tty.usbserial-A571V1ZF"
-            ]
-        },
-        {
-            "name": "INFERENCE – Test client",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "scripts.inference.run_test_client",
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "TRAINING – Train model",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "scripts.training.train",
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
-        },
-        {
-          "name": "TRAINING – Print Metrics",
-          "type": "debugpy",
-          "request": "launch",
-          "module": "scripts.training.print_metrics",
-          "cwd": "${workspaceFolder}",
-          "console": "integratedTerminal",
-          "args": ["--model", "outputs/models/rotate_data_all"]
-        },
-        {
-            "name": "TRAINING – Create hold out predictions",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "scripts.training.create_hold_out_predictions",
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal",
-            "args": ["--model", "outputs/models/CNN_LSTM"]
-        },
-        {
-            "name": "VISUALIZATIONS – Collected video and readout",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "scripts.visualization.visualize_collected_data",
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal",
-            "args": [
-                "--data",
-                "data/2025-12-16_20-24-32-line-juli",
-                "--signal-threshold",
-                "140"
-            ]
-        },
-        {
-            "name": "VISUALIZATIONS – Visualize position tracking",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "scripts.visualization.visualize_position_tracking",
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal",
-            "args": [
-                "--data",
-                "data/2025-12-16_20-24-32-line-juli",
-            ]
-        },
-        {
-            "name": "VISUALIZATIONS – RoI floor",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "scripts.visualization.visualize_roi_floor",
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal",
-            "args": [
-                "--data",
-                "data/2025-12-16_20-24-32-line-juli",
-            ]
-        },
-        {
-            "name": "VISUALIZATIONS – Rotation",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "scripts.visualization.visualize_rotation",
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "VISUALIZATIONS – Bone lengths",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "scripts.visualization.visualize_bone_lengths",
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal",
-            "args": [
-                "--csv",
-                "data/hold_out/2025-12-16_12-07-42-rikuto-shorts/predicted_poses.csv"
-            ]
-        },
-        {
-            "name": "VISUALIZATIONS – Kalman Filter",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "scripts.visualization.visualize_kalman_filter",
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal",
-            "args": [
-                "--csv",
-                "data/2026-02-02_16-01-05-all-felix/sensfloor_readout.csv",
-                "--start",
-                "421",
-                "--end",
-                "432"
-            ]
-        }
-    ],
-    "compounds": [
-        {
-            "name": "INFERENCE – Mock server and test client",
-            "configurations": [
-                "INFERENCE – Mock server",
-                "INFERENCE – Test client"
-            ],
-            "stopAll": true
-        },
-        {
-            "name": "INFERENCE – Server and test client",
-            "configurations": [
-                "INFERENCE – Server",
-                "INFERENCE – Test client"
-            ],
-            "stopAll": true
-        }
-    ]
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "DATA_COLLECTION – Collect sensfloor and video data",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "scripts.data_collection.collect_sensfloor_data_and_video",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "args": ["--serial-port", "/dev/tty.usbserial-A571V1ZF"]
+    },
+    {
+      "name": "DATA_COLLECTION – Extract poses from video",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "scripts.data_collection.extract_mediapipe_poses",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "args": ["--data", "data/train"]
+    },
+    {
+      "name": "INFERENCE – Mock server",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "scripts.inference.run_server",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "args": [
+        "--model",
+        "outputs/models/model_type_CNNLSTM",
+        "--mock-file",
+        "data/train/2025-12-16_12-20-54-line-subject1/sensfloor_readout.csv"
+      ]
+    },
+    {
+      "name": "INFERENCE – Server",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "scripts.inference.run_server",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "args": [
+        "--model",
+        "outputs/models/model_type_CNNLSTM",
+        "--serial-port",
+        "/dev/tty.usbserial-A571V1ZF"
+      ]
+    },
+    {
+      "name": "INFERENCE – Test client",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "scripts.inference.run_test_client",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "TRAINING – Train model",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "scripts.training.train",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "TRAINING – Print Metrics",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "scripts.training.print_metrics",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "args": ["--model", "outputs/models/model_type_CNNLSTM"]
+    },
+    {
+      "name": "TRAINING – Create hold out predictions",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "scripts.training.create_hold_out_predictions",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "args": ["--model", "outputs/models/model_type_CNNLSTM"]
+    },
+    {
+      "name": "VISUALIZATIONS – Collected video and readout",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "scripts.visualization.visualize_collected_data",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "args": [
+        "--data",
+        "data/train/2025-12-16_12-20-54-line-subject1",
+        "--signal-threshold",
+        "140"
+      ]
+    },
+    {
+      "name": "VISUALIZATIONS – Visualize position tracking",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "scripts.visualization.visualize_position_tracking",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "args": ["--data", "data/train/2025-12-16_12-20-54-line-subject1"]
+    },
+    {
+      "name": "VISUALIZATIONS – RoI floor",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "scripts.visualization.visualize_roi_floor",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "args": ["--data", "data/train/2025-12-16_12-20-54-line-subject1"]
+    },
+    {
+      "name": "VISUALIZATIONS – Rotation",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "scripts.visualization.visualize_rotation",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "VISUALIZATIONS – Bone lengths",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "scripts.visualization.visualize_bone_lengths",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "args": [
+        "--csv",
+        "data/hold-out/2025-12-16_12-07-42-line-subject2/predicted_poses.csv"
+      ]
+    },
+    {
+      "name": "VISUALIZATIONS – Kalman Filter",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "scripts.visualization.visualize_kalman_filter",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "args": [
+        "--csv",
+        "data/train/2026-02-02_10-56-14-all-subject2/sensfloor_readout.csv",
+        "--start",
+        "421",
+        "--end",
+        "432"
+      ]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "INFERENCE – Mock server and test client",
+      "configurations": ["INFERENCE – Mock server", "INFERENCE – Test client"],
+      "stopAll": true
+    },
+    {
+      "name": "INFERENCE – Server and test client",
+      "configurations": ["INFERENCE – Server", "INFERENCE – Test client"],
+      "stopAll": true
+    }
+  ]
 }

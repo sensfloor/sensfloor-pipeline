@@ -4,7 +4,7 @@ from pathlib import Path
 import mediapipe as mp
 
 from src.data_collection.mediapipe_pose_extraction import read_video
-from src.definitions import NEW_DATA_PATH, ROOT_PATH
+from src.definitions import TRAIN_DATA_PATH, ROOT_PATH
 
 
 def main(data_path: Path, model_path: Path) -> None:
@@ -34,7 +34,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--data",
         type=Path,
-        default=NEW_DATA_PATH,
+        default=TRAIN_DATA_PATH,
         help="Root folder of recorded data.",
     )
 

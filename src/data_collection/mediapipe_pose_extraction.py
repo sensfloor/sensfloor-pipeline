@@ -6,6 +6,7 @@ from typing import Any
 import cv2
 import mediapipe as mp
 import numpy as np
+import pandas as pd
 from mediapipe import solutions
 from mediapipe.framework.formats import landmark_pb2
 from mediapipe.tasks.python.vision.pose_landmarker import PoseLandmarker, PoseLandmarkerResult
@@ -79,8 +80,14 @@ def read_video(
     csv_path = video_directory / f"{video_path.stem}_poses.csv"
 
     if csv_path.exists():
+        df = pd.read_csv(csv_path)
         print(f"File {csv_path} already exists, skipping")
-        return
+        
+        if len(df) < 100:
+            print(f"length: {len(df)} less than 100, overwriting")
+        else:            
+            print(f"length: {len(df)} greater than 100, skipping file")
+            return
     write_csv_header(csv_path, HEADER)
 
     with (
