@@ -18,6 +18,7 @@ from src.training.trainer.base_trainer import BaseTrainer
 # Metrics Strings also used for Logging
 VAL_PREFIX = "val_"
 TRAIN_PREFIX = "train_"
+TEST_PREFIX = "test_"
 TOTAL_LOSS = "total_loss"
 EPOCH = "epoch"
 LOSS_LINK = "loss_link"
