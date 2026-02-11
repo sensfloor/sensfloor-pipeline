@@ -63,14 +63,17 @@ class BaseTrainer(metaclass=ABCMeta):
             print(f"Best model updated with validation loss {val_loss:.4f}.")
 
 
-    def save_metrics_to_csv(self) -> None:
+    def save_epoch_metrics_to_csv(self) -> None:
         if not self.epochs_metrics_list:
             return
 
-        csv_path = self.results_path / METRICS_FILE_NAME
         keys = self.epochs_metrics_list[-1].keys()
+        self.save_metrics_to_csv(keys, self.epochs_metrics_list, file_name=METRICS_FILE_NAME)
+
+    def save_metrics_to_csv(self, keys, rows, file_name) -> None:
+        csv_path = self.results_path / file_name
 
         with csv_path.open(mode="w", newline="", encoding="utf-8") as file:
             writer = csv.DictWriter(file, fieldnames=keys)
             writer.writeheader()
-            writer.writerows(self.epochs_metrics_list)
+            writer.writerows(rows)

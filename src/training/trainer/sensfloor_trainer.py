@@ -322,4 +322,31 @@ def get_test_accuracy(
             for key, value in batch_metrics.items():
                 total_metrics[key] += value
 
-    return {f"test_{key}": value / num_batches for key, value in total_metrics.items()}
+    return {f"{TEST_PREFIX}{key}": value / num_batches for key, value in total_metrics.items()}
+
+def get_test_metrics(
+        model: nn.Module,
+        test_loader: torch.utils.data.DataLoader,
+        device: torch.device,
+        trainer_instance: SensfloorTrainer,
+) -> list[dict[str, float]]:
+    model.eval()
+    model.to(device)
+    total_metrics_list: list[dict[str, float]] = []
+    num_batches = len(test_loader)
+
+    with torch.no_grad():
+        for inputs, labels in tqdm(test_loader, desc="Testing"):
+            total_metrics: dict[str, float] = defaultdict(float)
+            inputs_on_device, labels_on_device = inputs.to(device), labels.to(device)
+            outputs = model(inputs_on_device)
+
+            batch_metrics = trainer_instance.calculate_metrics(outputs, labels_on_device)
+
+            for key, value in batch_metrics.items():
+                total_metrics[key] = value
+
+            total_metrics_list.append({f"{TEST_PREFIX}{key}": value / num_batches for key, value in total_metrics.items()})
+            
+
+    return total_metrics_list

@@ -20,7 +20,7 @@ from src.training.utils import get_device, get_kept_links, get_model, set_seed
 from src.visualization.create_landmark_predictions import create_predictions
 
 
-def train(configuration: TrainingConfiguration) -> None:
+def get_training_setup(configuration: TrainingConfiguration, test_batch_size = 8):
     print(f"hyper params: {configuration}")
 
     model_folder = MODELS_FOLDER_PATH / configuration.model_name
@@ -77,6 +77,7 @@ def train(configuration: TrainingConfiguration) -> None:
         config=dataset_config,
         batch_size=configuration.batch_size,
         dataset_type=configuration.dataset_type,
+        test_batch_size=test_batch_size,
     )
 
     model = get_model(
@@ -119,9 +120,15 @@ def train(configuration: TrainingConfiguration) -> None:
         scheduler=scheduler,
     )
 
+    return model, device, trainer, train_loader, val_loader, test_loader
+
+def train(configuration: TrainingConfiguration) -> None:
+    model, device, trainer, train_loader, val_loader, test_loader = get_training_setup(configuration, test_batch_size=64)
+
     trainer.train(train_loader=train_loader, validation_loader=val_loader, epochs=configuration.epochs)
 
     test_metrics = get_test_accuracy(model, test_loader, device, trainer)
+    trainer.save_metrics_to_csv(test_metrics.keys(), test_metrics, file_name="test_metrics.csv")
     metrics_str = " | ".join([f"{key.upper()}: {value:.4f}" for key, value in test_metrics.items()])
 
     print(metrics_str)
