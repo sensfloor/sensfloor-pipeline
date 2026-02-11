@@ -13,7 +13,7 @@ from src.definitions import HOLD_OUT_DATA_PATH, MODELS_FOLDER_PATH, TRAIN_DATA_P
 
 CONFIG_FILE_NAME = "config.json"
 PROJECT_NAME = "sensfloor_cairo_12_new_metrics"
-PROJECT_GROUP = "bigger_model"
+PROJECT_GROUP = "new split"
 
 training_folders = [directory.name for directory in TRAIN_DATA_PATH.iterdir() if directory.is_dir()]
 hold_out_folders = [directory.name for directory in HOLD_OUT_DATA_PATH.iterdir() if directory.is_dir()]
@@ -186,12 +186,12 @@ _BASE_CONFIG = TrainingConfiguration(
     roi_offset_strategy=OffsetStrategy.EXHAUSTIVE,
     do_normalize=True,
     normalize_to_max=False,
-    rotate_data=False,
+    rotate_data=True,
     remove_noise=True,
     training_data_folders=training_folders,
     landmarks=list(landmark_weights.keys()),
-    landmark_weights=get_weighted_feet(10),
-    model_type=ModelType.CNN_LSTM_EFFICIENT,
+    landmark_weights=get_weighted_feet(5),
+    model_type=ModelType.CNN_LSTM,
     dataset_type=DatasetType.HISTORY,
     scheduler_patience=3,
     scheduler_min_lr=1e-6,
@@ -199,12 +199,12 @@ _BASE_CONFIG = TrainingConfiguration(
     trainer_patience=5,
     amplify_link_loss=0.1,
     hold_out_data_folder=hold_out_folders,
-    model_name="base_config_weighted",
+    model_name="final_base_rotate",
 )
 
 _ALL_CONFIGS = [
-    _BASE_CONFIG.model_copy(update={"model_name": "model_type_CNNLSTM", "model_type": ModelType.CNN_LSTM}),
     _BASE_CONFIG,
+    _BASE_CONFIG.model_copy(update={"model_name": "final_base_no_rotate", "rotate_data": False}),
 ]
 
 
