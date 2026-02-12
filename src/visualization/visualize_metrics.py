@@ -113,11 +113,27 @@ def load_and_plot_mjpe_professional(model_path: Path):
     # 4. Create Plot
     fig, ax = plt.subplots(figsize=(4, 4), dpi=300)
 
+    positions = []
+    current_pos = 1.0    
+    for i in range(len(labels)):
+        positions.append(current_pos)
+        
+        # Check if the NEXT label is a "Right" version of the same joint
+        if i < len(labels) - 1:
+            current_label = labels[i].replace('L.', '').strip()
+            next_label = labels[i+1].replace('R.', '').strip()
+            
+            if current_label == next_label:
+                current_pos += 0.5  # Small spacing for pairs (L/R)
+            else:
+                current_pos += 0.8  # Larger spacing between different joints
+
     bplot = ax.boxplot(plot_data,
+                       positions=positions,
                        patch_artist=True,
                        labels=labels,
                        widths=0.4, 
-                       flierprops=dict(marker='o', markersize=2, alpha=0.3, markeredgecolor='black'))
+                       flierprops=dict(marker='o', markersize=2, alpha=0.4, markeredgecolor='black'))
 
     # Color boxes
     for patch, color in zip(bplot['boxes'], box_colors):
