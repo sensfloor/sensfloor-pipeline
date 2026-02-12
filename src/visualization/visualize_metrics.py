@@ -34,9 +34,9 @@ LANDMARK_GROUPS = {
 
 # Define distinct colors for publication (Colorblind safe)
 CATEGORY_COLORS = {
-    'Body': '#95a5a6',  # Grey/Neutral for Head/Torso
-    'Arms': '#e67e22',  # Burnt Orange for Upper Limbs
-    'Legs': '#2ecc71'   # Emerald Green for Lower Limbs
+    'Body': '#95a5a6',  # Grey/Neutral 
+    'Arms': '#f45f74',  # Burnt Orange 
+    'Legs': '#00b0be'   # Emerald Green
 }
 
 def get_landmark_category(column_name):
@@ -155,10 +155,13 @@ def load_and_plot_mjpe_professional(model_path: Path):
               frameon=False, 
               fontsize=9)
 
-    plt.tight_layout(pad=0.2)
+    plt.tight_layout(pad=0.0)
+
+    plt.margins(0,0)
+
     
     output_image = model_path / "test_metrics_boxplot.svg"
-    plt.savefig(output_image, format="svg", bbox_inches="tight")
+    plt.savefig(output_image, format="svg", bbox_inches="tight", pad_inches = 0)
     print(f"Compact boxplot saved to {output_image}")
     plt.close()
     
