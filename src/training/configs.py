@@ -13,7 +13,7 @@ from src.definitions import HOLD_OUT_DATA_PATH, MODELS_FOLDER_PATH, TRAIN_DATA_P
 
 CONFIG_FILE_NAME = "config.json"
 PROJECT_NAME = "sensfloor_cairo_12_new_metrics"
-PROJECT_GROUP = "new split"
+PROJECT_GROUP = "bigger_model"
 
 training_folders = [directory.name for directory in TRAIN_DATA_PATH.iterdir() if directory.is_dir()]
 hold_out_folders = [directory.name for directory in HOLD_OUT_DATA_PATH.iterdir() if directory.is_dir()]
@@ -186,7 +186,7 @@ _BASE_CONFIG = TrainingConfiguration(
     roi_offset_strategy=OffsetStrategy.EXHAUSTIVE,
     do_normalize=True,
     normalize_to_max=False,
-    rotate_data=True,
+    rotate_data=False,
     remove_noise=True,
     training_data_folders=training_folders,
     landmarks=list(landmark_weights.keys()),
@@ -199,12 +199,12 @@ _BASE_CONFIG = TrainingConfiguration(
     trainer_patience=5,
     amplify_link_loss=0.1,
     hold_out_data_folder=hold_out_folders,
-    model_name="final_base_rotate",
+    model_name="sensfloor_model",
 )
 
 _ALL_CONFIGS = [
     _BASE_CONFIG,
-    _BASE_CONFIG.model_copy(update={"model_name": "final_base_no_rotate", "rotate_data": False}),
+    _BASE_CONFIG.model_copy(update={"model_name": "sensfloor_rotate", "rotate_data": True}),
 ]
 
 
