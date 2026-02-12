@@ -50,13 +50,12 @@ def get_landmark_category(column_name):
     return 'Body' # fallback
 
 def load_and_plot_mjpe_professional(model_path: Path):
-    # Set font globally - using a slightly smaller base size
     plt.rcParams.update({
         "font.family": "Courier New",
-        "font.size": 16, # General text size
+        "font.size": 16,
         "axes.labelsize": 11,
         "axes.titlesize": 12,
-        "xtick.labelsize": 9, # Specific size for x-axis labels
+        "xtick.labelsize": 9,
         "ytick.labelsize": 9,
         "axes.grid": True,
         "grid.color": "black",
@@ -65,37 +64,52 @@ def load_and_plot_mjpe_professional(model_path: Path):
     })
     
     csv_file_path = model_path / TEST_METRICS_FILENAME 
-
     df = pd.read_csv(csv_file_path)
     
+    # 1. Filter Columns
     mjpe_columns = [col for col in df.columns if MJPE_PREFIX in col.lower()]
     
     if not mjpe_columns:
         print(f"No columns found.")
         return df.to_dict(orient='list')
 
+    # 2. SORT COLUMNS LOGIC
+    # Priority: Overall Mean -> Body -> Arms -> Legs
+    def sort_key(col_name):
+        # Always put "Mean" or "Overall" first (index -1)
+        if 'mean' in col_name.lower(): 
+            return -1
+        
+        category = get_landmark_category(col_name)
+        # Define the specific order for the rest
+        order = ['Body', 'Arms', 'Legs']
+        
+        try:
+            return order.index(category)
+        except ValueError:
+            return 99 # Put unknown categories at the end
+
+    # Apply the sort
+    mjpe_columns.sort(key=sort_key)
+
+    # 3. Prepare Data
     plot_data = []
     labels = []
     box_colors = []
     
     for col in mjpe_columns:
-        # Determine color
         category = get_landmark_category(col)
         box_colors.append(CATEGORY_COLORS[category])
         
-        # 1. Aggressive Label Cleaning for Compactness
-        # Remove 'Test', 'MJPE', underscores
+        # Cleaning labels
         clean = col.lower().replace(TEST_PREFIX, '').replace(MJPE_PREFIX, '').replace('_', ' ').title()
-        
-        # Shorten Left/Right to L./R. to save horizontal space
         clean = clean.replace('Left', 'L.').replace('Right', 'R.')
-        
         if clean.strip() == "Mean": clean = "Overall"
-        labels.append(clean)
         
-        # Get data
+        labels.append(clean)
         plot_data.append(df[col].dropna().values)
     
+    # 4. Create Plot
     fig, ax = plt.subplots(figsize=(4, 4), dpi=300)
 
     bplot = ax.boxplot(plot_data,
@@ -104,34 +118,43 @@ def load_and_plot_mjpe_professional(model_path: Path):
                        widths=0.4, 
                        flierprops=dict(marker='o', markersize=2, alpha=0.3, markeredgecolor='black'))
 
+    # Color boxes
     for patch, color in zip(bplot['boxes'], box_colors):
         patch.set_facecolor(color)
         patch.set_linewidth(0.75)
         patch.set_alpha(1)
     
     plt.setp(bplot['medians'], color='black', linewidth=1.0)
-
-    ax.set_ylabel(r"Mean Joint Position Error") # Shortened Y-label
+    
+    # Axis formatting
+    ax.set_ylabel(r"Mean Joint Position Error")
     ax.set_xlabel("")
+    plt.xticks(rotation=90, ha='center') 
     
-    plt.xticks(rotation=90, ha='right', rotation_mode='anchor')
-    
-    # Grid and Spines
+    # Spines
     ax.xaxis.grid(False)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['left'].set_visible(False) 
 
-    # Compact Legend
+    # 5. LEGEND ON TOP & ONE LINE
     legend_elements = [
         Patch(facecolor=CATEGORY_COLORS['Body'], edgecolor='black', label='Body'),
         Patch(facecolor=CATEGORY_COLORS['Arms'], edgecolor='black', label='Arms'),
         Patch(facecolor=CATEGORY_COLORS['Legs'], edgecolor='black', label='Legs')
     ]
-    # Move legend inside the plot area if there is space, or keep it tight outside
-    ax.legend(handles=legend_elements, loc='upper right', frameon=True, fontsize=9)
+    
+    # bbox_to_anchor=(x, y): (0.5, 1.0) is top-center.
+    # loc='lower center' means the bottom of the legend box is at that point.
+    # ncol=3 forces the items into a single row.
+    ax.legend(handles=legend_elements, 
+              loc='lower center', 
+              bbox_to_anchor=(0.5, 1.0), 
+              ncol=3, 
+              frameon=False, 
+              fontsize=9)
 
-    plt.tight_layout(pad=0.0)
+    plt.tight_layout(pad=0.2)
     
     output_image = model_path / "test_metrics_boxplot.svg"
     plt.savefig(output_image, format="svg", bbox_inches="tight")
