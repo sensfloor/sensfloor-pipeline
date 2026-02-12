@@ -19,6 +19,7 @@ from src.training.trainer.sensfloor_trainer import SensfloorTrainer, get_test_ac
 from src.training.utils import get_device, get_kept_links, get_model, set_seed
 from src.visualization.create_landmark_predictions import create_predictions
 
+from dataclasses import replace
 
 def get_dataset_config(configuration: TrainingConfiguration):
     kept_landmarks = configuration.landmarks
@@ -152,6 +153,8 @@ def create_hold_out_predictions(configuration: TrainingConfiguration) -> None:
 
     kept_landmarks, drop_landmarks, pose_to_model_index_dict, dataset_config, roi_shape, landmarks_out = get_dataset_config(configuration)
     hold_out_dirs = [HOLD_OUT_DATA_PATH / folder for folder in configuration.hold_out_data_folder]
+
+    dataset_config = replace(dataset_config, rotate_data=False)
 
     model = get_model(
         roi_shape,
