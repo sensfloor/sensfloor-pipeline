@@ -91,22 +91,7 @@
       "module": "scripts.training.create_hold_out_predictions",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
-      "args": [
-        "--model",
-        "outputs/models/model_type_CNNLSTM"
-      ]
-    },
-    {
-      "name": "TRAINING – Create Test Metrics",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "scripts.training.create_test_metrics",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "args": [
-        "--model",
-        "outputs/models/model_type_CNNLSTM"
-      ]
+      "args": ["--model", "outputs/models/model_type_CNNLSTM"]
     },
     {
       "name": "TRAINING – Create Test Metrics",
