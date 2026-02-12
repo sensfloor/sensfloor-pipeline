@@ -2,11 +2,6 @@ from pathlib import Path
 import pandas as pd
 from src.data_loading.pose_landmark import PoseLandmark
 from src.definitions import TRAIN_DATA_PATH, VIDEO_POSES_FILENAME
-
-from pathlib import Path
-import pandas as pd
-from src.data_loading.pose_landmark import PoseLandmark
-from src.definitions import TRAIN_DATA_PATH, VIDEO_POSES_FILENAME
 import matplotlib.pyplot as plt
 
 def box_plot_all_median():
@@ -53,7 +48,6 @@ def boxplot_each_recording():
         poses_path = directory / VIDEO_POSES_FILENAME
         poses = pd.read_csv(poses_path)
 
-        columns = []
         rename_columns = {}
 
         for landmark in PoseLandmark:
@@ -74,4 +68,5 @@ def boxplot_each_recording():
 
 
 if __name__ == "__main__":
+    boxplot_each_recording()
     box_plot_all_median()

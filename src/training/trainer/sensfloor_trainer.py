@@ -334,7 +334,6 @@ def get_test_metrics(
     model.eval()
     model.to(device)
     total_metrics_list: list[dict[str, float]] = []
-    num_batches = len(test_loader)
 
     with torch.no_grad():
         for inputs, labels in tqdm(test_loader, desc="Testing"):
@@ -347,7 +346,7 @@ def get_test_metrics(
             for key, value in batch_metrics.items():
                 total_metrics[key] = value
 
-            total_metrics_list.append({f"{TEST_PREFIX}{key}": value / num_batches for key, value in total_metrics.items()})
+            total_metrics_list.append({f"{TEST_PREFIX}{key}": value for key, value in total_metrics.items()})
             
 
     return total_metrics_list

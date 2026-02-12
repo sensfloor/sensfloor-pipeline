@@ -134,7 +134,7 @@ def train(configuration: TrainingConfiguration) -> None:
     trainer.train(train_loader=train_loader, validation_loader=val_loader, epochs=configuration.epochs)
 
     test_metrics = get_test_accuracy(model, test_loader, device, trainer)
-    trainer.save_metrics_to_csv(test_metrics.keys(), test_metrics, file_name="test_metrics.csv")
+    trainer.save_metrics_to_csv(test_metrics.keys(), [test_metrics], file_name="test_metrics_mean.csv") # TODO Add name to defintions perhaps. Make it different from create_test_metrics, because this means over the testset
     metrics_str = " | ".join([f"{key.upper()}: {value:.4f}" for key, value in test_metrics.items()])
 
     print(metrics_str)
