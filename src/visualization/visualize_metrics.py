@@ -4,31 +4,31 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.patches import Patch
 
+from src.data_loading.pose_landmark import PoseLandmark
 from src.definitions import TEST_METRICS_FILENAME
 from src.training.trainer.sensfloor_trainer import MJPE_PREFIX, TEST_PREFIX
 
 
-# Define the grouping logic based on MediaPipe Pose landmarks
 LANDMARK_GROUPS = {
-    # Body/Head (Indices 0-10)
+    # Body/Head
     'Body': [
-        'LEFT_SHOULDER', 'RIGHT_SHOULDER',
-        'LEFT_HIP', 'RIGHT_HIP',
-        'NOSE', 'LEFT_EYE_INNER', 'LEFT_EYE', 'LEFT_EYE_OUTER',
-        'RIGHT_EYE_INNER', 'RIGHT_EYE', 'RIGHT_EYE_OUTER',
-        'LEFT_EAR', 'RIGHT_EAR', 'MOUTH_LEFT', 'MOUTH_RIGHT'
+        PoseLandmark.LEFT_SHOULDER.name, PoseLandmark.RIGHT_SHOULDER.name,
+        PoseLandmark.LEFT_HIP.name, PoseLandmark.RIGHT_HIP.name,
+        PoseLandmark.NOSE.name, PoseLandmark.LEFT_EYE_INNER.name, PoseLandmark.LEFT_EYE.name, PoseLandmark.LEFT_EYE_OUTER.name,
+        PoseLandmark.RIGHT_EYE_INNER.name, PoseLandmark.RIGHT_EYE.name, PoseLandmark.RIGHT_EYE_OUTER.name,
+        PoseLandmark.LEFT_EAR.name, PoseLandmark.RIGHT_EAR.name, PoseLandmark.MOUTH_LEFT.name, PoseLandmark.MOUTH_RIGHT.name
     ],
-    # Arms (Indices 11-22) including Shoulders
+    # Arms
     'Arms': [
-        'LEFT_ELBOW', 'RIGHT_ELBOW',
-        'LEFT_WRIST', 'RIGHT_WRIST', 'LEFT_PINKY', 'RIGHT_PINKY',
-        'LEFT_INDEX', 'RIGHT_INDEX', 'LEFT_THUMB', 'RIGHT_THUMB'
+        PoseLandmark.LEFT_ELBOW.name, PoseLandmark.RIGHT_ELBOW.name,
+        PoseLandmark.LEFT_WRIST.name, PoseLandmark.RIGHT_WRIST.name, PoseLandmark.LEFT_PINKY.name, PoseLandmark.RIGHT_PINKY.name,
+        PoseLandmark.LEFT_INDEX.name, PoseLandmark.RIGHT_INDEX.name, PoseLandmark.LEFT_THUMB.name, PoseLandmark.RIGHT_THUMB.name
     ],
-    # Legs (Indices 23-32) including Hips
+    # Legs
     'Legs': [
-        'LEFT_KNEE', 'RIGHT_KNEE',
-        'LEFT_ANKLE', 'RIGHT_ANKLE', 'LEFT_HEEL', 'RIGHT_HEEL',
-        'LEFT_FOOT_INDEX', 'RIGHT_FOOT_INDEX'
+        PoseLandmark.LEFT_KNEE.name, PoseLandmark.RIGHT_KNEE.name,
+        PoseLandmark.LEFT_ANKLE.name, PoseLandmark.RIGHT_ANKLE.name, PoseLandmark.LEFT_HEEL.name, PoseLandmark.RIGHT_HEEL.name,
+        PoseLandmark.LEFT_FOOT_INDEX.name, PoseLandmark.RIGHT_FOOT_INDEX.name
     ]
 }
 
@@ -64,14 +64,14 @@ def load_and_plot_mjpe_professional(model_path: Path):
     })
     
     csv_file_path = model_path / TEST_METRICS_FILENAME 
-    df = pd.read_csv(csv_file_path)
+    metrics_df = pd.read_csv(csv_file_path)
     
     # 1. Filter Columns
-    mjpe_columns = [col for col in df.columns if MJPE_PREFIX in col.lower()]
+    mjpe_columns = [col for col in metrics_df.columns if MJPE_PREFIX in col.lower()]
     
     if not mjpe_columns:
         print(f"No columns found.")
-        return df.to_dict(orient='list')
+        return metrics_df.to_dict(orient='list')
 
     # 2. SORT COLUMNS LOGIC
     # Priority: Overall Mean -> Body -> Arms -> Legs
@@ -89,9 +89,9 @@ def load_and_plot_mjpe_professional(model_path: Path):
         except ValueError:
             return 99 # Put unknown categories at the end
 
-    # Apply the sort
     mjpe_columns.sort(key=sort_key)
     mjpe_columns.pop(0)
+    metrics_df = metrics_df[mjpe_columns].multiply(100) # Make numbers in cm
 
     # 3. Prepare Data
     plot_data = []
@@ -108,7 +108,7 @@ def load_and_plot_mjpe_professional(model_path: Path):
         if clean.strip() == "Mean": clean = "Overall"
         
         labels.append(clean)
-        plot_data.append(df[col].dropna().values)
+        plot_data.append(metrics_df[col].dropna().values)
     
     # 4. Create Plot
     fig, ax = plt.subplots(figsize=(4, 4), dpi=300)
@@ -128,7 +128,7 @@ def load_and_plot_mjpe_professional(model_path: Path):
     plt.setp(bplot['medians'], color='black', linewidth=1.0)
     
     # Axis formatting
-    ax.set_ylabel(r"Mean Joint Position Error")
+    ax.set_ylabel(r"Mean Joint Position Error (cm)")
     ax.set_xlabel("")
     plt.xticks(rotation=90, ha='center') 
     
@@ -148,7 +148,7 @@ def load_and_plot_mjpe_professional(model_path: Path):
     # bbox_to_anchor=(x, y): (0.5, 1.0) is top-center.
     # loc='lower center' means the bottom of the legend box is at that point.
     # ncol=3 forces the items into a single row.
-    ax.legend(handles=legend_elements, 
+    ax.legend(handles=legend_elements,
               loc='lower center', 
               bbox_to_anchor=(0.5, 1.0), 
               ncol=3, 
@@ -165,4 +165,4 @@ def load_and_plot_mjpe_professional(model_path: Path):
     print(f"Compact boxplot saved to {output_image}")
     plt.close()
     
-    return df.to_dict(orient='list')
+    return metrics_df.to_dict(orient='list')
