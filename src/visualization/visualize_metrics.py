@@ -91,6 +91,7 @@ def load_and_plot_mjpe_professional(model_path: Path):
 
     # Apply the sort
     mjpe_columns.sort(key=sort_key)
+    mjpe_columns.pop(0)
 
     # 3. Prepare Data
     plot_data = []
