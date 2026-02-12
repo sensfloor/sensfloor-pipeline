@@ -22,8 +22,8 @@ def plot_paths(raw_signals_path: np.ndarray, kalman_filter_path: np.ndarray) -> 
     _, axs = plt.subplots(ncols=2, figsize=(8, 6))
 
     paths = [
-        ("Raw signal path", raw_signals_path),
-        ("Kalman filter path", kalman_filter_path),
+        ("Raw Signal Trajectory", raw_signals_path),
+        ("Kalman Filter path", kalman_filter_path),
     ]
 
     for ax, (title, path) in zip(axs, paths, strict=True):
