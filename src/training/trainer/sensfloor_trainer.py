@@ -223,7 +223,7 @@ class SensfloorTrainer(BaseTrainer):
             SensfloorTrainer.log_training_metrics(log_data, list(self.pose_to_model_dict.keys()))
 
             self.save_best_model(avg_val_loss)
-            self.save_metrics_to_csv()
+            self.save_epoch_metrics_to_csv()
 
             if self.scheduler:
                 if isinstance(self.scheduler, optim.lr_scheduler.ReduceLROnPlateau):
