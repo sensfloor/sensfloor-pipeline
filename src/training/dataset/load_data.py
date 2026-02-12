@@ -71,7 +71,8 @@ def train_val_test_split(
         ratios: tuple[float, float, float],
         config: DatasetConfig,
         batch_size: int,
-        dataset_type: DatasetType
+        dataset_type: DatasetType,
+        test_batch_size: int=8,
 ) -> tuple[DataLoader, DataLoader, DataLoader]:
     train_dataset, val_dataset, test_dataset = load_all_datasets(
         data_root_path=data_root_path,
@@ -90,6 +91,6 @@ def train_val_test_split(
 
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, **loader_args)
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, **loader_args)
-    test_dataloader = DataLoader(test_dataset, batch_size=8, shuffle=False, **loader_args)
+    test_dataloader = DataLoader(test_dataset, batch_size=test_batch_size, shuffle=False, **loader_args)
 
     return train_dataloader, val_dataloader, test_dataloader
