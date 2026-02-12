@@ -14,7 +14,7 @@ from src.training.dataset.load_data import load_single_dataset
 from src.visualization.utils import draw_floor, draw_roi
 
 
-def main(data_dir: Path) -> None:
+def main(data_dir: Path, data_index: int) -> None:
     print(f"Visualize data from directory: {data_dir}")
     video_path = data_dir / VIDEO_FILENAME
     floor_config = RoIFloorConfig(
@@ -32,7 +32,7 @@ def main(data_dir: Path) -> None:
 
     # Load dataset
     dataset = load_single_dataset(data_path=data_dir, config=dataset_config, dataset_type=DatasetType.HISTORY)
-    data = dataset.get_detailed_data(45)
+    data = dataset.get_detailed_data(data_index)
     roi = data.floor.get_roi()
 
     if roi is None:
@@ -60,7 +60,7 @@ def main(data_dir: Path) -> None:
     fig.tight_layout()
 
     # Create plots
-    cmap = mcolors.LinearSegmentedColormap.from_list("signal colormap", ["#FFFFFF", "#0033FF", "#FF6A00"])
+    cmap = mcolors.LinearSegmentedColormap.from_list("signal colormap", ["#FFFFFF", "#000000"])
     fig, axs = plt.subplots(num_rows, num_cols, figsize=figsize)
     image = None
     for timestamp, ax in enumerate(axs.flatten()):
@@ -88,9 +88,15 @@ def parse_args() -> argparse.Namespace:
         required=True,
         help="Required path to data directory containing video and sensfloor readout.",
     )
+    parser.add_argument(
+        "--data-index",
+        type=int,
+        required=True,
+        help="Index of data to visualize.",
+    )
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
-    main(args.data)
+    main(args.data, args.data_index)

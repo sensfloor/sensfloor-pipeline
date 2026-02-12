@@ -137,7 +137,9 @@
       "console": "integratedTerminal",
       "args": [
         "--data",
-        "data/train/2025-12-16_12-20-54-line-subject1"
+        "data/train/2025-12-16_12-44-28-line-subject3",
+        "--data-index",
+        "310"
       ]
     },
     {
