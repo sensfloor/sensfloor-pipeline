@@ -169,11 +169,11 @@
       "console": "integratedTerminal",
       "args": [
         "--csv",
-        "data/train/2026-02-02_10-56-14-all-subject2/sensfloor_readout.csv",
+        "data/tracking/2026-02-09_09-35-00-house-subject3/sensfloor_readout.csv",
         "--start",
-        "421",
+        "10",
         "--end",
-        "432"
+        "42"
       ]
     },
     {

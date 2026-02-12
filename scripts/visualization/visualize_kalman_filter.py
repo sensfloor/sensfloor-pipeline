@@ -27,7 +27,25 @@ def plot_paths(raw_signals_path: np.ndarray, kalman_filter_path: np.ndarray) -> 
     ]
 
     for ax, (title, path) in zip(axs, paths, strict=True):
-        ax.plot(path[:, 1], path[:, 0], marker="o", ms=2, c="black")
+        x = path[:-1, 1]
+        y = path[:-1, 0]
+        u = path[1:, 1] - path[:-1, 1]
+        v = path[1:, 0] - path[:-1, 0]
+
+        ax.quiver(
+            x,
+            y,
+            u,
+            v,
+            angles="xy",
+            scale_units="xy",
+            scale=1,
+            color="black",
+            width=0.004,
+            headwidth=7,
+            headlength=7,
+            headaxislength=7,
+        )
 
         ax.set_xlim(-0.5, 4.5)
         ax.set_ylim(-0.5, 6.5)
