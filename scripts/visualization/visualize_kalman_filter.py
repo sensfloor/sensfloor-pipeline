@@ -47,8 +47,8 @@ def plot_paths(raw_signals_path: np.ndarray, kalman_filter_path: np.ndarray) -> 
             headaxislength=7,
         )
 
-        ax.set_xlim(-0.5, 4.5)
-        ax.set_ylim(-0.5, 6.5)
+        ax.set_xlim(0, 4)
+        ax.set_ylim(0, 6)
 
         # Paint floor grid
         for x in range(5):
@@ -68,12 +68,12 @@ def plot_paths(raw_signals_path: np.ndarray, kalman_filter_path: np.ndarray) -> 
         )
 
         ax.set_aspect("equal", adjustable="box")
-        ax.set_title(title)
+        ax.set_title(title, fontweight="bold")
     plt.tight_layout()
 
-    save_path = Path("outputs/images/filter_visualization.svg")
+    save_path = Path("outputs/images/kalman-filter-effect.pdf")
     save_path.parent.mkdir(exist_ok=True, parents=True)
-    plt.savefig(save_path, format="svg", bbox_inches="tight")
+    plt.savefig(save_path, format="pdf", bbox_inches="tight")
     print(f"Saved plot to {save_path}")
 
 
