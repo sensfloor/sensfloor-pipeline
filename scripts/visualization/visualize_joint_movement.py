@@ -183,6 +183,8 @@ def plot_joint_distance_boxplot(
     plt.margins(0, 0)
 
     output_path = Path("outputs/images/joint_movement.svg")
+    output_path.parent.mkdir(exist_ok=True, parents=True)
+
     plt.savefig(output_path, format="svg", bbox_inches="tight", pad_inches=0)
     print(f"Saved boxplot to {output_path}")
     plt.close(fig)

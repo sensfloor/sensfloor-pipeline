@@ -284,7 +284,7 @@ def create_mjpe_boxplot(model_path: Path):
     ax.set_ylabel("MJPE (cm)", fontweight='bold')
     ax.set_xlabel("")
     plt.xticks(rotation=90, ha='center') 
-    plt.ylim(-1, 25) 
+    plt.ylim(-1, 26) 
     
     # Spines
     ax.xaxis.grid(False)
