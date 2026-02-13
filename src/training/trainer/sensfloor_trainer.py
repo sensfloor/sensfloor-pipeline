@@ -14,7 +14,7 @@ from src.data_loading.pose_landmark import PoseLandmark
 from src.definitions import ROOT_PATH
 from src.training.link_loss.link_loss import calculate_linkloss
 from src.training.trainer.base_trainer import BaseTrainer
-
+from src.definitions import BEST_MODEL_FILENAME
 # Metrics Strings also used for Logging
 VAL_PREFIX = "val_"
 TRAIN_PREFIX = "train_"
@@ -73,7 +73,7 @@ class SensfloorTrainer(BaseTrainer):
             use_early_stopping: bool = True,
             patience: int = 10,
             results_path: Path = ROOT_PATH,
-            best_model_name: str = "best_model.pth",
+            best_model_name: str = BEST_MODEL_FILENAME,
             amplify_link_loss: float = 10,
     ):
         super().__init__(

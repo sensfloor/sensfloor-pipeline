@@ -1,9 +1,12 @@
+from dataclasses import replace
+
 import torch
 import trackio
 
 from src.data_loading.floor import PATCH_SIZE
 from src.data_loading.pose_landmark import PoseLandmark
 from src.data_loading.roi_floor import RoIFloorConfig
+from src.definitions import BEST_MODEL_FILENAME
 from src.definitions import HOLD_OUT_DATA_PATH, TRAIN_DATA_PATH
 from src.training.configs import (
     CONFIG_FILE_NAME,
@@ -19,7 +22,6 @@ from src.training.trainer.sensfloor_trainer import SensfloorTrainer, get_test_ac
 from src.training.utils import get_device, get_kept_links, get_model, set_seed
 from src.visualization.create_landmark_predictions import create_predictions
 
-from dataclasses import replace
 
 def get_dataset_config(configuration: TrainingConfiguration):
     kept_landmarks = configuration.landmarks
@@ -62,7 +64,6 @@ def get_training_setup(configuration: TrainingConfiguration, test_batch_size = 8
     print(f"hyper params: {configuration}")
 
     model_folder = MODELS_FOLDER_PATH / configuration.model_name
-    model_file_name = "best_model.pth"
 
     configuration.save(model_folder / CONFIG_FILE_NAME)
     device = get_device()
@@ -102,7 +103,7 @@ def get_training_setup(configuration: TrainingConfiguration, test_batch_size = 8
 
     trainer = SensfloorTrainer(
         model=model,
-        best_model_name=model_file_name,
+        best_model_name=BEST_MODEL_FILENAME,
         results_path=model_folder,
         device=device,
         optimizer=optimizer,
@@ -146,8 +147,7 @@ def create_hold_out_predictions(configuration: TrainingConfiguration) -> None:
     print(f"hyper params: {configuration}")
 
     model_folder = MODELS_FOLDER_PATH / configuration.model_name
-    model_file_name = "best_model.pth"
-    model_path = model_folder / model_file_name
+    model_path = model_folder / BEST_MODEL_FILENAME
 
     device = get_device()
 

@@ -3,6 +3,7 @@ from pathlib import Path
 
 import torch
 
+from src.definitions import BEST_MODEL_FILENAME
 from src.data_loading.floor import PATCH_SIZE
 from src.data_loading.pose_landmark import PoseLandmark
 from src.data_loading.roi_floor import RoIFloor, RoIFloorConfig
@@ -12,7 +13,7 @@ from src.training.utils import get_device, get_model
 
 
 def load_model(model_folder: Path) -> tuple[torch.nn.Module, torch.device, ModelType]:
-    model_file = model_folder / "best_model.pth"
+    model_file = model_folder / BEST_MODEL_FILENAME
     config = TrainingConfiguration.load(model_folder / CONFIG_FILE_NAME)
 
     roi_size_x = (config.roi_size if config.roi_size is not None else config.floor_x_size) * PATCH_SIZE

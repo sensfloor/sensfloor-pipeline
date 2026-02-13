@@ -3,7 +3,7 @@ from pathlib import Path
 
 import torch
 
-from src.definitions import TEST_METRICS_FILENAME
+from src.definitions import TEST_METRICS_FILENAME, BEST_MODEL_FILENAME
 from src.training.configs import (CONFIG_FILE_NAME, TrainingConfiguration)
 from src.training.trainer.sensfloor_trainer import (get_test_metrics)
 from src.training.training_pipeline import get_training_setup
@@ -12,7 +12,7 @@ from src.training.training_pipeline import get_training_setup
 def get_and_save_test_metrics(configuration: TrainingConfiguration, model_folder: Path) -> None:
     model, device, trainer, train_loader, val_loader, test_loader = get_training_setup(configuration, test_batch_size=1)
 
-    model_file_name = "best_model.pth"  # TODO refactor this into the defintions
+    model_file_name = BEST_MODEL_FILENAME
     model_path = model_folder / model_file_name
 
     checkpoint = torch.load(f=model_path)

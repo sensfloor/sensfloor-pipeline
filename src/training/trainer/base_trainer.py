@@ -6,8 +6,7 @@ import torch
 from torch import nn, optim
 from torch.optim.lr_scheduler import LRScheduler
 
-from src.definitions import ROOT_PATH
-
+from src.definitions import ROOT_PATH, BEST_MODEL_FILENAME
 METRICS_FILE_NAME = "metrics.csv"
 
 class BaseTrainer(metaclass=ABCMeta):
@@ -20,7 +19,7 @@ class BaseTrainer(metaclass=ABCMeta):
         use_early_stopping: bool = True,
         patience: int = 10,
         results_path: Path = ROOT_PATH,
-        best_model_name: str = "best_model.pth",
+        best_model_name: str = BEST_MODEL_FILENAME,
     ) -> None:
         self.model: nn.Module = model.to(device)
         self.optimizer: optim.Optimizer = optimizer
