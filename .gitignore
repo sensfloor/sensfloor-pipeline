@@ -7,10 +7,12 @@
 outputs/**/*
 !outputs/
 !outputs/models/
-!outputs/models/model_type_CNNLSTM/
-!outputs/models/model_type_CNNLSTM/best_model.pth
-!outputs/models/model_type_CNNLSTM/config.json
-!outputs/models/model_type_CNNLSTM/metrics.csv
+!outputs/models/sensfloor_model/
+!outputs/models/sensfloor_model/best_model.pth
+!outputs/models/sensfloor_model/config.json
+!outputs/models/sensfloor_model/metrics.csv
+!outputs/models/sensfloor_model/test_metrics.csv
+!outputs/models/sensfloor_model/test_metrics_boxplot.svg
 
 data
 
