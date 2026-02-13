@@ -48,7 +48,7 @@ def create_pose_comparison(
         fig = plt.figure()
         ax = fig.add_subplot(111, projection="3d")
         add_pose_to_ax(ax, ground_truth_pose, color="black", links=links)
-        add_pose_to_ax(ax, predicted_pose, color="#00b0be", links=links)
+        add_pose_to_ax(ax, predicted_pose, color="#ff0000", links=links)
         setup_clean_ax(ax)
         ax.view_init(elev=5, azim=rotation)
 
