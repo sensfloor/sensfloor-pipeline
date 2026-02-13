@@ -15,7 +15,7 @@ from src.training.dataset.dataset_utils import (
 from src.training.dataset.sensfloor_dataset import SensfloorPosesDataset
 
 
-class LSTMDataset(SensfloorPosesDataset):
+class LSTMDataset(SensfloorPosesDataset): # TODO: Remove unused Dataset
     def __init__(
         self,
         poses_df: pd.DataFrame,

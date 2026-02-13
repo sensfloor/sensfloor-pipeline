@@ -25,7 +25,7 @@ dataset = load_single_dataset(
     data_path=DATA_PATH,
     config=dataset_config,
     dataset_type=DatasetType.HISTORY,
-)  # TODO dataset_type
+)
 
 FRAME_TO_SHOW = 906
 CONNECTIONS = [

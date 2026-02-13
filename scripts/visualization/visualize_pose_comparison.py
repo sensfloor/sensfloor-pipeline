@@ -85,7 +85,7 @@ def main(model_folder: Path, data_folder: Path, data_index: int) -> None:
         data_path=data_folder,
         config=dataset_config,
         dataset_type=DatasetType.HISTORY,
-    )  # TODO dataset_type
+    )
 
     data = dataset.get_detailed_data(data_index)
 

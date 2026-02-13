@@ -324,7 +324,6 @@ def get_test_accuracy(
 
     return {f"{TEST_PREFIX}{key}": value / num_batches for key, value in total_metrics.items()}
 
-# TODO: Duplicate code, perhaps return the full list and sum afterwards or add a flag
 def get_test_metrics(
         model: nn.Module,
         test_loader: torch.utils.data.DataLoader,

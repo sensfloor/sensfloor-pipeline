@@ -6,7 +6,7 @@ import trackio
 from src.data_loading.floor import PATCH_SIZE
 from src.data_loading.pose_landmark import PoseLandmark
 from src.data_loading.roi_floor import RoIFloorConfig
-from src.definitions import BEST_MODEL_FILENAME
+from src.definitions import BEST_MODEL_FILENAME, TEST_METRICS_MEAN_FILENAME
 from src.definitions import HOLD_OUT_DATA_PATH, TRAIN_DATA_PATH
 from src.training.configs import (
     CONFIG_FILE_NAME,
@@ -135,7 +135,7 @@ def train(configuration: TrainingConfiguration) -> None:
     trainer.train(train_loader=train_loader, validation_loader=val_loader, epochs=configuration.epochs)
 
     test_metrics = get_test_accuracy(model, test_loader, device, trainer)
-    trainer.save_metrics_to_csv(test_metrics.keys(), [test_metrics], file_name="test_metrics_mean.csv") # TODO Add name to defintions perhaps. Make it different from create_test_metrics, because this means over the testset
+    trainer.save_metrics_to_csv(test_metrics.keys(), [test_metrics], file_name=TEST_METRICS_MEAN_FILENAME)
     metrics_str = " | ".join([f"{key.upper()}: {value:.4f}" for key, value in test_metrics.items()])
 
     print(metrics_str)

@@ -2,14 +2,12 @@ import torch
 from torch import nn
 
 
-class RegressionModel(nn.Module):
+class RegressionModel(nn.Module): # TODO: remove unused Model perhaps
     """
     idea from Yiyue Luo et. all - Intelligent Carpet: Inferring 3D Human Pose from Tactile Signals
     """
 
     def __init__(self, roi_shape: tuple[int, int], history_len: int, landmarks_out: int):
-        # TODO: adapt kernel size, because we have a smaller input?
-        # TODO: consider removing batchnorm, because we want to have value predictions (no sigmoid or classification)
         super().__init__()
 
         # 4x4x64

@@ -90,11 +90,11 @@ def get_model(
                 landmarks_out=landmarks_out,
                 history_len=history_maxlen,
             )
-        case ModelType.CNN_LSTM:  # TODO try different parameter inputs
+        case ModelType.CNN_LSTM:
             return CNNLSTM(
                 num_classes=landmarks_out * 3, roi_shape=roi_shape, return_hidden_states=return_hidden_states
             )
-        case ModelType.CNN_LSTM_EFFICIENT:  # TODO try different parameter inputs
+        case ModelType.CNN_LSTM_EFFICIENT:
             return EfficientCNNLSTM(
                 num_classes=landmarks_out * 3, roi_shape=roi_shape, return_hidden_states=return_hidden_states
             )
