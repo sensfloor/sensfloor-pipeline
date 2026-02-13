@@ -23,6 +23,7 @@ def main(data_dir: Path, data_index: int) -> None:
         history_maxlen=15,
         roi_size=4,
         active_field_min_value=140,
+        remove_noise=True,
     )
 
     dataset_config = DatasetConfig(

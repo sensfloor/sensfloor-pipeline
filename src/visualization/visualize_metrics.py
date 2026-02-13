@@ -51,7 +51,7 @@ def clean_label(col_name):
     if clean.strip() == "Mean": return "Overall"
     return clean
 
-def load_and_plot_mjpe_professional(model_path: Path):
+def create_mjpe_boxenplot(model_path: Path):
     plt.rcParams.update({
         "font.family": "Courier New", "font.size": 16, "axes.labelsize": 11,
         "axes.titlesize": 12, "xtick.labelsize": 9, "ytick.labelsize": 9,
@@ -178,6 +178,145 @@ def load_and_plot_mjpe_professional(model_path: Path):
     output_image = model_path / "test_metrics_boxenplot_grouped.svg"
     plt.savefig(output_image, format="svg", bbox_inches="tight", pad_inches = 0)
     print(f"Grouped boxenplot saved to {output_image}")
+    plt.close()
+    
+    return metrics_df.to_dict(orient='list')
+
+
+def create_mjpe_boxplot(model_path: Path):
+    plt.rcParams.update({
+        "font.family": "Courier New",
+        "font.size": 16,
+        "axes.labelsize": 11,
+        "axes.titlesize": 12,
+        "xtick.labelsize": 9,
+        "ytick.labelsize": 9,
+        "axes.grid": True,
+        "grid.color": "black",
+        "grid.alpha": 0.2,
+        "grid.linestyle": "--",
+    })
+    
+    csv_file_path = model_path / TEST_METRICS_FILENAME 
+    metrics_df = pd.read_csv(csv_file_path)
+    
+    # 1. Filter Columns
+    mjpe_columns = [col for col in metrics_df.columns if MJPE_PREFIX in col.lower()]
+    
+    if not mjpe_columns:
+        print(f"No columns found.")
+        return metrics_df.to_dict(orient='list')
+
+    # 2. SORT COLUMNS LOGIC
+    # Priority: Overall Mean -> Body -> Arms -> Legs
+    def sort_key(col_name):
+        # Always put "Mean" or "Overall" first (index -1)
+        if 'mean' in col_name.lower(): 
+            return -1
+        
+        category = get_landmark_category(col_name)
+        # Define the specific order for the rest
+        order = ['Body', 'Arms', 'Legs']
+        
+        try:
+            return order.index(category)
+        except ValueError:
+            return 99 # Put unknown categories at the end
+
+    mjpe_columns.sort(key=sort_key)
+    mjpe_columns.pop(0)
+    metrics_df = metrics_df[mjpe_columns].multiply(100) # Make numbers in cm
+
+    # 3. Prepare Data
+    plot_data = []
+    labels = []
+    box_colors = []
+    
+    for col in mjpe_columns:
+        category = get_landmark_category(col)
+        box_colors.append(CATEGORY_COLORS[category])
+        
+        # Cleaning labels
+        clean = col.lower().replace(TEST_PREFIX, '').replace(MJPE_PREFIX, '').replace('_', ' ').title()
+        clean = clean.replace('Left', 'L.').replace('Right', 'R.')
+        if clean.strip() == "Mean": clean = "Overall"
+        
+        labels.append(clean)
+        plot_data.append(metrics_df[col].dropna().values)
+    
+    # 4. Create Plot
+    fig, ax = plt.subplots(figsize=(5, 3), dpi=300)
+
+    positions = []
+    current_pos = 1.0    
+    for i in range(len(labels)):
+        positions.append(current_pos)
+        
+        # Check if the NEXT label is a "Right" version of the same joint
+        if i < len(labels) - 1:
+            current_label = labels[i].replace('L.', '').strip()
+            next_label = labels[i+1].replace('R.', '').strip()
+            
+            if current_label == next_label:
+                current_pos += 0.5  # Small spacing for pairs (L/R)
+            else:
+                current_pos += 0.8  # Larger spacing between different joints
+
+    bplot = ax.boxplot(plot_data,
+                       positions=positions,
+                       patch_artist=True,
+                       labels=labels,
+                       widths=0.4, 
+                       whis=(5, 95),
+                       showfliers=False,
+                       flierprops=dict(marker='o', markersize=2, alpha=0.4, markeredgecolor='black')
+                       )
+
+    # Color boxes
+    for patch, color in zip(bplot['boxes'], box_colors):
+        patch.set_facecolor(color)
+        patch.set_linewidth(0.75)
+        patch.set_alpha(1)
+    
+    plt.setp(bplot['medians'], color='black', linewidth=1.0)
+    
+    # Axis formatting
+    ax.set_ylabel("MJPE (cm)", fontweight='bold')
+    ax.set_xlabel("")
+    plt.xticks(rotation=90, ha='center') 
+    plt.ylim(-1, 25) 
+    
+    # Spines
+    ax.xaxis.grid(False)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False) 
+
+    # 5. LEGEND ON TOP & ONE LINE
+    legend_elements = [
+        Patch(facecolor=CATEGORY_COLORS['Body'], edgecolor='black', label='Body'),
+        Patch(facecolor=CATEGORY_COLORS['Arms'], edgecolor='black', label='Arms'),
+        Patch(facecolor=CATEGORY_COLORS['Legs'], edgecolor='black', label='Legs')
+    ]
+    
+    # bbox_to_anchor=(x, y): (0.5, 1.0) is top-center.
+    # loc='lower center' means the bottom of the legend box is at that point.
+    # ncol=3 forces the items into a single row.
+    ax.legend(handles=legend_elements,
+              loc='lower center', 
+              bbox_to_anchor=(0.5, 1.0), 
+              ncol=3, 
+              frameon=False, 
+              fontsize=9)
+
+    plt.tight_layout(pad=0.0)
+
+    plt.margins(0,0)
+
+    
+    output_image = model_path / "test_metrics_boxplot.svg"
+    plt.savefig(output_image, format="svg", bbox_inches="tight", pad_inches = 0)
+    print(f"Compact boxplot saved to {output_image}")
     plt.close()
     
     return metrics_df.to_dict(orient='list')

@@ -4,11 +4,11 @@ from pathlib import Path
 from src.definitions import TEST_METRICS_FILENAME
 from pathlib import Path
 
-from src.visualization.visualize_metrics import load_and_plot_mjpe_professional
+from src.visualization.visualize_metrics import create_mjpe_boxplot
 
 
 def main(model_path: Path):
-    load_and_plot_mjpe_professional(model_path)
+    create_mjpe_boxplot(model_path)
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run live prediction of poses")
