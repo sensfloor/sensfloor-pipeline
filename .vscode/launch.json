@@ -39,7 +39,7 @@
         "--model",
         "outputs/models/model_type_CNNLSTM",
         "--mock-file",
-        "data/train/2025-12-16_12-20-54-line-subject1/sensfloor_readout.csv"
+        "data/extra/2025-12-09_15-52-01-line-subject4/sensfloor_readout.csv"
       ]
     },
     {
@@ -91,7 +91,10 @@
       "module": "scripts.training.create_hold_out_predictions",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
-      "args": ["--model", "outputs/models/model_type_CNNLSTM"]
+      "args": [
+        "--model",
+        "outputs/models/model_type_CNNLSTM"
+      ]
     },
     {
       "name": "TRAINING – Create Test Metrics",
@@ -100,7 +103,10 @@
       "module": "scripts.training.create_test_metrics",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
-      "args": ["--model", "outputs/models/model_type_CNNLSTM"]
+      "args": [
+        "--model",
+        "outputs/models/model_type_CNNLSTM"
+      ]
     },
     {
       "name": "VISUALIZATIONS – Collected video and readout",
@@ -139,7 +145,7 @@
         "--data",
         "data/train/2025-12-16_12-44-28-line-subject3",
         "--data-index",
-        "310"
+        "307"
       ]
     },
     {
@@ -195,13 +201,24 @@
       ]
     },
     {
+      "name": "VISUALIZATIONS – Joint Movements",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "scripts.visualization.visualize_joint_movement",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
       "name": "VISUALIZATIONS – Boxplot Test Metrics",
       "type": "debugpy",
       "request": "launch",
       "module": "scripts.visualization.visualize_metrics",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
-      "args": ["--model", "outputs/models/model_type_CNNLSTM"]
+      "args": [
+        "--model",
+        "outputs/models/model_type_CNNLSTM"
+      ]
     }
   ],
   "compounds": [
