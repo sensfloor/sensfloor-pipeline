@@ -10,11 +10,9 @@ from src.training.dataset.dataset_utils import (
     DetailedSensfloorPosesData,
     drop_landmarks,
     get_unique_frames_with_poses,
-    normalize_roi,
     remove_noise_messages,
-    rotate_pose,
-    rotate_roi,
 )
+from src.training.dataset.transformations import normalize_roi, rotate_pose, rotate_roi
 
 
 class SensfloorPosesDataset(Dataset):

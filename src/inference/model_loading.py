@@ -3,12 +3,12 @@ from pathlib import Path
 
 import torch
 
-from src.definitions import BEST_MODEL_FILENAME
 from src.data_loading.floor import PATCH_SIZE
 from src.data_loading.pose_landmark import PoseLandmark
 from src.data_loading.roi_floor import RoIFloor, RoIFloorConfig
+from src.definitions import BEST_MODEL_FILENAME
 from src.training.configs import CONFIG_FILE_NAME, ModelType, TrainingConfiguration
-from src.training.dataset.dataset_utils import normalize_roi
+from src.training.dataset.transformations import normalize_roi
 from src.training.utils import get_device, get_model
 
 
