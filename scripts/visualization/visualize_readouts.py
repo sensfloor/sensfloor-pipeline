@@ -1,13 +1,12 @@
+import argparse
 from pathlib import Path
 
 import pandas as pd
 from matplotlib import pyplot as plt
 
-from src.definitions import HOLD_OUT_DATA_PATH, READOUT_FILENAME, TRAIN_DATA_PATH
 
-
-def visualize_read_outs(data_path: Path) -> None:
-    floor_readout = pd.read_csv(data_path / READOUT_FILENAME)
+def visualize_read_outs(csv_path: Path) -> None:
+    floor_readout = pd.read_csv(csv_path)
     floor_readout = floor_readout.drop(columns=["timestamp", "frame_number", "group_id", "magic_number"])
 
     sensor_columns = ["0", "1", "2", "3", "4", "5", "6", "7"]
@@ -21,16 +20,23 @@ def visualize_read_outs(data_path: Path) -> None:
     plt.figure(figsize=(10, 8))
     plt.imshow(heatmap_data, cmap="inferno", origin="lower")
     plt.colorbar(label="Total Accumulated Activity (Intensity * Frequency)")
-    plt.title(f"Cumulative Activity Heatmap: {data_path.name}")
+    plt.title(f"Cumulative Activity Heatmap: {csv_path.parent.name}")
     plt.xlabel("X Coordinate")
     plt.ylabel("Y Coordinate")
     plt.show()
 
 
-if __name__ == "__main__":
-    training_folders = [directory for directory in TRAIN_DATA_PATH.iterdir() if directory.is_dir()]
-    hold_out_folders = [directory for directory in HOLD_OUT_DATA_PATH.iterdir() if directory.is_dir()]
-    all_folders = training_folders + hold_out_folders
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Visualize readout heatmap")
+    parser.add_argument(
+        "--csv",
+        type=Path,
+        required=True,
+        help="Path to sensfloor readout to visualize.",
+    )
+    return parser.parse_args()
 
-    for folder in all_folders:
-        visualize_read_outs(folder)
+
+if __name__ == "__main__":
+    args = parse_args()
+    visualize_read_outs(args.csv)
