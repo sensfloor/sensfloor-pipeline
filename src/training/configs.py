@@ -199,7 +199,7 @@ _BASE_CONFIG = TrainingConfiguration(
     trainer_patience=5,
     amplify_link_loss=0.1,
     hold_out_data_folder=hold_out_folders,
-    model_name="sensfloor_model",
+    model_name="sensfloor_model2",
 )
 
 _ALL_CONFIGS = [
@@ -213,7 +213,7 @@ def get_hyper_param_configs() -> list[TrainingConfiguration]:
         model_folder = MODELS_FOLDER_PATH / config.model_name
         if model_folder.is_dir():
             message = f"Folder for model {config.model_name} already exists."
-            raise RuntimeError(message)
+            #raise RuntimeError(message)
 
     names = [config.model_name for config in _ALL_CONFIGS]
     if len(names) != len(set(names)):

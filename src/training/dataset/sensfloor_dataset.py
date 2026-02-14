@@ -8,7 +8,7 @@ from src.data_loading.roi_floor import RoIFloor, create_roi_floor
 from src.training.dataset.dataset_utils import (
     DatasetConfig,
     DetailedSensfloorPosesData,
-    drop_landmarks,
+    drop_unused_landmarks,
     get_unique_frames_with_poses,
     remove_noise_messages,
 )
@@ -29,8 +29,8 @@ class SensfloorPosesDataset(Dataset):
         self.config = config
         self.return_detailed = return_detailed
 
-        if config.drop_landmarks:
-            self.poses_df = drop_landmarks(poses=poses_df, drop_landmarks=config.drop_landmarks)
+        if config.landmarks:
+            self.poses_df = drop_unused_landmarks(poses=poses_df, landmarks_to_keep=config.landmarks)
 
         # Remove all messages that are below a specified signal value (no activity, just noise)
         self.filtered_readout = remove_noise_messages(

@@ -11,18 +11,18 @@ from src.data_loading.roi_floor import RoIFloor, RoIFloorConfig
 @dataclass(frozen=True)
 class DatasetConfig:
     floor_config: RoIFloorConfig
-    drop_landmarks: list[PoseLandmark] | None = None
+    landmarks: list[PoseLandmark] | None = None
     rotate_data: bool = False
     normalize_signals: bool = False
     normalize_to_max: bool = False
 
 
-def drop_landmarks(poses: pd.DataFrame, drop_landmarks: list[PoseLandmark]) -> pd.DataFrame:
-    columns_to_drop = []
-    for landmark in drop_landmarks:
-        columns_to_drop += [f"x{landmark.value}", f"y{landmark.value}", f"z{landmark.value}"]
-
-    return poses.drop(columns=columns_to_drop)
+def drop_unused_landmarks(poses: pd.DataFrame, landmarks_to_keep: list[PoseLandmark]) -> pd.DataFrame:
+    drop_columns = []
+    for landmark in PoseLandmark:
+        if landmark not in landmarks_to_keep:
+            drop_columns += [f"x{landmark.value}", f"y{landmark.value}", f"z{landmark.value}"]
+    return poses.drop(columns=drop_columns)
 
 
 def remove_noise_messages(sensfloor_readout: pd.DataFrame, noise_threshold: int) -> pd.DataFrame:

@@ -3,7 +3,7 @@ import random
 import numpy as np
 import torch
 
-from src.data_loading.pose_landmark import LINKS
+from src.data_loading.pose_landmark import LINKS, PoseLandmark
 from src.training.configs import ModelType
 from src.training.models.CNN.cnn_default import RegressionModel
 from src.training.models.CNN.cnn_variants import (
@@ -16,13 +16,8 @@ from src.training.models.LSTM.efficient_lstm import EfficientCNNLSTM
 from src.training.models.LSTM.lstm_model import CNNLSTM
 
 
-def get_kept_links(drop_landmarks):
-    kept_links = []
-    for link in LINKS:
-        if link[0] in drop_landmarks or link[1] in drop_landmarks:
-            continue
-        kept_links.append(link)
-    return kept_links
+def get_kept_links(landmarks: list[PoseLandmark]) -> list[tuple[PoseLandmark, PoseLandmark]]:
+    return [link for link in LINKS if link[0] in landmarks and link[1] in landmarks]
 
 
 def get_device() -> torch.device:
@@ -92,9 +87,13 @@ def get_model(
             )
         case ModelType.CNN_LSTM:
             return CNNLSTM(
-                num_classes=landmarks_out * 3, roi_shape=roi_shape, return_hidden_states=return_hidden_states
+                num_classes=landmarks_out * 3,
+                roi_shape=roi_shape,
+                return_hidden_states=return_hidden_states,
             )
         case ModelType.CNN_LSTM_EFFICIENT:
             return EfficientCNNLSTM(
-                num_classes=landmarks_out * 3, roi_shape=roi_shape, return_hidden_states=return_hidden_states
+                num_classes=landmarks_out * 3,
+                roi_shape=roi_shape,
+                return_hidden_states=return_hidden_states,
             )

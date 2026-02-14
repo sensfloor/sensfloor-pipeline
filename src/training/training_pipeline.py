@@ -130,7 +130,7 @@ def get_dataset_config(configuration: TrainingConfiguration):
             active_field_min_value=configuration.active_field_min_value,
             remove_noise=configuration.remove_noise,
         ),
-        drop_landmarks=drop_landmarks,
+        landmarks=configuration.landmarks,
         normalize_signals=configuration.do_normalize,
         normalize_to_max=configuration.normalize_to_max,
         rotate_data=configuration.rotate_data,
@@ -160,7 +160,7 @@ def get_training_setup(configuration: TrainingConfiguration, test_batch_size=8):
     configuration.save(model_folder / CONFIG_FILE_NAME)
     device = get_device()
 
-    _, drop_landmarks, pose_to_model_index_dict, dataset_config, roi_shape, landmarks_out = get_dataset_config(
+    _, _, pose_to_model_index_dict, dataset_config, roi_shape, landmarks_out = get_dataset_config(
         configuration,
     )
 
@@ -180,7 +180,7 @@ def get_training_setup(configuration: TrainingConfiguration, test_batch_size=8):
         configuration.model_type,
     )
 
-    kept_links = get_kept_links(drop_landmarks)
+    kept_links = get_kept_links(configuration.landmarks)
     link_min, link_max = get_link_min_max(
         do_compute_link_lengths=True,
         links=kept_links,
