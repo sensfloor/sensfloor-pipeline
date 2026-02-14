@@ -189,8 +189,8 @@ def create_mjpe_boxplot(model_path: Path):
         "font.size": 16,
         "axes.labelsize": 11,
         "axes.titlesize": 12,
-        "xtick.labelsize": 9,
-        "ytick.labelsize": 9,
+        "xtick.labelsize": 11,
+        "ytick.labelsize": 11,
         "axes.grid": True,
         "grid.color": "black",
         "grid.alpha": 0.2,
@@ -245,7 +245,7 @@ def create_mjpe_boxplot(model_path: Path):
         plot_data.append(metrics_df[col].dropna().values)
     
     # 4. Create Plot
-    fig, ax = plt.subplots(figsize=(5, 3), dpi=300)
+    fig, ax = plt.subplots(figsize=(5, 4), dpi=300)
 
     positions = []
     current_pos = 1.0    
@@ -281,7 +281,7 @@ def create_mjpe_boxplot(model_path: Path):
     plt.setp(bplot['medians'], color='black', linewidth=1.0)
     
     # Axis formatting
-    ax.set_ylabel("MJPE (cm)", fontweight='bold')
+    ax.set_ylabel("MPJPE (cm)", fontweight='bold')
     ax.set_xlabel("")
     plt.xticks(rotation=90, ha='center') 
     plt.ylim(-1, 26) 
@@ -307,15 +307,15 @@ def create_mjpe_boxplot(model_path: Path):
               bbox_to_anchor=(0.5, 1.0), 
               ncol=3, 
               frameon=False, 
-              fontsize=9)
+              fontsize=11)
 
     plt.tight_layout(pad=0.0)
 
     plt.margins(0,0)
 
     
-    output_image = model_path / "test_metrics_boxplot.svg"
-    plt.savefig(output_image, format="svg", bbox_inches="tight", pad_inches = 0)
+    output_image = model_path / "test_metrics_boxplot.pdf"
+    plt.savefig(output_image, format="pdf", bbox_inches="tight", pad_inches = 0)
     print(f"Compact boxplot saved to {output_image}")
     plt.close()
     
