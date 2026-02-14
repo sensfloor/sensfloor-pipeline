@@ -42,7 +42,6 @@ def load_all_datasets(
     ConcatDataset[SensfloorPosesDataset],
     ConcatDataset[SensfloorPosesDataset],
 ]:
-    # TODO: Use Training hyperparams folders
     folders = [folder for folder in data_root_path.iterdir() if folder.is_dir()]
 
     train_datasets = []

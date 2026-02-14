@@ -21,7 +21,7 @@ def calculate_linkloss(pred_keypoints: torch.Tensor, k_min, k_max, pose_to_model
 
     link_lengths = torch.stack(link_lengths, dim=1)
 
-    k_min = torch.as_tensor(k_min, device=device, dtype=dtype)  # convert to tensor
+    k_min = torch.as_tensor(k_min, device=device, dtype=dtype)
     k_max = torch.as_tensor(k_max, device=device, dtype=dtype)
 
     short_linkloss = torch.clamp(k_min - link_lengths, min=0.0)

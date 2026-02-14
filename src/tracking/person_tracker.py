@@ -18,7 +18,7 @@ class PersonTracker:
 
         if floor_config.active_field_min_value != FILTER_OPTIMIZED_ACTIVE_FIELD_MIN_VALUE:
             warning = (
-                "Used kalman filter for person tracker filter is optimized for floor"
+                "Used kalman filter for person tracker is optimized for floor"
                 f"active_field_min_value == {FILTER_OPTIMIZED_ACTIVE_FIELD_MIN_VALUE}."
                 "Using a different value may result in decreased performance."
             )

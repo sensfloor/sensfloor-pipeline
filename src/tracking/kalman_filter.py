@@ -11,7 +11,6 @@ class SensfloorKalmanFilter:
         self.reset()
 
     def reset(self) -> None:
-        # TODO: Test usage of last position as initial belief if reset due to floor exit
         self.kf.P = np.eye(4) * 10
         self.kf.x = np.array([0, 0, 0, 0], dtype=np.float64)  # (Initial) State estimate
         self.kf.F = np.array(  # State transition matrix

@@ -11,10 +11,10 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from src.data_loading.pose_landmark import PoseLandmark
-from src.definitions import ROOT_PATH
+from src.definitions import BEST_MODEL_FILENAME, ROOT_PATH
 from src.training.link_loss.link_loss import calculate_linkloss
 from src.training.trainer.base_trainer import BaseTrainer
-from src.definitions import BEST_MODEL_FILENAME
+
 # Metrics Strings also used for Logging
 VAL_PREFIX = "val_"
 TRAIN_PREFIX = "train_"
@@ -35,7 +35,7 @@ def create_landmark_weights(landmarks_loss: dict[PoseLandmark, float], device: t
     """
     # Create weight list for each landmark (x, y, z get the same weight)
     weights = []
-    for landmark, weight in landmarks_loss.items():
+    for _, weight in landmarks_loss.items():
         weights.extend([weight, weight, weight])  # x, y, z for each landmark
 
     # Convert to tensor
@@ -59,22 +59,22 @@ def weighted_mse_loss(outputs, labels, weights):
 
 class SensfloorTrainer(BaseTrainer):
     def __init__(
-            self,
-            model: nn.Module,
-            optimizer: optim.Optimizer,
-            device: torch.device,
-            link_min: np.ndarray,
-            link_max: np.ndarray,
-            pose_to_model_dict: dict[PoseLandmark, int],
-            landmark_weights: dict[PoseLandmark, float],
-            landmarks_out: int,
-            kept_links: list[tuple[PoseLandmark, PoseLandmark]],
-            scheduler: LRScheduler | None = None,
-            use_early_stopping: bool = True,
-            patience: int = 10,
-            results_path: Path = ROOT_PATH,
-            best_model_name: str = BEST_MODEL_FILENAME,
-            amplify_link_loss: float = 10,
+        self,
+        model: nn.Module,
+        optimizer: optim.Optimizer,
+        device: torch.device,
+        link_min: np.ndarray,
+        link_max: np.ndarray,
+        pose_to_model_dict: dict[PoseLandmark, int],
+        landmark_weights: dict[PoseLandmark, float],
+        landmarks_out: int,
+        kept_links: list[tuple[PoseLandmark, PoseLandmark]],
+        scheduler: LRScheduler | None = None,
+        use_early_stopping: bool = True,
+        patience: int = 10,
+        results_path: Path = ROOT_PATH,
+        best_model_name: str = BEST_MODEL_FILENAME,
+        amplify_link_loss: float = 10,
     ):
         super().__init__(
             model=model,
@@ -104,8 +104,8 @@ class SensfloorTrainer(BaseTrainer):
 
     @staticmethod
     def calculate_percentage_correct_keypoints(
-            distances: torch.Tensor,
-            threshold: float,
+        distances: torch.Tensor,
+        threshold: float,
     ) -> torch.Tensor:
         """Returns tensor of shape [B, landmarks_out] with 1.0 for correct, 0.0 for incorrect."""
         correct = distances < threshold
@@ -124,19 +124,21 @@ class SensfloorTrainer(BaseTrainer):
         separator = "-" * 200
         outputs.append("\n" + "=" * 120)
         outputs.append(f"EPOCH {log_data.get(EPOCH, '?')} SUMMARY")
-        outputs.append(f"Losses | Train: {log_data.get(TRAIN_PREFIX + TOTAL_LOSS, -1):.4f} | "
-                       f"MSE: {log_data.get(TRAIN_PREFIX + LOSS_MSE, -1):.4f}, "
-                       f"Link: {log_data.get(TRAIN_PREFIX + LOSS_LINK, -1):.4f}")
-        outputs.append(f"Losses | Valid: {log_data.get(VAL_PREFIX + TOTAL_LOSS, -1):.4f} | "
-                       f"MSE: {log_data.get(VAL_PREFIX + LOSS_MSE, -1):.4f}, "
-                       f"Link: {log_data.get(VAL_PREFIX + LOSS_LINK, -1):.4f}")
+        outputs.append(
+            f"Losses | Train: {log_data.get(TRAIN_PREFIX + TOTAL_LOSS, -1):.4f} | "
+            f"MSE: {log_data.get(TRAIN_PREFIX + LOSS_MSE, -1):.4f}, "
+            f"Link: {log_data.get(TRAIN_PREFIX + LOSS_LINK, -1):.4f}"
+        )
+        outputs.append(
+            f"Losses | Valid: {log_data.get(VAL_PREFIX + TOTAL_LOSS, -1):.4f} | "
+            f"MSE: {log_data.get(VAL_PREFIX + LOSS_MSE, -1):.4f}, "
+            f"Link: {log_data.get(VAL_PREFIX + LOSS_LINK, -1):.4f}"
+        )
         outputs.append(separator)
 
         # Metrics
         joint_names = [k.name for k in landmarks]
-        headers = ["METRIC", "MEAN"] + [
-            name.replace("LEFT", "L").replace("RIGHT", "R")[:6] for name in joint_names
-        ]
+        headers = ["METRIC", "MEAN"] + [name.replace("LEFT", "L").replace("RIGHT", "R")[:6] for name in joint_names]
 
         # Spacing format: First col 13 wide, others 8 wide
         row_fmt = "{:<13} " + "{:>8} " * (len(headers) - 1)
@@ -157,7 +159,7 @@ class SensfloorTrainer(BaseTrainer):
 
         outputs.append(separator)
 
-        for prefix, value in PCK_THRESHOLDS.items():
+        for prefix, _ in PCK_THRESHOLDS.items():
             outputs.append(print_metric_row(f"Train {prefix}", f"{TRAIN_PREFIX}{prefix}"))
             outputs.append(print_metric_row(f"Val {prefix}", f"{VAL_PREFIX}{prefix}"))
             outputs.append(separator)
@@ -183,7 +185,7 @@ class SensfloorTrainer(BaseTrainer):
                 # 1. Forward pass
                 outputs: Any = self.forward_pass(inputs_on_device)
 
-                # 2. Calculate loss (Now unpacks tuple)
+                # 2. Calculate loss
                 loss, loss_dict = self.calculate_loss(outputs, labels_on_device)
 
                 # 3. Optimizer zero grad
@@ -195,7 +197,7 @@ class SensfloorTrainer(BaseTrainer):
                 # 5. Optimizer step
                 self.optimizer.step()
 
-                epoch_metrics[TOTAL_LOSS] += loss.item()  # total loss
+                epoch_metrics[TOTAL_LOSS] += loss.item()
                 for k, v in loss_dict.items():  # MSE and Link
                     epoch_metrics[k] += v
 
@@ -242,8 +244,8 @@ class SensfloorTrainer(BaseTrainer):
     def calculate_loss(self, outputs: torch.Tensor, labels: torch.Tensor) -> tuple[torch.Tensor, dict[str, float]]:
         mse_loss = weighted_mse_loss(outputs, labels, self.landmark_weights)
         link_loss = (
-                calculate_linkloss(outputs, self.k_min, self.k_max, self.pose_to_model_dict, links=self.kept_links)
-                * self.amplify_link_loss
+            calculate_linkloss(outputs, self.k_min, self.k_max, self.pose_to_model_dict, links=self.kept_links)
+            * self.amplify_link_loss
         )  # Paper amplifies link loss by 10
 
         total_loss = mse_loss + link_loss
@@ -302,10 +304,10 @@ class SensfloorTrainer(BaseTrainer):
 
 
 def get_test_accuracy(
-        model: nn.Module,
-        test_loader: torch.utils.data.DataLoader,
-        device: torch.device,
-        trainer_instance: SensfloorTrainer,
+    model: nn.Module,
+    test_loader: torch.utils.data.DataLoader,
+    device: torch.device,
+    trainer_instance: SensfloorTrainer,
 ) -> dict[str, float]:
     model.eval()
     model.to(device)
@@ -324,11 +326,12 @@ def get_test_accuracy(
 
     return {f"{TEST_PREFIX}{key}": value / num_batches for key, value in total_metrics.items()}
 
+
 def get_test_metrics(
-        model: nn.Module,
-        test_loader: torch.utils.data.DataLoader,
-        device: torch.device,
-        trainer_instance: SensfloorTrainer,
+    model: nn.Module,
+    test_loader: torch.utils.data.DataLoader,
+    device: torch.device,
+    trainer_instance: SensfloorTrainer,
 ) -> list[dict[str, float]]:
     model.eval()
     model.to(device)
@@ -346,6 +349,5 @@ def get_test_metrics(
                 total_metrics[key] = value
 
             total_metrics_list.append({f"{TEST_PREFIX}{key}": value for key, value in total_metrics.items()})
-            
 
     return total_metrics_list

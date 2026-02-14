@@ -260,7 +260,7 @@ def create_hold_out_predictions(configuration: TrainingConfiguration) -> None:
         dataset_config.floor_config.history_maxlen,
         configuration.model_type,
     )
-    checkpoint = torch.load(f=model_path)
+    checkpoint = torch.load(f=model_path, map_location=device)
     model.load_state_dict(state_dict=checkpoint)
 
     # --- Create csv Predictions ---

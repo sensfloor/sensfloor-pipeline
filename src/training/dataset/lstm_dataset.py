@@ -15,7 +15,7 @@ from src.training.dataset.dataset_utils import (
 from src.training.dataset.sensfloor_dataset import SensfloorPosesDataset
 
 
-class LSTMDataset(SensfloorPosesDataset): # TODO: Remove unused Dataset
+class LSTMDataset(SensfloorPosesDataset):
     def __init__(
         self,
         poses_df: pd.DataFrame,
@@ -27,19 +27,19 @@ class LSTMDataset(SensfloorPosesDataset): # TODO: Remove unused Dataset
 
         filter_threshold = 145
         filtered_readout = remove_noise_messages(
-            sensfloor_readout_df, filter_threshold
-        )  # TODO: BaseClass also has filtered readout, refactor that one
+            sensfloor_readout_df,
+            filter_threshold,
+        )
 
         self.sequences = get_sequences(
             sensfloor_readout=filtered_readout,
             poses=poses_df,
         )
-        # self._analyse_sequences()
 
     def _analyse_sequences(self) -> None:
         print("frames", [sequence[1] for sequence in self.sequences])
         print("lengths", [sequence[0] for sequence in self.sequences])
-        fig, ax = plt.subplots()
+        _, ax = plt.subplots()
         ax.boxplot([sequence[0] for sequence in self.sequences])
         ax.set_xticklabels([f"{len(self.sequences)}"])
         plt.show()
@@ -48,7 +48,6 @@ class LSTMDataset(SensfloorPosesDataset): # TODO: Remove unused Dataset
         return len(self.sequences)
 
     def get_detailed_data(self, index: int) -> DetailedSensfloorPosesData:
-        # TODO: Add transform -> go back 1-10 frames to get more variety of poses
         history_len, frame_number = self.sequences[index]
         updated_floor_config = replace(self.config.floor_config, history_maxlen=history_len)
         floor = create_roi_floor(updated_floor_config, self.sensfloor_readout_df, frame_number)

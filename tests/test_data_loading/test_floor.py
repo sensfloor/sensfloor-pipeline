@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.data_loading import Floor, FloorConfig, interpolate_signal
+from src.data_loading.floor import Floor, FloorConfig, interpolate_signal
 
 
 def test_has_correct_shape():
@@ -181,7 +181,7 @@ def test_signal_clipping():
     floor.update(positions, signals)
     np.testing.assert_array_equal(floor.patches, expected_patches)
 
-    
+
 def test_remove_noise():
     config = FloorConfig(x_size=2, y_size=1, history_maxlen=1, remove_noise=True)
     floor = Floor(config)
@@ -217,7 +217,7 @@ def test_remove_noise():
     # Expect resetted patch
     np.testing.assert_array_equal(floor.patches, expected_patches)
 
-    
+
 def test_no_remove_noise():
     config = FloorConfig(x_size=2, y_size=1, history_maxlen=1, remove_noise=True)
     floor = Floor(config)
@@ -251,5 +251,3 @@ def test_no_remove_noise():
 
     # No reset
     np.testing.assert_array_equal(floor.patches, expected_patches)
-
-

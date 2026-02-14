@@ -1,9 +1,16 @@
 import torch
-import torch.nn as nn
+from torch import nn
 
 
 class CNNLSTM(nn.Module):
-    def __init__(self, num_classes: int, roi_shape: tuple[int, int], hidden_size=256, num_layers=3, return_hidden_states: bool = False):
+    def __init__(
+        self,
+        num_classes: int,
+        roi_shape: tuple[int, int],
+        hidden_size=256,
+        num_layers=3,
+        return_hidden_states: bool = False,
+    ):
         super().__init__()
 
         self.return_hidden_states = return_hidden_states
@@ -13,37 +20,40 @@ class CNNLSTM(nn.Module):
             nn.Conv2d(1, 32, kernel_size=3, padding=1),
             nn.BatchNorm2d(32),
             nn.ReLU(),
-
             # Layer 2: 12x12 -> 6x6 (Pooling reduces spatial dim, keeps features robust)
             nn.Conv2d(32, 64, kernel_size=3, padding=1),
             nn.BatchNorm2d(64),
             nn.ReLU(),
             nn.MaxPool2d(2),
-
             # Layer 3: 6x6 -> 3x3
             nn.Conv2d(64, 128, kernel_size=3, padding=1),
             nn.BatchNorm2d(128),
             nn.ReLU(),
-            nn.MaxPool2d(2)
+            nn.MaxPool2d(2),
         )
 
         # Flatten size: 128 channels * 3 * 3 = 1152 features
 
         with torch.no_grad():
-            dummy_input = torch.rand((1,1, *roi_shape))
+            dummy_input = torch.rand((1, 1, *roi_shape))
             cnn_out_size = self.cnn(dummy_input).numel()
 
         # smooth transition from CNN to LSTM
         self.projection = nn.Linear(cnn_out_size, hidden_size)
 
         # big hidden size for capturing motion
-        self.lstm = nn.LSTM(input_size=hidden_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True, dropout=0.2)
+        self.lstm = nn.LSTM(
+            input_size=hidden_size, hidden_size=hidden_size, num_layers=num_layers, batch_first=True, dropout=0.2
+        )
 
         self.regressor = nn.Sequential(
-            nn.Linear(hidden_size, 256),nn.ReLU(),
-            nn.Linear(256, 256),nn.ReLU(),
-            nn.Linear(256, 128),nn.ReLU(),
-            nn.Linear(128, num_classes)
+            nn.Linear(hidden_size, 256),
+            nn.ReLU(),
+            nn.Linear(256, 256),
+            nn.ReLU(),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Linear(128, num_classes),
         )
 
     def forward(self, x, h_c: tuple | None = None):
@@ -72,16 +82,15 @@ class CNNLSTM(nn.Module):
 
         if self.return_hidden_states:
             return pred, (h_n, c_n)
-        else:
-            return pred
+        return pred
+
 
 # Example Usage
 if __name__ == "__main__":
     # Example: Batch of 32, 25 history, 12x12 res
     dummy_input = torch.rand(32, 30, 24, 24)
 
-    #model = RegressionModel(landmarks_out=99, history_len=25, roi_shape=(12,12))
-    model = EfficientCNNLSTM(num_classes=99, roi_shape=(24,24))
+    model = CNNLSTM(num_classes=99, roi_shape=(24, 24))
 
     output = model(dummy_input)
     print(f"Input Shape: {dummy_input.shape}")

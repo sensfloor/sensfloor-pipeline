@@ -2,7 +2,7 @@ import torch
 from torch import nn
 
 
-class RegressionModel(nn.Module): # TODO: remove unused Model perhaps
+class RegressionModel(nn.Module):
     """
     idea from Yiyue Luo et. all - Intelligent Carpet: Inferring 3D Human Pose from Tactile Signals
     """
@@ -47,8 +47,15 @@ class RegressionModel(nn.Module): # TODO: remove unused Model perhaps
             nn.BatchNorm2d(1024),
         )
 
-        self.encoder = nn.Sequential(self.encoder_1, self.encoder_2, self.encoder_3, self.encoder_4, self.encoder_5,
-                                     self.encoder_6, self.encoder_7)
+        self.encoder = nn.Sequential(
+            self.encoder_1,
+            self.encoder_2,
+            self.encoder_3,
+            self.encoder_4,
+            self.encoder_5,
+            self.encoder_6,
+            self.encoder_7,
+        )
 
         dummy_input = torch.zeros((1, history_len, roi_shape[0], roi_shape[1]))
         linear_in_features = self.encoder(dummy_input).numel()
@@ -57,6 +64,4 @@ class RegressionModel(nn.Module): # TODO: remove unused Model perhaps
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.encoder(x)
         x = x.view(x.size(0), -1)
-        x = self.linear(x)
-
-        return x
+        return self.linear(x)

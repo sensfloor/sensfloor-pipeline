@@ -20,11 +20,11 @@ def draw_landmarks_on_image(rgb_image: np.ndarray, detection_result: PoseLandmar
     pose_landmarks_list = detection_result.pose_landmarks
     annotated_image = np.copy(rgb_image)
 
-    # Loop through the detected poses to visualize.
+    # Loop through the detected poses to visualize
     for idx in range(len(pose_landmarks_list)):
         pose_landmarks = pose_landmarks_list[idx]
 
-        # Draw the pose landmarks.
+        # Draw the pose landmarks
         pose_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
         pose_landmarks_proto.landmark.extend(
             [
@@ -46,14 +46,12 @@ def draw_landmarks_on_image(rgb_image: np.ndarray, detection_result: PoseLandmar
 
 
 def write_csv_header(csv_path: Path, header: list[str]) -> None:
-    """Overwrite filepath and create new csv file with header"""
     with csv_path.open("w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(header)
 
 
 def landmarks_to_row(pose_landmarker_result: PoseLandmarkerResult, frame: int) -> list | None:
-    """Convert pose landmarks to a list matching a CSV row."""
     if not pose_landmarker_result.pose_world_landmarks:
         return None
     landmarks = pose_landmarker_result.pose_world_landmarks[0]
@@ -64,28 +62,21 @@ def landmarks_to_row(pose_landmarker_result: PoseLandmarkerResult, frame: int) -
 
 
 def read_video(
-        video_directory: Path,
-        options: Any,  # noqa: ANN401
-        draw_image: bool,  # noqa: FBT001
-        generate_new_header: bool,  # noqa: FBT001
+    video_directory: Path,
+    options: Any,  # noqa: ANN401
+    draw_image: bool,  # noqa: FBT001
+    generate_new_header: bool,  # noqa: FBT001
 ) -> None:
-    """
-    read all frames of a video and write the mediapipe 3D poses into a csv file
-    video_path: path to video file
-    options: Options for Mediapipe
-    draw_image: Show each frame with the landmark predictions
-    generate_new_header: use the first frame to generate a csv header, if set to False, uses HEADER constant instead
-    """
     video_path = video_directory / VIDEO_FILENAME
     csv_path = video_directory / f"{video_path.stem}_poses.csv"
 
     if csv_path.exists():
         df = pd.read_csv(csv_path)
         print(f"File {csv_path} already exists, skipping")
-        
+
         if len(df) < 100:
             print(f"length: {len(df)} less than 100, overwriting")
-        else:            
+        else:
             print(f"length: {len(df)} greater than 100, skipping file")
             return
     write_csv_header(csv_path, HEADER)
