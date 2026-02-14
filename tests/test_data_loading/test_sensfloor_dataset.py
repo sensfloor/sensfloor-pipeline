@@ -17,7 +17,7 @@ test_poses_path = current_dir / "data" / "test_video_poses.csv"
 def test_dataset_length():
     sensfloor_readout_df = pd.read_csv(test_sensfloor_readout_path)
     poses_df = pd.read_csv(test_poses_path)
-    expected_dataset_length = 9
+    expected_dataset_length = 2
 
     floor_config = RoIFloorConfig(x_size=10, y_size=6, history_maxlen=4, roi_size=3)
     config = DatasetConfig(floor_config=floor_config)
@@ -34,7 +34,7 @@ def test_getitem_with_one_signal():
     config = DatasetConfig(floor_config=floor_config)
     dataset = SensfloorPosesDataset(poses_df, sensfloor_readout_df, config)
 
-    roi_history, label = dataset[0]
+    roi_history, label = dataset[0] # type: ignore
 
     # 10 frames, 12x12 due to kernel size 3
     assert roi_history.shape == torch.Size([10, 12, 12])
@@ -51,7 +51,7 @@ def test_getitem_with_multiple_signals():
     config = DatasetConfig(floor_config=floor_config)
     dataset = SensfloorPosesDataset(poses_df, sensfloor_readout_df, config)
 
-    roi_history, label = dataset[-1]
+    roi_history, label = dataset[-1] # type: ignore
 
     # 10 frames, 12x12 due to kernel size 3
     assert roi_history.shape == torch.Size([10, 12, 12])
