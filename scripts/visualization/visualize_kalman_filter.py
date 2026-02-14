@@ -50,7 +50,6 @@ def plot_paths(raw_signals_path: np.ndarray, kalman_filter_path: np.ndarray) -> 
         ax.set_xlim(0, 4)
         ax.set_ylim(0, 6)
 
-        # Paint floor grid
         for x in range(5):
             ax.vlines(x, 0, 6, colors="0.7", linewidth=1, zorder=0, alpha=0.5)
         for y in range(7):

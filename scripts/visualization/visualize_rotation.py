@@ -1,31 +1,17 @@
+import argparse
+from pathlib import Path
+
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
-import pandas as pd
+import numpy as np
+from matplotlib.axes import Axes
+from matplotlib.colors import Colormap
+from matplotlib.image import AxesImage
 
 from src.data_loading.roi_floor import RoIFloorConfig
-from src.definitions import ROOT_PATH
 from src.training.configs import DatasetType
 from src.training.dataset.load_data import load_single_dataset
 from src.training.dataset.sensfloor_dataset import DatasetConfig
-from src.visualization.utils import draw_floor
-
-DATA_PATH = ROOT_PATH / "data/hold_out/2025-12-16_12-07-42-rikuto-shorts"
-DATA_INDEX = 120
-df = pd.read_csv(DATA_PATH / "video_poses.csv")
-
-floor_config = RoIFloorConfig(x_size=6, y_size=4, history_maxlen=10, roi_size=3)
-
-dataset_config = DatasetConfig(
-    floor_config=floor_config,
-    normalize_signals=False,
-    rotate_data=True,
-)
-
-dataset = load_single_dataset(
-    data_path=DATA_PATH,
-    config=dataset_config,
-    dataset_type=DatasetType.HISTORY,
-)
 
 FRAME_TO_SHOW = 906
 CONNECTIONS = [
@@ -67,14 +53,61 @@ CONNECTIONS = [
 ]
 
 
-def visualize_rotation() -> None:
-    data = dataset.get_detailed_data(DATA_INDEX)
+def draw_floor(ax: Axes, floor: np.ndarray, cmap: Colormap, vmin: int = 127, vmax: int = 255) -> AxesImage:
+    x_size_floor_array, y_size_floor_array = floor.shape
+
+    image = ax.imshow(
+        floor,
+        origin="lower",
+        cmap=cmap,
+        extent=(0, y_size_floor_array, 0, x_size_floor_array),
+        aspect="equal",
+        vmin=vmin,
+        vmax=vmax,
+    )
+
+    ax.grid(which="major", color="gray", linestyle="-", linewidth=0.5, alpha=0.3)
+
+    fields_per_patch = 4
+    x_positions = np.arange(0, y_size_floor_array + 1, fields_per_patch)
+    y_positions = np.arange(0, x_size_floor_array + 1, fields_per_patch)
+
+    x_labels = [str(int(x_position / fields_per_patch)) for x_position in x_positions]
+    y_labels = [str(int(y_position / fields_per_patch)) for y_position in y_positions]
+
+    ax.set_xticks(x_positions, x_labels)
+    ax.set_yticks(y_positions, y_labels)
+
+    ax.set_xlabel("y")
+    ax.set_ylabel("x")
+
+    ax.invert_yaxis()
+
+    return image
+
+
+def visualize_rotation(data_dir: Path, data_index: int) -> None:
+    floor_config = RoIFloorConfig(x_size=6, y_size=4, history_maxlen=10, roi_size=3)
+
+    dataset_config = DatasetConfig(
+        floor_config=floor_config,
+        normalize_signals=False,
+        rotate_data=True,
+    )
+
+    dataset = load_single_dataset(
+        data_path=data_dir,
+        config=dataset_config,
+        dataset_type=DatasetType.HISTORY,
+    )
+
+    data = dataset.get_detailed_data(data_index)
 
     # Rotate mediapipe skeleton landmarks
     rotated_t = data.transformed_label_tensor.reshape(33, 3).T
 
-    plot_xs = rotated_t[0, :].tolist()  # rotated_xs  # mediapipe X is horizontal axis
-    plot_ys = rotated_t[2, :].tolist()  # rotated_zs  # mediapipe Z is vertical axis
+    plot_xs = rotated_t[0, :].tolist()  # mediapipe X is horizontal axis
+    plot_ys = rotated_t[2, :].tolist()  # mediapipe Z is vertical axis
     plot_zs = [-y for y in rotated_t[1, :].tolist()]  # mediapipe Y is depth (and inverted)
 
     floor_tensor = data.transformed_roi_tensor[-1].numpy()
@@ -119,7 +152,6 @@ def visualize_rotation() -> None:
     # Adjust point of view
     ax_pose.view_init(elev=5, azim=110)
 
-    # --------------------
     ax_floor = axes["Floor"]
     cmap = mcolors.LinearSegmentedColormap.from_list("signal colormap", ["#FFFFFF", "#0033FF", "#FF6A00"])
     draw_floor(ax_floor, floor_tensor, cmap)
@@ -127,9 +159,31 @@ def visualize_rotation() -> None:
     fig.show()
 
 
-visualize_rotation()
-visualize_rotation()
-visualize_rotation()
-visualize_rotation()
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Visualize collected video and readout")
+    parser.add_argument(
+        "--data",
+        type=Path,
+        required=True,
+        help="Required path to data directory containing video and sensfloor readout.",
+    )
+    parser.add_argument(
+        "--data-index",
+        type=int,
+        required=True,
+        help="Index of data to visualize.",
+    )
+    return parser.parse_args()
 
-plt.show()
+
+def main() -> None:
+    args = parse_args()
+    visualize_rotation(args.data, args.data_index)
+    visualize_rotation(args.data, args.data_index)
+    visualize_rotation(args.data, args.data_index)
+    visualize_rotation(args.data, args.data_index)
+    plt.show()
+
+
+if __name__ == "__main__":
+    main()

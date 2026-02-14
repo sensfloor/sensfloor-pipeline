@@ -105,7 +105,6 @@ def plot_joint_distance_boxplot(
 
     distances_in_cm = distances * 100.0
 
-    # ---- styling (same vibe as your other plot) ----
     plt.rcParams.update(
         {
             "font.family": "Courier New",
@@ -121,12 +120,10 @@ def plot_joint_distance_boxplot(
         },
     )
 
-    # ---- prepare data ----
     labels = [clean_label(lm) for lm in JOINTS_TO_COMPARE]
     plot_data = [distances_in_cm[:, j][~np.isnan(distances_in_cm[:, j])] for j in range(num_joints)]
     box_colors = [CATEGORY_COLORS[get_landmark_category(lm.name)] for lm in JOINTS_TO_COMPARE]
 
-    # ---- positions with L/R pairing spacing ----
     positions = []
     current_pos = 1.0
     for i in range(num_joints):
@@ -137,7 +134,6 @@ def plot_joint_distance_boxplot(
             else:
                 current_pos += 0.8
 
-    # ---- plot ----
     fig, ax = plt.subplots(figsize=(5, 3))
 
     bplot = ax.boxplot(

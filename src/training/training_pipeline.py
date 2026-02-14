@@ -1,26 +1,118 @@
+import csv
 from dataclasses import replace
+from pathlib import Path
 
 import torch
+import tqdm
 import trackio
+from torch import nn
+from torch.utils.data import DataLoader
 
+from src.data_collection.mediapipe_utils import HEADER
 from src.data_loading.floor import PATCH_SIZE
 from src.data_loading.pose_landmark import PoseLandmark
 from src.data_loading.roi_floor import RoIFloorConfig
-from src.definitions import BEST_MODEL_FILENAME, TEST_METRICS_MEAN_FILENAME
-from src.definitions import HOLD_OUT_DATA_PATH, TRAIN_DATA_PATH
+from src.definitions import BEST_MODEL_FILENAME, HOLD_OUT_DATA_PATH, TEST_METRICS_MEAN_FILENAME, TRAIN_DATA_PATH
 from src.training.configs import (
     CONFIG_FILE_NAME,
     MODELS_FOLDER_PATH,
-    PROJECT_NAME,
     PROJECT_GROUP,
+    PROJECT_NAME,
+    DatasetType,
     TrainingConfiguration,
 )
-from src.training.dataset.load_data import train_val_test_split
-from src.training.dataset.sensfloor_dataset import DatasetConfig
+from src.training.dataset.dataset_utils import DatasetConfig, DetailedSensfloorPosesData
+from src.training.dataset.load_data import load_single_dataset, train_val_test_split
 from src.training.link_loss.links_min_max import get_link_min_max
 from src.training.trainer.sensfloor_trainer import SensfloorTrainer, get_test_accuracy
 from src.training.utils import get_device, get_kept_links, get_model, set_seed
-from src.visualization.create_landmark_predictions import create_predictions
+
+ACC_HEADER = ["frame_number"] + [lm.name for lm in PoseLandmark]
+
+
+def detailed_collate_fn(batch: list[DetailedSensfloorPosesData]):
+    # 1. Extract and stack tensors for the model (Creates B x C x H x W)
+    tensors = torch.stack([item.transformed_roi_tensor for item in batch])
+    labels = torch.stack([item.transformed_label_tensor for item in batch])
+
+    # 2. Keep the original objects for metadata access
+    detailed_objects = batch
+
+    return tensors, labels, detailed_objects
+
+
+def create_predictions(
+    data_path: Path,
+    dataset_config: DatasetConfig,
+    kept_landmarks: list[PoseLandmark],
+    model: nn.Module,
+    pred_out_path: Path,
+    acc_out_path: Path,
+    device,
+    total_mediapipe_landmarks: int = 33,
+    stop_after_x_batches: int | None = None,
+):
+    detailed_dataset = load_single_dataset(
+        data_path,
+        config=dataset_config,
+        return_detailed=True,
+        dataset_type=DatasetType.HISTORY,
+    )
+    detailed_dataloader = DataLoader(detailed_dataset, batch_size=256, shuffle=False, collate_fn=detailed_collate_fn)
+    model.to(device)
+    model.eval()
+
+    with open(pred_out_path, "w", newline="") as f_pred, open(acc_out_path, "w", newline="") as f_acc:
+        pred_writer = csv.writer(f_pred)
+        acc_writer = csv.writer(f_acc)
+
+        pred_writer.writerow(HEADER)
+        acc_writer.writerow(ACC_HEADER)
+
+        # for each batch of epoch
+        for batch, (batch_tensors, batch_labels, batch_details) in enumerate(
+            tqdm.tqdm(detailed_dataloader, total=stop_after_x_batches, ncols=100),
+        ):
+            batch_tensors = batch_tensors.to(device)
+            batch_labels = batch_labels.to(device)
+
+            with torch.no_grad():
+                outputs = model(batch_tensors)
+
+                pred_coords = outputs.view(outputs.size(0), len(kept_landmarks), 3)
+                distances = SensfloorTrainer.get_distances(outputs, pred_coords, landmarks_out=len(kept_landmarks))
+                accuarcy = SensfloorTrainer.calculate_percentage_correct_keypoints(
+                    distances=distances,
+                    threshold=0.1,
+                )
+
+                pred_cpu = pred_coords.cpu().numpy()
+                accuarcy_cpu = accuarcy.cpu().numpy()
+
+            # for each output of batch
+            for coords, accuracy, detailed_data in zip(pred_cpu, accuarcy_cpu, batch_details):
+                # The csv should have all 33 joints even though the model doesn't predict all of them
+                full_pred_row = [None] * (total_mediapipe_landmarks * 3)
+                full_acc_row = [None] * total_mediapipe_landmarks
+
+                # insert kept landmarks into the full rows
+                # for each joint of output
+                for model_prediction_index, kept_landmark in enumerate(kept_landmarks):
+                    media_pipe_joint_index = kept_landmark.value  # index of the mediapipe landmark
+                    x, y, z = coords[model_prediction_index].tolist()  # corresponding model predictions for landmark
+
+                    base_idx = media_pipe_joint_index * 3
+                    full_pred_row[base_idx] = x
+                    full_pred_row[base_idx + 1] = y
+                    full_pred_row[base_idx + 2] = z
+
+                    full_acc_row[media_pipe_joint_index] = accuracy[model_prediction_index]
+
+                pred_writer.writerow([detailed_data.frame_number] + full_pred_row)
+                acc_writer.writerow([detailed_data.frame_number] + full_acc_row)
+
+            if stop_after_x_batches is not None and batch >= stop_after_x_batches:
+                break
 
 
 def get_dataset_config(configuration: TrainingConfiguration):
@@ -60,7 +152,7 @@ def get_dataset_config(configuration: TrainingConfiguration):
     return kept_landmarks, drop_landmarks, pose_to_model_index_dict, dataset_config, roi_shape, landmarks_out
 
 
-def get_training_setup(configuration: TrainingConfiguration, test_batch_size = 8):
+def get_training_setup(configuration: TrainingConfiguration, test_batch_size=8):
     print(f"hyper params: {configuration}")
 
     model_folder = MODELS_FOLDER_PATH / configuration.model_name
@@ -68,7 +160,9 @@ def get_training_setup(configuration: TrainingConfiguration, test_batch_size = 8
     configuration.save(model_folder / CONFIG_FILE_NAME)
     device = get_device()
 
-    kept_landmarks, drop_landmarks, pose_to_model_index_dict, dataset_config, roi_shape, landmarks_out = get_dataset_config(configuration)
+    _, drop_landmarks, pose_to_model_index_dict, dataset_config, roi_shape, landmarks_out = get_dataset_config(
+        configuration,
+    )
 
     train_loader, val_loader, test_loader = train_val_test_split(
         data_root_path=TRAIN_DATA_PATH,
@@ -121,6 +215,7 @@ def get_training_setup(configuration: TrainingConfiguration, test_batch_size = 8
 
     return model, device, trainer, train_loader, val_loader, test_loader
 
+
 def train(configuration: TrainingConfiguration) -> None:
     set_seed(seed=configuration.seed)
     trackio.init(
@@ -130,7 +225,10 @@ def train(configuration: TrainingConfiguration) -> None:
         group=PROJECT_GROUP,
     )
 
-    model, device, trainer, train_loader, val_loader, test_loader = get_training_setup(configuration, test_batch_size=64)
+    model, device, trainer, train_loader, val_loader, test_loader = get_training_setup(
+        configuration,
+        test_batch_size=64,
+    )
 
     trainer.train(train_loader=train_loader, validation_loader=val_loader, epochs=configuration.epochs)
 
@@ -151,7 +249,7 @@ def create_hold_out_predictions(configuration: TrainingConfiguration) -> None:
 
     device = get_device()
 
-    kept_landmarks, drop_landmarks, pose_to_model_index_dict, dataset_config, roi_shape, landmarks_out = get_dataset_config(configuration)
+    kept_landmarks, _, _, dataset_config, roi_shape, landmarks_out = get_dataset_config(configuration)
     hold_out_dirs = [HOLD_OUT_DATA_PATH / folder for folder in configuration.hold_out_data_folder]
 
     dataset_config = replace(dataset_config, rotate_data=False)

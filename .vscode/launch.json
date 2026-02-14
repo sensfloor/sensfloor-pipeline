@@ -11,7 +11,10 @@
       "module": "scripts.data_collection.collect_sensfloor_data_and_video",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
-      "args": ["--serial-port", "/dev/tty.usbserial-A571V1ZF"]
+      "args": [
+        "--serial-port",
+        "/dev/tty.usbserial-A571V1ZF"
+      ]
     },
     {
       "name": "DATA_COLLECTION – Extract poses from video",
@@ -20,7 +23,10 @@
       "module": "scripts.data_collection.extract_mediapipe_poses",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
-      "args": ["--data", "data/train"]
+      "args": [
+        "--data",
+        "data/train"
+      ]
     },
     {
       "name": "INFERENCE – Mock server",
@@ -73,7 +79,10 @@
       "module": "scripts.training.print_metrics",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
-      "args": ["--model", "outputs/models/sensfloor_model"]
+      "args": [
+        "--model",
+        "outputs/models/sensfloor_model"
+      ]
     },
     {
       "name": "TRAINING – Create hold out predictions",
@@ -82,7 +91,10 @@
       "module": "scripts.training.create_hold_out_predictions",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
-      "args": ["--model", "outputs/models/sensfloor_model"]
+      "args": [
+        "--model",
+        "outputs/models/sensfloor_model"
+      ]
     },
     {
       "name": "TRAINING – Create Test Metrics",
@@ -91,10 +103,13 @@
       "module": "scripts.training.create_test_metrics",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
-      "args": ["--model", "outputs/models/sensfloor_model"]
+      "args": [
+        "--model",
+        "outputs/models/sensfloor_model"
+      ]
     },
     {
-      "name": "VISUALIZATIONS – Collected video and readout",
+      "name": "VISUALIZATIONS – Collected Video and Readout",
       "type": "debugpy",
       "request": "launch",
       "module": "scripts.visualization.visualize_collected_data",
@@ -108,22 +123,30 @@
       ]
     },
     {
-      "name": "VISUALIZATIONS – Visualize position tracking",
+      "name": "VISUALIZATIONS – Position Tracking",
       "type": "debugpy",
       "request": "launch",
       "module": "scripts.visualization.visualize_position_tracking",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
-      "args": ["--data", "data/train/2025-12-16_12-20-54-line-subject1"]
+      "args": [
+        "--data",
+        "data/train/2025-12-16_12-20-54-line-subject1"
+      ]
     },
     {
-      "name": "VISUALIZATIONS – RoI floor",
+      "name": "VISUALIZATIONS – ROI Floor",
       "type": "debugpy",
       "request": "launch",
       "module": "scripts.visualization.visualize_roi_floor",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
-      "args": ["--data", "data/train/2025-12-16_12-20-54-line-subject1"]
+      "args": [
+        "--data",
+        "data/train/2025-12-16_12-20-54-line-subject1",
+        "--data-index",
+        "120"
+      ]
     },
     {
       "name": "VISUALIZATIONS – Rotation",
@@ -131,10 +154,16 @@
       "request": "launch",
       "module": "scripts.visualization.visualize_rotation",
       "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
+      "console": "integratedTerminal",
+      "args": [
+        "--data",
+        "data/train/2025-12-16_12-20-54-line-subject1",
+        "--data-index",
+        "120"
+      ]
     },
     {
-      "name": "VISUALIZATIONS – Bone lengths",
+      "name": "VISUALIZATIONS – Bone Length Deviations",
       "type": "debugpy",
       "request": "launch",
       "module": "scripts.visualization.visualize_bone_lengths",
@@ -142,7 +171,7 @@
       "console": "integratedTerminal",
       "args": [
         "--csv",
-        "data/hold-out/2025-12-16_12-07-42-line-subject2/predicted_poses.csv"
+        "data/train/2025-12-16_12-20-54-line-subject1/video_poses.csv"
       ]
     },
     {
@@ -178,6 +207,14 @@
       ]
     },
     {
+      "name": "VISUALIZATIONS – Readouts",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "scripts.visualization.visualize_readouts",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+    },
+    {
       "name": "VISUALIZATIONS – Joint Movements",
       "type": "debugpy",
       "request": "launch",
@@ -192,18 +229,27 @@
       "module": "scripts.visualization.visualize_metrics",
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
-      "args": ["--model", "outputs/models/sensfloor_model"]
+      "args": [
+        "--model",
+        "outputs/models/sensfloor_model"
+      ]
     }
   ],
   "compounds": [
     {
       "name": "INFERENCE – Mock server and test client",
-      "configurations": ["INFERENCE – Mock server", "INFERENCE – Test client"],
+      "configurations": [
+        "INFERENCE – Mock server",
+        "INFERENCE – Test client"
+      ],
       "stopAll": true
     },
     {
       "name": "INFERENCE – Server and test client",
-      "configurations": ["INFERENCE – Server", "INFERENCE – Test client"],
+      "configurations": [
+        "INFERENCE – Server",
+        "INFERENCE – Test client"
+      ],
       "stopAll": true
     }
   ]
