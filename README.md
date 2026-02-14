@@ -25,13 +25,13 @@ The dataset we collected for training can be downloaded [here](https://drive.goo
 
 ## Training
 Before using the dataset we first define a configuration containing all required hyperparameters for training. Our final model uses the `_BASE_CONFIG` found in [`src/training/configs.py`](src/training/configs.py). To start training run this command:   
-```python -m scripts.training.train```
+`python -m scripts.training.train`
 
 ### Post-training evaluation
 After training a model these scripts can be used to evaluate its performance:
  | Description                                | Command                                                                                         |
  | ------------------------------------------ | ----------------------------------------------------------------------------------------------- |
- | Print human-readable metrics in terminal   | `python -m scripts.training.print_metrics --model outputs/models/sensfloor_model`               |
+ | Print easy-readable metrics in terminal   | `python -m scripts.training.print_metrics --model outputs/models/sensfloor_model`               |
  | Evaluate model performance on the test set | `python -m scripts.training.create_test_metrics --model outputs/models/sensfloor_model`         |
  | Generate CSV predictions for hold-out data | `python -m scripts.training.create_hold_out_predictions --model outputs/models/sensfloor_model` |
 
@@ -59,9 +59,9 @@ While developing this project, we've developed several visualizations to get a d
  | Activity heatmaps showing total sensor activation                    | `python -m scripts.visualization.visualize_readouts --csv data/train/2025-12-16_12-20-54-line-subject1/sensfloor_readout.csv`                                          |
  | Visualization of extracted ROI and their frames                      | `python -m scripts.visualization.visualize_roi_floor --data data/train/2025-12-16_12-20-54-line-subject1 --data-index 120`                                             |
  | Boxplot of bone length deviations for evaluating MediaPope estimates | `python -m scripts.visualization.visualize_bone_lengths --csv data/train/2025-12-16_12-20-54-line-subject1/video_poses.csv`                                            |
- | Boxplot of the joint movement range to assess estimation difficulty  | `python -m scripts.visualization.visualize_joint_movement`                                                                                                             |
+ | Boxplot of joint movement range to assess estimation difficulty  | `python -m scripts.visualization.visualize_joint_movement`                                                                                                             |
  | Visualization of the trajectory of a person walking on the floor     | `python -m scripts.visualization.visualize_position_tracking --data data/train/2025-12-16_12-20-54-line-subject1`                                                      |
  | Comparison of estimated vs target pose                               | `python -m scripts.visualization.visualize_pose_comparison --model outputs/models/sensfloor_model --data data/train/2025-12-16_12-20-54-line-subject1 --data-index -4` |
  | Comparison between raw and filtered pose estimates                   | `python -m scripts.visualization.visualize_kalman_filter --csv data/tracking/2026-02-09_09-35-00-house-subject3/sensfloor_readout.csv --start 10 --end 42`             |
- | Boxplot of the Mean Per Joint Position Error                         | `python -m scripts.visualization.visualize_metrics --model outputs/models/sensfloor_model`                                                                             |
+ | Boxplot of the Mean Per Joint Position Errors                         | `python -m scripts.visualization.visualize_metrics --model outputs/models/sensfloor_model`                                                                             |
  | Image of rotation transformation for data                            | `python -m scripts.visualization.visualize_rotation --data data/train/2025-12-16_12-20-54-line-subject1 --data-index 120`                                              |

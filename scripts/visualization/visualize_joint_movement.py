@@ -178,10 +178,10 @@ def plot_joint_distance_boxplot(
     plt.tight_layout(pad=0.0)
     plt.margins(0, 0)
 
-    output_path = Path("outputs/images/joint_movement.svg")
+    output_path = Path("outputs/images/joint_movement.pdf")
     output_path.parent.mkdir(exist_ok=True, parents=True)
 
-    plt.savefig(output_path, format="svg", bbox_inches="tight", pad_inches=0)
+    plt.savefig(output_path, format="pdf", bbox_inches="tight", pad_inches=0)
     print(f"Saved boxplot to {output_path}")
     plt.close(fig)
 
@@ -226,7 +226,7 @@ def main() -> None:
         dataset_type=DatasetType.HISTORY,
     )
 
-    sampled_poses = sample_poses(test_dataset, 10000)
+    sampled_poses = sample_poses(test_dataset, 1000)
     distances = distances_to_mean(sampled_poses)
 
     plot_joint_distance_boxplot(distances)
