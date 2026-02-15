@@ -23,13 +23,13 @@
   - [x] Make Projects Public
 
 - Sensfloor-paper
-  - [ ] Read Paper Template
-  - [ ] Read Paper instructions (What was that about AI usage again?)
-  - [ ] Go through comment todos (# TODO, // TODO, % TODO)
-  - [ ] Give PDF Or Latex to AI and correct spelling, grammar, commas
-  - [ ] Align images
+  - [x] Read Paper Template
+  - [x] Read Paper instructions (What was that about AI usage again?)
+  - [x] Go through comment todos (# TODO, // TODO, % TODO)
+  - [x] Give PDF Or Latex to AI and correct spelling, grammar, commas
+  - [x] Align images
   - [ ] Check references
-  - [ ] Upload to Conference
+  - [x] Upload to Conference
 
 - remove TODOS.md from sensfloor-pipeline
 
